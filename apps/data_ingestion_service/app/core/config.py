@@ -3,10 +3,6 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     database_url: str
-    agent_service_url: str = "http://localhost:8001"
-    data_ingestion_service_url: str = "http://localhost:8004"
-    app_env: str = "development"
-    app_debug: bool = True
 
     class Config:
         env_file = ".env"

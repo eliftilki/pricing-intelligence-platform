@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers.data_collection import router as data_collection_router
+from app.routers.ingestion import router as ingestion_router
 
 
 app = FastAPI(
-    title="Pricing Intelligence API",
+    title="Data Ingestion Service",
     version="0.1.0",
-    description="Marketplace sellers için AI destekli pricing intelligence backend API.",
+    description="Marketplace competitor data collection service.",
 )
 
 app.add_middleware(
@@ -23,9 +23,8 @@ app.add_middleware(
 def health_check():
     return {
         "status": "ok",
-        "service": "api_service",
+        "service": "data_ingestion_service",
     }
 
-app.include_router(data_collection_router)
 
-
+app.include_router(ingestion_router)
