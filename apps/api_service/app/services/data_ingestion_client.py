@@ -8,9 +8,18 @@ class DataIngestionClient:
         self.base_url = settings.data_ingestion_service_url
 
     async def run_collection(self, payload: DataCollectionRunRequest) -> dict:
-        async with httpx.AsyncClient(timeout=120) as client:
+        async with httpx.AsyncClient(timeout=180) as client:
             response = await client.post(
                 f"{self.base_url}/ingestion/run",
+                json=payload.model_dump(mode="json"),
+            )
+            response.raise_for_status()
+            return response.json()
+
+    async def create_product(self, payload) -> dict:
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(
+                f"{self.base_url}/ingestion/products",
                 json=payload.model_dump(mode="json"),
             )
             response.raise_for_status()

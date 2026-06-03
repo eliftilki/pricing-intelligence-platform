@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers.data_collection import router as data_collection_router
+from app.routers.intelligence import router as intelligence_router
 
 
 app = FastAPI(
@@ -27,5 +28,6 @@ def health_check():
     }
 
 app.include_router(data_collection_router)
+app.include_router(intelligence_router)
 
 
