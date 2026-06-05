@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import sys
 from datetime import datetime, timezone
 from typing import Any, Dict
@@ -14,9 +15,14 @@ except ImportError:
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+logger = logging.getLogger(__name__)
+
 
 class AmazonCollector(BaseMarketplaceCollector):
     async def scrape_product_by_url(self, url: str) -> Dict[str, Any]:
+        return await self._scrape_with_retry(self._scrape_impl, url, max_retries=3)
+
+    async def _scrape_impl(self, url: str) -> Dict[str, Any]:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             context = await browser.new_context(
@@ -30,7 +36,7 @@ class AmazonCollector(BaseMarketplaceCollector):
             )
             page = await context.new_page()
 
-            print(f"[-] Amazon verisi cekiliyor: {url}")
+            logger.info(f"Scraping Amazon: {url}")
             await page.goto(url, wait_until="domcontentloaded", timeout=60000)
             await page.wait_for_timeout(4000)
 

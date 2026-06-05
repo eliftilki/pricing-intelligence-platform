@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import re
 import sys
 from datetime import datetime, timezone
@@ -15,9 +16,14 @@ except ImportError:
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+logger = logging.getLogger(__name__)
+
 
 class HepsiburadaCollector(BaseMarketplaceCollector):
     async def scrape_product_by_url(self, url: str) -> Dict[str, Any]:
+        return await self._scrape_with_retry(self._scrape_impl, url, max_retries=3)
+
+    async def _scrape_impl(self, url: str) -> Dict[str, Any]:
         queue: asyncio.Queue = asyncio.Queue()
 
         async with async_playwright() as p:
@@ -47,7 +53,7 @@ class HepsiburadaCollector(BaseMarketplaceCollector):
                         return
                     await queue.put(body)
                 except Exception as e:
-                    print("handle_response error:", e)
+                    logger.error(f"Response handler error: {e}")
 
             page.on("response", lambda r: asyncio.create_task(handle_response(r)))
 

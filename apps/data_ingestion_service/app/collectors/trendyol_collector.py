@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import re
 import sys
 from datetime import datetime, timezone
@@ -15,9 +16,14 @@ except ImportError:
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+logger = logging.getLogger(__name__)
+
 
 class TrendyolCollector(BaseMarketplaceCollector):
     async def scrape_product_by_url(self, url: str) -> Dict[str, Any]:
+        return await self._scrape_with_retry(self._scrape_impl, url, max_retries=3)
+
+    async def _scrape_impl(self, url: str) -> Dict[str, Any]:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             context = await browser.new_context(
@@ -29,7 +35,7 @@ class TrendyolCollector(BaseMarketplaceCollector):
             )
             page = await context.new_page()
 
-            print(f"[-] Trendyol verisi cekiliyor: {url}")
+            logger.info(f"Scraping Trendyol: {url}")
             await page.goto(url, wait_until="domcontentloaded", timeout=60000)
             await page.wait_for_timeout(4000)
 
@@ -110,7 +116,7 @@ class TrendyolCollector(BaseMarketplaceCollector):
             await browser.close()
 
         if "error" in result:
-            print("JS evaluation error:", result["error"])
+            logger.error(f"JS evaluation error: {result['error']}")
             result["product"] = {"name": None, "sku": None, "brand": None, "rating": None, "review_count": None}
             result["sellers"] = []
 
