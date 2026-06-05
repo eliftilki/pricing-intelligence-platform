@@ -1,0 +1,2062 @@
+[
+  {
+    "url": "https://www.hepsiburada.com/api/v1/product/installment?maxInstallment=9&amount=178900&definitionId=372&isFashion=false&consumerFinanceTag=&paymentTag=br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme,ucuzunu-bulursan-farki-iade&sku=HBCV00004D5VKJ&merchantId=e82ae592-6ae6-4d89-85f2-f82137421f36&taxRatio=20",
+    "status": 200,
+    "data": {
+      "statusCode": 200,
+      "data": {
+        "instalmentDetail": {
+          "cardAmount": 24525,
+          "cardInstallment": 9,
+          "loanAmount": 29318,
+          "loanInstallment": 36
+        }
+      },
+      "redirection": {
+        "url": null,
+        "type": null,
+        "message": null
+      }
+    }
+  },
+  {
+    "url": "https://www.hepsiburada.com/api/v1/product/listings/HBCV00004D5VKJ",
+    "status": 200,
+    "data": {
+      "statusCode": 200,
+      "data": {
+        "listings": [
+          {
+            "merchantId": "e82ae592-6ae6-4d89-85f2-f82137421f36",
+            "listingId": "5bc98bb9-1d8a-4241-ae62-9cb67d75b02e",
+            "merchantName": "VATAN BİLGİSAYAR",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 2,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme,ucuzunu-bulursan-farki-iade",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 1789,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 1889,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 1519,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 1490.83,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/e82ae592-6ae6-4d89-85f2-f82137421f36-60319.png",
+            "ratingSummary": {
+              "lifetimeRating": 9.5,
+              "ratingQuantity": 1586
+            },
+            "merchantCity": "İSTANBUL",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "e82ae592-6ae6-4d89-85f2-f82137421f36",
+              "name": "VATAN BİLGİSAYAR",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/e82ae592-6ae6-4d89-85f2-f82137421f36-60319.png",
+              "ratingSummary": {
+                "lifetimeRating": 9.5,
+                "ratingQuantity": 1586
+              },
+              "merchantLabels": null,
+              "urlPostfix": "vatan-bilgisayar"
+            },
+            "prices": [
+              {
+                "formattedPrice": "1.789,00",
+                "value": 1789,
+                "currency": 0,
+                "discountRate": 0
+              }
+            ],
+            "discountRate": 0,
+            "warehouseId": "BIRINCIL",
+            "quantity": 216,
+            "buyboxOrder": 1,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              },
+              {
+                "tagId": "ucuzunu-bulursan-farki-iade"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "09ec9bdd-4bc3-4446-bb90-c94099d7ddbd",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 1
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": 2,
+            "campaigns": [],
+            "pbs": "5JfekrBtjHJJwLno4kr+WzDbOU0yNfoM/zbAwa8Fi69J+gHEfYp0XyuWufJX390JuQela/56yXWirJYa1FMlSd2IDkEbgd6rfVr0Cc2CtFhyphZar/ZYbmAxoj/hiomlRMrlQfxzB2ca3rPWylOj1xqkQYYPlLuKSpk0fhi5QzdvH+nkrHqO+ya44RSSaHDHevz5XVL2wiwCyB4uTM3dYVPvDvIFsuBtCa4LY247oos+FZU3uo0VHKhMyeVomne62wPC7FOC+ueMT5SWoEj47WK0E8PvdsGpSHaxC30cYqPRaPfPTvV6oidNivvRJSYDf5Qqp65E7y9hH6R8V2r2vmLnrFe8ggqm/li+c9ybp/Q="
+          },
+          {
+            "merchantId": "47622c66-257d-4e08-87ac-602fb83efd77",
+            "listingId": "32c20978-9f4e-44f3-ac22-02bc8dea1121",
+            "merchantName": "Teknosa",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 1,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 1889,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 1989,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 1939,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 1574.17,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/47622c66-257d-4e08-87ac-602fb83efd77-66477.png",
+            "ratingSummary": {
+              "lifetimeRating": 9.4,
+              "ratingQuantity": 1181
+            },
+            "merchantCity": "KOCAELİ",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "47622c66-257d-4e08-87ac-602fb83efd77",
+              "name": "Teknosa",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/47622c66-257d-4e08-87ac-602fb83efd77-66477.png",
+              "ratingSummary": {
+                "lifetimeRating": 9.4,
+                "ratingQuantity": 1181
+              },
+              "merchantLabels": null,
+              "urlPostfix": "teknosa"
+            },
+            "prices": [
+              {
+                "formattedPrice": "1.939,00",
+                "value": 1939,
+                "currency": 0,
+                "discountRate": 0
+              },
+              {
+                "formattedPrice": "1.889,00",
+                "value": 1889,
+                "currency": 0,
+                "discountRate": 3
+              }
+            ],
+            "discountRate": 3,
+            "warehouseId": "Guncel",
+            "quantity": 2,
+            "buyboxOrder": 2,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "a6e0e087-fd4b-447a-ad9f-43bd6aee5431",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 2
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": 1,
+            "campaigns": [],
+            "pbs": "5JfekrBtjHJJwLno4kr+WzDbOU0yNfoM/zbAwa8Fi69J+gHEfYp0XyuWufJX390JuQela/56yXWirJYa1FMlSd2IDkEbgd6rfVr0Cc2CtFhyphZar/ZYbmAxoj/hiomlRMrlQfxzB2ca3rPWylOj1xqkQYYPlLuKSpk0fhi5QzdvH+nkrHqO+ya44RSSaHDHevz5XVL2wiwCyB4uTM3dYVPvDvIFsuBtCa4LY247oos+FZU3uo0VHKhMyeVomne62wPC7FOC+ueMT5SWoEj47WK0E8PvdsGpSHaxC30cYqPRaPfPTvV6oidNivvRJSYDf5Qqp65E7y9hH6R8V2r2vmLnrFe8ggqm/li+c9ybp/Q="
+          },
+          {
+            "merchantId": "ab005bbe-ec76-41d8-b18f-fc94e4f856c4",
+            "listingId": "f31a57a0-a635-48a2-88a6-398757b8f39f",
+            "merchantName": "Vip Trend",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 1,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 1899,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 1999,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 1949,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 1582.5,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/ab005bbe-ec76-41d8-b18f-fc94e4f856c4-49815.png",
+            "ratingSummary": {
+              "lifetimeRating": 9.3,
+              "ratingQuantity": 529
+            },
+            "merchantCity": "İSTANBUL",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "ab005bbe-ec76-41d8-b18f-fc94e4f856c4",
+              "name": "Vip Trend",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/ab005bbe-ec76-41d8-b18f-fc94e4f856c4-49815.png",
+              "ratingSummary": {
+                "lifetimeRating": 9.3,
+                "ratingQuantity": 529
+              },
+              "merchantLabels": null,
+              "urlPostfix": "vip-trend"
+            },
+            "prices": [
+              {
+                "formattedPrice": "1.949,00",
+                "value": 1949,
+                "currency": 0,
+                "discountRate": 0
+              },
+              {
+                "formattedPrice": "1.899,00",
+                "value": 1899,
+                "currency": 0,
+                "discountRate": 3
+              }
+            ],
+            "discountRate": 3,
+            "warehouseId": "BIRINCIL",
+            "quantity": 6,
+            "buyboxOrder": 3,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "ab1b5f7f-a449-4b63-990e-e2c329747dcd",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 3
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": 1,
+            "campaigns": [],
+            "pbs": "5JfekrBtjHJJwLno4kr+WzDbOU0yNfoM/zbAwa8Fi69J+gHEfYp0XyuWufJX390JuQela/56yXWirJYa1FMlSd2IDkEbgd6rfVr0Cc2CtFhyphZar/ZYbmAxoj/hiomlRMrlQfxzB2ca3rPWylOj1xqkQYYPlLuKSpk0fhi5QzdvH+nkrHqO+ya44RSSaHDHevz5XVL2wiwCyB4uTM3dYVPvDvIFsuBtCa4LY247oos+FZU3uo0VHKhMyeVomne62wPC7FOC+ueMT5SWoEj47WK0E8PvdsGpSHaxC30cYqPRaPfPTvV6oidNivvRJSYDf5Qqp65E7y9hH6R8V2r2vmLnrFe8ggqm/li+c9ybp/Q="
+          },
+          {
+            "merchantId": "cf5257c9-8be7-4482-8bfb-cdd8510c9477",
+            "listingId": "1e424154-5fb2-40f6-aa1e-f98ae1926657",
+            "merchantName": "GÜMENEZ",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 0,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 2199,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 2299,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 2249,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 1832.5,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/cf5257c9-8be7-4482-8bfb-cdd8510c9477-03018.png",
+            "ratingSummary": {
+              "lifetimeRating": 9.7,
+              "ratingQuantity": 5
+            },
+            "merchantCity": "KOCAELİ",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "cf5257c9-8be7-4482-8bfb-cdd8510c9477",
+              "name": "GÜMENEZ",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/cf5257c9-8be7-4482-8bfb-cdd8510c9477-03018.png",
+              "ratingSummary": {
+                "lifetimeRating": 9.7,
+                "ratingQuantity": 5
+              },
+              "merchantLabels": null,
+              "urlPostfix": "gumenez"
+            },
+            "prices": [
+              {
+                "formattedPrice": "2.249,00",
+                "value": 2249,
+                "currency": 0,
+                "discountRate": 0
+              },
+              {
+                "formattedPrice": "2.199,00",
+                "value": 2199,
+                "currency": 0,
+                "discountRate": 2
+              }
+            ],
+            "discountRate": 2,
+            "warehouseId": "BIRINCIL",
+            "quantity": 5,
+            "buyboxOrder": 4,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "ddf690d8-be91-4619-a885-f249f33b9860",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 4
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": 2,
+            "campaigns": [],
+            "pbs": "brzFXa5zDWdHLYHxEwaEJ7gqa9QbiJty7ZeC0OTyH29yFFkNn07K1BU94tOJER99QpgXK07jw9lswg2Q0HrWskRxgen48i8OEGTThtiEjDVFKzYXUMV+kH7yUf3WKrLc0JFvOmz6j4C6L0BlaqcyN3fQhEbT6UW2ZTm9ADdLZca+pBO9yJqCBlhUM29yXGqsd+mS4S9jE3oumdfriv4vWZ9VwiXWvVHez6Q8aMp1p4E147GS/puHk4JuBE6tKkuJumQindNl1dlVz2wFDcPTMo1yHBZOKa24Yp4hMe8HYxUaJgI8kbp6HvMg32jGC23tbKlg1ofDW3t9WOXlSutCWbcAHIukItV+yvXjh2y5hJI="
+          },
+          {
+            "merchantId": "b38d2d14-6ccf-4fc8-a543-c85dfab931f3",
+            "listingId": "58e6a192-8971-46ea-a009-fe6c7e35943e",
+            "merchantName": "Nethouse",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 0,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 2199,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 2299,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 2249,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 1832.5,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/b38d2d14-6ccf-4fc8-a543-c85dfab931f3-67626.png",
+            "ratingSummary": {
+              "lifetimeRating": 9.5,
+              "ratingQuantity": 988
+            },
+            "merchantCity": "İSTANBUL",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "b38d2d14-6ccf-4fc8-a543-c85dfab931f3",
+              "name": "Nethouse",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/b38d2d14-6ccf-4fc8-a543-c85dfab931f3-67626.png",
+              "ratingSummary": {
+                "lifetimeRating": 9.5,
+                "ratingQuantity": 988
+              },
+              "merchantLabels": null,
+              "urlPostfix": "nethouse"
+            },
+            "prices": [
+              {
+                "formattedPrice": "2.249,00",
+                "value": 2249,
+                "currency": 0,
+                "discountRate": 0
+              },
+              {
+                "formattedPrice": "2.199,00",
+                "value": 2199,
+                "currency": 0,
+                "discountRate": 2
+              }
+            ],
+            "discountRate": 2,
+            "warehouseId": "BIRINCIL",
+            "quantity": 191,
+            "buyboxOrder": 5,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "27ff87bc-3cdf-4258-96f0-5e0a28d8ad15",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 5
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": 1,
+            "campaigns": [],
+            "pbs": "brzFXa5zDWdHLYHxEwaEJ7gqa9QbiJty7ZeC0OTyH29yFFkNn07K1BU94tOJER99QpgXK07jw9lswg2Q0HrWskRxgen48i8OEGTThtiEjDVFKzYXUMV+kH7yUf3WKrLc0JFvOmz6j4C6L0BlaqcyN3fQhEbT6UW2ZTm9ADdLZca+pBO9yJqCBlhUM29yXGqsd+mS4S9jE3oumdfriv4vWZ9VwiXWvVHez6Q8aMp1p4E147GS/puHk4JuBE6tKkuJumQindNl1dlVz2wFDcPTMo1yHBZOKa24Yp4hMe8HYxUaJgI8kbp6HvMg32jGC23tbKlg1ofDW3t9WOXlSutCWbcAHIukItV+yvXjh2y5hJI="
+          },
+          {
+            "merchantId": "e3a0700a-c128-4234-af5b-16c518474034",
+            "listingId": "c173cb74-7744-4572-9278-823f8136e513",
+            "merchantName": "MİX TEKNOLOJİ",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 0,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 2385,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 2485,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 2435,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 1987.5,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "",
+            "ratingSummary": {
+              "lifetimeRating": 9.4,
+              "ratingQuantity": 43
+            },
+            "merchantCity": "İSTANBUL",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "e3a0700a-c128-4234-af5b-16c518474034",
+              "name": "MİX TEKNOLOJİ",
+              "logo": "",
+              "ratingSummary": {
+                "lifetimeRating": 9.4,
+                "ratingQuantity": 43
+              },
+              "merchantLabels": null,
+              "urlPostfix": "mix-teknoloji"
+            },
+            "prices": [
+              {
+                "formattedPrice": "2.435,00",
+                "value": 2435,
+                "currency": 0,
+                "discountRate": 0
+              },
+              {
+                "formattedPrice": "2.385,00",
+                "value": 2385,
+                "currency": 0,
+                "discountRate": 2
+              }
+            ],
+            "discountRate": 2,
+            "warehouseId": "BIRINCIL",
+            "quantity": 2,
+            "buyboxOrder": 6,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "d05f9e15-f6dc-452d-85e2-2e4d1a302204",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 6
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": 1,
+            "campaigns": [],
+            "pbs": "brzFXa5zDWdHLYHxEwaEJ7gqa9QbiJty7ZeC0OTyH29yFFkNn07K1BU94tOJER99QpgXK07jw9lswg2Q0HrWskRxgen48i8OEGTThtiEjDVFKzYXUMV+kH7yUf3WKrLc0JFvOmz6j4C6L0BlaqcyN3fQhEbT6UW2ZTm9ADdLZca+pBO9yJqCBlhUM29yXGqsd+mS4S9jE3oumdfriv4vWZ9VwiXWvVHez6Q8aMp1p4E147GS/puHk4JuBE6tKkuJumQindNl1dlVz2wFDcPTMo1yHBZOKa24Yp4hMe8HYxUaJgI8kbp6HvMg32jGC23tbKlg1ofDW3t9WOXlSutCWbcAHIukItV+yvXjh2y5hJI="
+          },
+          {
+            "merchantId": "9d50e2f6-2e6c-4681-a32a-71c29eb0d8a2",
+            "listingId": "24bcf516-0d0f-4b2a-a971-75c725ed3f70",
+            "merchantName": "Umay iletişim",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 0,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,77797351-50-tl-ye-10-tl-indirim,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 2399,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 2499,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 2449,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 1999.17,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/9d50e2f6-2e6c-4681-a32a-71c29eb0d8a2-54322.png",
+            "ratingSummary": {
+              "lifetimeRating": 10,
+              "ratingQuantity": 39
+            },
+            "merchantCity": "İSTANBUL",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "9d50e2f6-2e6c-4681-a32a-71c29eb0d8a2",
+              "name": "Umay iletişim",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/9d50e2f6-2e6c-4681-a32a-71c29eb0d8a2-54322.png",
+              "ratingSummary": {
+                "lifetimeRating": 10,
+                "ratingQuantity": 39
+              },
+              "merchantLabels": null,
+              "urlPostfix": "umay-iletisim"
+            },
+            "prices": [
+              {
+                "formattedPrice": "2.449,00",
+                "value": 2449,
+                "currency": 0,
+                "discountRate": 0
+              },
+              {
+                "formattedPrice": "2.399,00",
+                "value": 2399,
+                "currency": 0,
+                "discountRate": 2
+              }
+            ],
+            "discountRate": 2,
+            "warehouseId": "BIRINCIL",
+            "quantity": 1,
+            "buyboxOrder": 7,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "77797351-50-tl-ye-10-tl-indirim"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "6ded4aaa-d5e7-11ec-b48c-c2861f36a8bf",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 7
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": 1,
+            "campaigns": [],
+            "pbs": "brzFXa5zDWdHLYHxEwaEJ7gqa9QbiJty7ZeC0OTyH29yFFkNn07K1BU94tOJER99QpgXK07jw9lswg2Q0HrWskRxgen48i8OEGTThtiEjDVFKzYXUMV+kH7yUf3WKrLc0JFvOmz6j4C6L0BlaqcyN3fQhEbT6UW2ZTm9ADdLZca+pBO9yJqCBlhUM29yXGqsd+mS4S9jE3oumdfriv4vWZ9VwiXWvVHez6Q8aMp1p4E147GS/puHk4JuBE6tKkuJumQindNl1dlVz2wFDcPTMo1yHBZOKa24Yp4hMe8HYxUaJgI8kbp6HvMg32jGC23tbKlg1ofDW3t9WOXlSutCWbcAHIukItV+yvXjh2y5hJI="
+          },
+          {
+            "merchantId": "f51812b9-8bca-4efa-91c6-8c3c1203463c",
+            "listingId": "1c73d08d-e201-47f5-a6e2-e54a72683b9f",
+            "merchantName": "DEPO SS TEKNOLOJİ",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 0,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 2399,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 2499,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 2449,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 1999.17,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/f51812b9-8bca-4efa-91c6-8c3c1203463c-32034.png",
+            "ratingSummary": {
+              "lifetimeRating": 9.7,
+              "ratingQuantity": 11
+            },
+            "merchantCity": "SAMSUN",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "f51812b9-8bca-4efa-91c6-8c3c1203463c",
+              "name": "DEPO SS TEKNOLOJİ",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/f51812b9-8bca-4efa-91c6-8c3c1203463c-32034.png",
+              "ratingSummary": {
+                "lifetimeRating": 9.7,
+                "ratingQuantity": 11
+              },
+              "merchantLabels": null,
+              "urlPostfix": "depo-ss-teknoloji"
+            },
+            "prices": [
+              {
+                "formattedPrice": "2.449,00",
+                "value": 2449,
+                "currency": 0,
+                "discountRate": 0
+              },
+              {
+                "formattedPrice": "2.399,00",
+                "value": 2399,
+                "currency": 0,
+                "discountRate": 2
+              }
+            ],
+            "discountRate": 2,
+            "warehouseId": "BIRINCIL",
+            "quantity": 2,
+            "buyboxOrder": 8,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "e4ff7f16-47d0-11ed-a5ec-8add1cda2c8d",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 8
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": null,
+            "campaigns": [],
+            "pbs": "brzFXa5zDWdHLYHxEwaEJ7gqa9QbiJty7ZeC0OTyH29yFFkNn07K1BU94tOJER99QpgXK07jw9lswg2Q0HrWskRxgen48i8OEGTThtiEjDVFKzYXUMV+kH7yUf3WKrLc0JFvOmz6j4C6L0BlaqcyN3fQhEbT6UW2ZTm9ADdLZca+pBO9yJqCBlhUM29yXGqsd+mS4S9jE3oumdfriv4vWZ9VwiXWvVHez6Q8aMp1p4E147GS/puHk4JuBE6tKkuJumQindNl1dlVz2wFDcPTMo1yHBZOKa24Yp4hMe8HYxUaJgI8kbp6HvMg32jGC23tbKlg1ofDW3t9WOXlSutCWbcAHIukItV+yvXjh2y5hJI="
+          },
+          {
+            "merchantId": "ecf7fa38-ba8f-40de-9dd8-4c22bb45d928",
+            "listingId": "9d3cefcc-8990-4331-9ad4-f01bb7dc439a",
+            "merchantName": "SEYİDOĞLU TEKNOLOJİ",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 0,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 2400,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 2500,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 2450,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 2000,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "",
+            "ratingSummary": {
+              "lifetimeRating": 9.4,
+              "ratingQuantity": 1
+            },
+            "merchantCity": "SİİRT",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "ecf7fa38-ba8f-40de-9dd8-4c22bb45d928",
+              "name": "SEYİDOĞLU TEKNOLOJİ",
+              "logo": "",
+              "ratingSummary": {
+                "lifetimeRating": 9.4,
+                "ratingQuantity": 1
+              },
+              "merchantLabels": null,
+              "urlPostfix": "seyidoglu-teknoloji"
+            },
+            "prices": [
+              {
+                "formattedPrice": "2.450,00",
+                "value": 2450,
+                "currency": 0,
+                "discountRate": 0
+              },
+              {
+                "formattedPrice": "2.400,00",
+                "value": 2400,
+                "currency": 0,
+                "discountRate": 2
+              }
+            ],
+            "discountRate": 2,
+            "warehouseId": "BIRINCIL",
+            "quantity": 3,
+            "buyboxOrder": 9,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "ce3274a0-626f-11ec-98ba-025041000001",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 9
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": null,
+            "campaigns": [],
+            "pbs": "brzFXa5zDWdHLYHxEwaEJ7gqa9QbiJty7ZeC0OTyH29yFFkNn07K1BU94tOJER99QpgXK07jw9lswg2Q0HrWskRxgen48i8OEGTThtiEjDVFKzYXUMV+kH7yUf3WKrLc0JFvOmz6j4C6L0BlaqcyN3fQhEbT6UW2ZTm9ADdLZca+pBO9yJqCBlhUM29yXGqsd+mS4S9jE3oumdfriv4vWZ9VwiXWvVHez6Q8aMp1p4E147GS/puHk4JuBE6tKkuJumQindNl1dlVz2wFDcPTMo1yHBZOKa24Yp4hMe8HYxUaJgI8kbp6HvMg32jGC23tbKlg1ofDW3t9WOXlSutCWbcAHIukItV+yvXjh2y5hJI="
+          },
+          {
+            "merchantId": "a28a0a2f-cfbc-452b-899d-b0f8a6bd5cfa",
+            "listingId": "ccfdcd1f-cab6-40ff-a9f3-14d64eae61e7",
+            "merchantName": "TURAN COMPUTER",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 0,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 2499,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 2599,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 2549,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 2082.5,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/a28a0a2f-cfbc-452b-899d-b0f8a6bd5cfa-55292.png",
+            "ratingSummary": {
+              "lifetimeRating": 9.7,
+              "ratingQuantity": 36
+            },
+            "merchantCity": "ISPARTA",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "a28a0a2f-cfbc-452b-899d-b0f8a6bd5cfa",
+              "name": "TURAN COMPUTER",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/a28a0a2f-cfbc-452b-899d-b0f8a6bd5cfa-55292.png",
+              "ratingSummary": {
+                "lifetimeRating": 9.7,
+                "ratingQuantity": 36
+              },
+              "merchantLabels": null,
+              "urlPostfix": "turan-computer"
+            },
+            "prices": [
+              {
+                "formattedPrice": "2.549,00",
+                "value": 2549,
+                "currency": 0,
+                "discountRate": 0
+              },
+              {
+                "formattedPrice": "2.499,00",
+                "value": 2499,
+                "currency": 0,
+                "discountRate": 2
+              }
+            ],
+            "discountRate": 2,
+            "warehouseId": "BIRINCIL",
+            "quantity": 5,
+            "buyboxOrder": 10,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "4537c6aa-6c07-40ab-a9e0-b8e762079827",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 10
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": null,
+            "campaigns": [],
+            "pbs": "brzFXa5zDWdHLYHxEwaEJ7gqa9QbiJty7ZeC0OTyH29yFFkNn07K1BU94tOJER99QpgXK07jw9lswg2Q0HrWskRxgen48i8OEGTThtiEjDVFKzYXUMV+kH7yUf3WKrLc0JFvOmz6j4C6L0BlaqcyN3fQhEbT6UW2ZTm9ADdLZca+pBO9yJqCBlhUM29yXGqsd+mS4S9jE3oumdfriv4vWZ9VwiXWvVHez6Q8aMp1p4E147GS/puHk4JuBE6tKkuJumQindNl1dlVz2wFDcPTMo1yHBZOKa24Yp4hMe8HYxUaJgI8kbp6HvMg32jGC23tbKlg1ofDW3t9WOXlSutCWbcAHIukItV+yvXjh2y5hJI="
+          },
+          {
+            "merchantId": "2a4b30e5-6432-4423-8c0c-9323d6fabce9",
+            "listingId": "44dad360-b540-497f-92da-de73d3e71226",
+            "merchantName": "Luxury Audio",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 2,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 2490,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 2590,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 2161,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 2075,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/2a4b30e5-6432-4423-8c0c-9323d6fabce9-47750.png",
+            "ratingSummary": {
+              "lifetimeRating": 9.4,
+              "ratingQuantity": 67
+            },
+            "merchantCity": "İSTANBUL",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": [
+              {
+                "labelName": "Yetkili Satıcı",
+                "logoUrl": "https://images.hepsiburada.net/mp/fe/assets/icons/tick-blue.svg",
+                "priority": 2
+              }
+            ],
+            "merchantInfo": {
+              "id": "2a4b30e5-6432-4423-8c0c-9323d6fabce9",
+              "name": "Luxury Audio",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/2a4b30e5-6432-4423-8c0c-9323d6fabce9-47750.png",
+              "ratingSummary": {
+                "lifetimeRating": 9.4,
+                "ratingQuantity": 67
+              },
+              "merchantLabels": [
+                {
+                  "labelName": "Yetkili Satıcı",
+                  "logoUrl": "https://images.hepsiburada.net/mp/fe/assets/icons/tick-blue.svg",
+                  "priority": 2
+                }
+              ],
+              "urlPostfix": "luxury-audio"
+            },
+            "prices": [
+              {
+                "formattedPrice": "2.490,00",
+                "value": 2490,
+                "currency": 0,
+                "discountRate": 0
+              }
+            ],
+            "discountRate": 0,
+            "warehouseId": "BIRINCIL",
+            "quantity": 10,
+            "buyboxOrder": 11,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "990dbb85-626b-11ec-98ba-025041000001",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 11
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": 1,
+            "campaigns": [],
+            "pbs": "5JfekrBtjHJJwLno4kr+WzDbOU0yNfoM/zbAwa8Fi69J+gHEfYp0XyuWufJX390JuQela/56yXWirJYa1FMlSd2IDkEbgd6rfVr0Cc2CtFhyphZar/ZYbmAxoj/hiomlRMrlQfxzB2ca3rPWylOj1xqkQYYPlLuKSpk0fhi5QzdvH+nkrHqO+ya44RSSaHDHevz5XVL2wiwCyB4uTM3dYVPvDvIFsuBtCa4LY247oos+FZU3uo0VHKhMyeVomne62wPC7FOC+ueMT5SWoEj47WK0E8PvdsGpSHaxC30cYqPRaPfPTvV6oidNivvRJSYDf5Qqp65E7y9hH6R8V2r2vmLnrFe8ggqm/li+c9ybp/Q="
+          },
+          {
+            "merchantId": "b6a749db-7ce2-401d-820f-79864a6a5bc4",
+            "listingId": "e3f4845a-b4eb-472c-8301-8f9e9b23f102",
+            "merchantName": "Ida Store",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 0,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,67915356-50-tl-ye-10-tl-indirim,kredi-karti-3-taksit-2-tag",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 2699,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 2699,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 2699,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 2249.17,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/b6a749db-7ce2-401d-820f-79864a6a5bc4-48676.png",
+            "ratingSummary": {
+              "lifetimeRating": 9.6,
+              "ratingQuantity": 4
+            },
+            "merchantCity": "ANKARA",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "b6a749db-7ce2-401d-820f-79864a6a5bc4",
+              "name": "Ida Store",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/b6a749db-7ce2-401d-820f-79864a6a5bc4-48676.png",
+              "ratingSummary": {
+                "lifetimeRating": 9.6,
+                "ratingQuantity": 4
+              },
+              "merchantLabels": null,
+              "urlPostfix": "ida-store"
+            },
+            "prices": [
+              {
+                "formattedPrice": "2.699,00",
+                "value": 2699,
+                "currency": 0,
+                "discountRate": 0
+              }
+            ],
+            "discountRate": 0,
+            "warehouseId": "BIRINCIL",
+            "quantity": 1,
+            "buyboxOrder": 12,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "67915356-50-tl-ye-10-tl-indirim"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "59de85ad-b955-400f-b3f8-9a959f11425e",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 12
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": true,
+            "aiBasedShipmentDay": null,
+            "campaigns": [],
+            "pbs": "brzFXa5zDWdHLYHxEwaEJ7gqa9QbiJty7ZeC0OTyH29yFFkNn07K1BU94tOJER99QpgXK07jw9lswg2Q0HrWskRxgen48i8OEGTThtiEjDVFKzYXUMV+kH7yUf3WKrLc0JFvOmz6j4C6L0BlaqcyN3fQhEbT6UW2ZTm9ADdLZca+pBO9yJqCBlhUM29yXGqsd+mS4S9jE3oumdfriv4vWZ9VwiXWvVHez6Q8aMp1p4E147GS/puHk4JuBE6tKkuJumQindNl1dlVz2wFDcPTMo1yHBZOKa24Yp4hMe8HYxUaJgI8kbp6HvMg32jGC23tbKlg1ofDW3t9WOXlSutCWbcAHIukItV+yvXjh2y5hJI="
+          },
+          {
+            "merchantId": "a8ce91cc-4d01-495a-bd1c-d303e9632063",
+            "listingId": "0f9062f2-e8e1-4dab-a337-a88fbe7b9013",
+            "merchantName": "EFE TELEKOM",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 0,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-2-tag,nivea-deneme",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 2899,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 2999,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 2949,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 2415.83,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/a8ce91cc-4d01-495a-bd1c-d303e9632063-21015.png",
+            "ratingSummary": {
+              "lifetimeRating": 9.8,
+              "ratingQuantity": 16
+            },
+            "merchantCity": "KONYA",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "a8ce91cc-4d01-495a-bd1c-d303e9632063",
+              "name": "EFE TELEKOM",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/a8ce91cc-4d01-495a-bd1c-d303e9632063-21015.png",
+              "ratingSummary": {
+                "lifetimeRating": 9.8,
+                "ratingQuantity": 16
+              },
+              "merchantLabels": null,
+              "urlPostfix": "efe-telekom"
+            },
+            "prices": [
+              {
+                "formattedPrice": "2.949,00",
+                "value": 2949,
+                "currency": 0,
+                "discountRate": 0
+              },
+              {
+                "formattedPrice": "2.899,00",
+                "value": 2899,
+                "currency": 0,
+                "discountRate": 2
+              }
+            ],
+            "discountRate": 2,
+            "warehouseId": "BIRINCIL",
+            "quantity": 7,
+            "buyboxOrder": 13,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-2-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "ba736f69-58f1-11ec-bd81-025041000001",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 13
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": null,
+            "campaigns": [],
+            "pbs": "brzFXa5zDWdHLYHxEwaEJ7gqa9QbiJty7ZeC0OTyH29yFFkNn07K1BU94tOJER99QpgXK07jw9lswg2Q0HrWskRxgen48i8OEGTThtiEjDVFKzYXUMV+kH7yUf3WKrLc0JFvOmz6j4C6L0BlaqcyN3fQhEbT6UW2ZTm9ADdLZca+pBO9yJqCBlhUM29yXGqsd+mS4S9jE3oumdfriv4vWZ9VwiXWvVHez6Q8aMp1p4E147GS/puHk4JuBE6tKkuJumQindNl1dlVz2wFDcPTMo1yHBZOKa24Yp4hMe8HYxUaJgI8kbp6HvMg32jGC23tbKlg1ofDW3t9WOXlSutCWbcAHIukItV+yvXjh2y5hJI="
+          },
+          {
+            "merchantId": "073a8bd2-be20-413b-94af-8b9c63391aa0",
+            "listingId": "77645195-f17b-4d92-9a51-b663905e0353",
+            "merchantName": "akdoganhediyelikesya",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 1,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar,5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet,78257701-6000-tl-ye-200-tl-indirim,axess-ile-chip-para-kazanma-firsati,giyilebilir-teknoloji-urunleri,kredi-karti-3-taksit-3-tag,nivea-deneme,yapi-kredi-worldcard-alisverislerinde-300-tl-hepsiburada-puan",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 3195,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 3295,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 3245,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 2662.5,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/073a8bd2-be20-413b-94af-8b9c63391aa0-21406.png",
+            "ratingSummary": {
+              "lifetimeRating": 9.6,
+              "ratingQuantity": 14
+            },
+            "merchantCity": "İSTANBUL",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "073a8bd2-be20-413b-94af-8b9c63391aa0",
+              "name": "akdoganhediyelikesya",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/073a8bd2-be20-413b-94af-8b9c63391aa0-21406.png",
+              "ratingSummary": {
+                "lifetimeRating": 9.6,
+                "ratingQuantity": 14
+              },
+              "merchantLabels": null,
+              "urlPostfix": "akdoganhediyelikesya"
+            },
+            "prices": [
+              {
+                "formattedPrice": "3.245,00",
+                "value": 3245,
+                "currency": 0,
+                "discountRate": 0
+              },
+              {
+                "formattedPrice": "3.195,00",
+                "value": 3195,
+                "currency": 0,
+                "discountRate": 2
+              }
+            ],
+            "discountRate": 2,
+            "warehouseId": "BIRINCIL",
+            "quantity": 15,
+            "buyboxOrder": 14,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "5-000-tl-alti-akilli-saatler-ve-bluetooth-kulakliklar"
+              },
+              {
+                "tagId": "5-000-tl-alti-giyilebilir-teknoloji-urunlerini-kesfet"
+              },
+              {
+                "tagId": "78257701-6000-tl-ye-200-tl-indirim"
+              },
+              {
+                "tagId": "axess-ile-chip-para-kazanma-firsati"
+              },
+              {
+                "tagId": "giyilebilir-teknoloji-urunleri"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-3-tag"
+              },
+              {
+                "tagId": "nivea-deneme"
+              },
+              {
+                "tagId": "yapi-kredi-worldcard-alisverislerinde-300-tl-hepsiburada-puan"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "2f1b50b5-626f-11ec-98ba-025041000001",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 14
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": false,
+            "aiBasedShipmentDay": null,
+            "campaigns": [],
+            "pbs": "5JfekrBtjHJJwLno4kr+WzDbOU0yNfoM/zbAwa8Fi69J+gHEfYp0XyuWufJX390JuQela/56yXWirJYa1FMlSd2IDkEbgd6rfVr0Cc2CtFhyphZar/ZYbmAxoj/hiomlRMrlQfxzB2ca3rPWylOj1xqkQYYPlLuKSpk0fhi5QzdvH+nkrHqO+ya44RSSaHDHevz5XVL2wiwCyB4uTM3dYVPvDvIFsuBtCa4LY247oos+FZU3uo0VHKhMyeVomne62wPC7FOC+ueMT5SWoEj47WK0E8PvdsGpSHaxC30cYqPRaPfPTvV6oidNivvRJSYDf5Qqp65E7y9hH6R8V2r2vmLnrFe8ggqm/li+c9ybp/Q="
+          },
+          {
+            "merchantId": "09ec31dc-7935-4427-b8eb-fa25b0a7e17e",
+            "listingId": "29868776-121a-4b96-bb90-fca9e6bea34e",
+            "merchantName": "Mobilpasaj",
+            "freeShipping": false,
+            "fastShipping": false,
+            "availableWarehouses": [],
+            "campaignIds": [],
+            "isBundle": false,
+            "shipmentDay": 0,
+            "shipmentType": "businessDays",
+            "isSalable": true,
+            "womanEntrepreneur": false,
+            "paymentTag": "br-all-products,comparison-sites-hero-category,hepsifinans-limiti-ile-alabilecegin-urunler,pft-3-tagi-3,axess-ile-chip-para-kazanma-firsati,kredi-karti-3-taksit-3-tag,yapi-kredi-worldcard-alisverislerinde-300-tl-hepsiburada-puan",
+            "campaignText": null,
+            "consumerFinanceTagList": "",
+            "price": {
+              "value": 3250,
+              "currency": 0
+            },
+            "originalPrice": {
+              "value": 3250,
+              "currency": 0
+            },
+            "minimumPrice": {
+              "value": 1975,
+              "currency": 0
+            },
+            "vatExcludedPrice": {
+              "value": 2708.33,
+              "currency": 0
+            },
+            "unitPrice": null,
+            "logo": "https://images.hepsiburada.net/assets/marketplace/09ec31dc-7935-4427-b8eb-fa25b0a7e17e-78924.png",
+            "ratingSummary": {
+              "lifetimeRating": 9.6,
+              "ratingQuantity": 6
+            },
+            "merchantCity": "İSTANBUL",
+            "merchantCountry": "TÜRKİYE",
+            "merchantLabels": null,
+            "merchantInfo": {
+              "id": "09ec31dc-7935-4427-b8eb-fa25b0a7e17e",
+              "name": "Mobilpasaj",
+              "logo": "https://images.hepsiburada.net/assets/marketplace/09ec31dc-7935-4427-b8eb-fa25b0a7e17e-78924.png",
+              "ratingSummary": {
+                "lifetimeRating": 9.6,
+                "ratingQuantity": 6
+              },
+              "merchantLabels": null,
+              "urlPostfix": "mobilpasaj"
+            },
+            "prices": [
+              {
+                "formattedPrice": "3.250,00",
+                "value": 3250,
+                "currency": 0,
+                "discountRate": 0
+              }
+            ],
+            "discountRate": 0,
+            "warehouseId": "BIRINCIL",
+            "quantity": 5,
+            "buyboxOrder": 15,
+            "tagList": [
+              {
+                "tagId": "br-all-products"
+              },
+              {
+                "tagId": "comparison-sites-hero-category"
+              },
+              {
+                "tagId": "hepsifinans-limiti-ile-alabilecegin-urunler"
+              },
+              {
+                "tagId": "pft-3-tagi-3"
+              },
+              {
+                "tagId": "axess-ile-chip-para-kazanma-firsati"
+              },
+              {
+                "tagId": "kredi-karti-3-taksit-3-tag"
+              },
+              {
+                "tagId": "yapi-kredi-worldcard-alisverislerinde-300-tl-hepsiburada-puan"
+              }
+            ],
+            "jetDeliveryCities": [],
+            "isFulfilledByHB": false,
+            "shippingProfileId": "7f5aada2-fd58-44dc-b21c-4b34d7e24419",
+            "inStockDate": null,
+            "minimumPurchasableQuantity": 0,
+            "buyboxAlternatives": [
+              {
+                "algorithmName": "mdc_model_v2",
+                "buyboxOrder": 15
+              }
+            ],
+            "customizationConfiguration": [],
+            "isCampaignParticipationClosed": true,
+            "aiBasedShipmentDay": null,
+            "campaigns": [],
+            "pbs": "brzFXa5zDWdHLYHxEwaEJ7gqa9QbiJty7ZeC0OTyH29yFFkNn07K1BU94tOJER99QpgXK07jw9lswg2Q0HrWskRxgen48i8OEGTThtiEjDVFKzYXUMV+kH7yUf3WKrLc0JFvOmz6j4C6L0BlaqcyN3fQhEbT6UW2ZTm9ADdLZca+pBO9yJqCBlhUM29yXGqsd+mS4S9jE3oumdfriv4vWZ9VwiXWvVHez6Q8aMp1p4E147GS/puHk4JuBE6tKkuJumQindNl1dlVz2wFDcPTMo1yHBZOKa24Yp4hMe8HYxUaJgI8kbp6HvMg32jGC23tbKlg1ofDW3t9WOXlSutCWbcAHIukItV+yvXjh2y5hJI="
+          }
+        ]
+      },
+      "redirection": {
+        "url": null,
+        "type": null,
+        "message": null
+      }
+    }
+  },
+  {
+    "url": "https://www.hepsiburada.com/api/v1/paymentOptions",
+    "status": 200,
+    "data": {
+      "statusCode": 200,
+      "data": {
+        "messages": null,
+        "result": {
+          "product": {
+            "paymentOptions": [
+              {
+                "id": "kredi-karti-3-taksit-2-tag",
+                "paymentType": 3,
+                "text": "Peşin fiyatına 3 x 596 TL",
+                "iconUrl": "https://images.hepsiburada.net/banners/s/1/48-48/credit-card133431466270120534133923018664783820133947245159249541.webp",
+                "bgColor": "#FAF7FD",
+                "textColor": "#7723DB",
+                "title": "Kredi Kartı ile",
+                "isCashPrice": true,
+                "installmentCount": 3,
+                "textHtml": "<div style=\"display:inline-flex;align-items:center;font-size:12px;color:#7723DB;\">Peşin fiyatına 3 x<span style=\"background:#6b00d7;color:#fff;font-weight:bold;padding:2px 4px;border-radius:4px;margin-left:4px;\">596 TL</span></div>",
+                "textMobileOneLine": [
+                  [
+                    {
+                      "text": "<span style=\"font-weight:semibold;font-size:11px;color:#7723DB;\">Peşin fiyatına</span>",
+                      "backgroundColor": "#FFFFFF",
+                      "canShrink": true,
+                      "hasTagStyle": false
+                    },
+                    {
+                      "text": "<span style=\"font-weight:semibold;font-size:11px;color:#7723DB;\">3 x</span>",
+                      "backgroundColor": "#FFFFFF",
+                      "canShrink": false,
+                      "hasTagStyle": false
+                    },
+                    {
+                      "text": "<span style=\"font-weight:bold;font-size:10px;color:#FFFFFF;\">596 TL</span>",
+                      "backgroundColor": "#7723DB",
+                      "canShrink": false,
+                      "hasTagStyle": true
+                    }
+                  ]
+                ],
+                "textMobileMultiLine": [
+                  [
+                    {
+                      "text": "<span style=\"font-weight:semibold;font-size:11px;color:#7723DB;\">Peşin fiyatına</span>",
+                      "backgroundColor": "#FFFFFF",
+                      "canShrink": true,
+                      "hasTagStyle": false
+                    }
+                  ],
+                  [
+                    {
+                      "text": "<span style=\"font-weight:semibold;font-size:11px;color:#7723DB;\">3 x</span>",
+                      "backgroundColor": "#FFFFFF",
+                      "canShrink": true,
+                      "hasTagStyle": false
+                    },
+                    {
+                      "text": "<span style=\"font-weight:bold;font-size:10px;color:#FFFFFF;\">596 TL</span>",
+                      "backgroundColor": "#7723DB",
+                      "canShrink": false,
+                      "hasTagStyle": true
+                    }
+                  ]
+                ]
+              },
+              {
+                "paymentType": 4,
+                "text": "Kartsız taksitle al",
+                "iconUrl": "https://images.hepsiburada.net/banners/s/1/102-102/frame_480958487_(1)133978133130451497.png",
+                "title": "Hepsifinans",
+                "isCashPrice": false
+              },
+              {
+                "paymentType": 2,
+                "text": "Kartsız {0} taksit",
+                "iconUrl": "https://images.hepsiburada.net/banners/s/1/102-102/Frame_480958487133964450652144409.png",
+                "title": "Alışveriş Kredisi",
+                "isCashPrice": false
+              },
+              {
+                "paymentType": 1,
+                "isCashPrice": false
+              }
+            ],
+            "cardPrograms": "Hepsiburada Premium Worldcard,World,KuveytTürk,Axess,Paraf,Qnb Kredi Kartı,Advantage,Bonus",
+            "prioritizedEcomCardProgramNames": null
+          }
+        }
+      },
+      "redirection": {
+        "url": null,
+        "type": null,
+        "message": null
+      }
+    }
+  },
+  {
+    "url": "https://shipping-external.hepsiburada.com/duedateapi/querymodel/withtext/v2",
+    "status": 200,
+    "data": [
+      {
+        "dtDueDate": "2026-06-02T20:59:00.000Z",
+        "dtCurrentDate": "2026-06-01T11:35:55.462Z",
+        "dueDate": "/Date(1780433940000+0300)/",
+        "dueDateFormatted": "02.06.2026",
+        "dueText": "Tahmini 2 Haziran Salı günü kargoda",
+        "cutOffTime": 23,
+        "cutOffHour": 23,
+        "cutOffMinute": 59,
+        "checkoutDueText": "Tahmini 2 Haziran Salı Günü Kargoda",
+        "checkoutDueText2": "Tahmini 2 Haziran Salı",
+        "shipmentTimeText": "Tahmini <b>2 Haziran Salı</b> günü kargoda",
+        "shipmentTimeMobileText": "",
+        "shipmentTimeAsDays": 1,
+        "warehouseId": "Guncel",
+        "merchantId": "47622c66-257d-4e08-87ac-602fb83efd77",
+        "listingId": "32c20978-9f4e-44f3-ac22-02bc8dea1121",
+        "isBuyBoxWinner": false,
+        "currentDate": "/Date(1780313755462+0300)/",
+        "isFasterMerchant": true,
+        "isJetDelivery": false,
+        "isNextDayDelivery": false,
+        "sku": "HBCV00004D5VKJ",
+        "cargoFirmId": 89100,
+        "checkoutOptionType": "StandardDelivery",
+        "basketDeliveryIcon": "https://images.hepsiburada.net/shipping/assets/StandartDeliveryNew@2x.png",
+        "basketDeliveryText": "Yarın kargoda",
+        "deliveryOptions": [
+          {
+            "optionName": "Yarın kargoda",
+            "rawOptionName": "Yarın kargoda",
+            "text": "Tahmini <b>2 Haziran Salı</b> günü kargoda",
+            "imageUrl": "https://images.hepsiburada.net/shipping/assets/cargo-logo/89100.png",
+            "type": "StandardDelivery",
+            "cargoFirmId": 89100,
+            "infoList": []
+          }
+        ],
+        "deliveryOptionsMobile": [
+          {
+            "optionName": "Standart Teslimat",
+            "rawOptionName": "Standart Teslimat",
+            "text": "Tahmini <b>2 Haziran Salı</b> günü kargoda",
+            "imageUrl": "https://images.hepsiburada.net/shipping/assets/cargo-logo/89100.png",
+            "type": "StandardDelivery",
+            "cargoFirmId": 89100,
+            "infoList": []
+          }
+        ],
+        "deliveryOptionsMobileV2": [
+          {
+            "pageOrder": 1,
+            "optionName": "Standart Teslimat",
+            "rawOptionName": "Standart Teslimat",
+            "text": "<b>Yarın kargoda</b>",
+            "imageUrl": "https://images.hepsiburada.net/shipping/assets/cargo-logo/89100.png",
+            "iconUrl": "https://images.hepsiburada.net/shipping/assets/yarin-kapinda.png",
+            "type": "StandardDelivery",
+            "cargoFirmId": 89100,
+            "infoList": []
+          }
+        ],
+        "additionalFields": "{\"ShipmentDays\":1,\"ShipmentDaysCalculationType\":\"Merchant\",\"EstimatedDeliveryDays\":null,\"EstimatedDeliveryDateCalculationType\":null,\"EstimatedDeliveryDateDistributionEffect\":null,\"IgnoredAIEstimatedShippingDate\":null,\"IgnoredAIEstimatedShippingDayCount\":null,\"IgnoredAIEstimatedShippingReason\":null}"
+      },
+      {
+        "dtDueDate": "2026-06-02T20:59:00.000Z",
+        "dtCurrentDate": "2026-06-01T11:35:55.469Z",
+        "dueDate": "/Date(1780433940000+0300)/",
+        "dueDateFormatted": "02.06.2026",
+        "dueText": "Tahmini 2 Haziran Salı günü kargoda",
+        "cutOffTime": 23,
+        "cutOffHour": 23,
+        "cutOffMinute": 59,
+        "checkoutDueText": "Tahmini 2 Haziran Salı Günü Kargoda",
+        "checkoutDueText2": "Tahmini 2 Haziran Salı",
+        "shipmentTimeText": "Tahmini <b>2 Haziran Salı</b> günü kargoda",
+        "shipmentTimeMobileText": "",
+        "shipmentTimeAsDays": 1,
+        "warehouseId": "BIRINCIL",
+        "merchantId": "ab005bbe-ec76-41d8-b18f-fc94e4f856c4",
+        "listingId": "f31a57a0-a635-48a2-88a6-398757b8f39f",
+        "isBuyBoxWinner": false,
+        "currentDate": "/Date(1780313755469+0300)/",
+        "isFasterMerchant": true,
+        "isJetDelivery": false,
+        "isNextDayDelivery": false,
+        "sku": "HBCV00004D5VKJ",
+        "cargoFirmId": 21,
+        "checkoutOptionType": "StandardDelivery",
+        "basketDeliveryIcon": "https://images.hepsiburada.net/shipping/assets/StandartDeliveryNew@2x.png",
+        "basketDeliveryText": "Yarın kargoda",
+        "deliveryOptions": [
+          {
+            "optionName": "Yarın kargoda",
+            "rawOptionName": "Yarın kargoda",
+            "text": "Tahmini <b>2 Haziran Salı</b> günü kargoda",
+            "imageUrl": "https://images.hepsiburada.net/shipping/assets/cargo-logo/21.png",
+            "type": "StandardDelivery",
+            "cargoFirmId": 21,
+            "infoList": []
+          }
+        ],
+        "deliveryOptionsMobile": [
+          {
+            "optionName": "Standart Teslimat",
+            "rawOptionName": "Standart Teslimat",
+            "text": "Tahmini <b>2 Haziran Salı</b> günü kargoda",
+            "imageUrl": "https://images.hepsiburada.net/shipping/assets/cargo-logo/21.png",
+            "type": "StandardDelivery",
+            "cargoFirmId": 21,
+            "infoList": []
+          }
+        ],
+        "deliveryOptionsMobileV2": [
+          {
+            "pageOrder": 1,
+            "optionName": "Standart Teslimat",
+            "rawOptionName": "Standart Teslimat",
+            "text": "<b>Yarın kargoda</b>",
+            "imageUrl": "https://images.hepsiburada.net/shipping/assets/cargo-logo/21.png",
+            "iconUrl": "https://images.hepsiburada.net/shipping/assets/yarin-kapinda.png",
+            "type": "StandardDelivery",
+            "cargoFirmId": 21,
+            "infoList": []
+          }
+        ],
+        "additionalFields": "{\"ShipmentDays\":1,\"ShipmentDaysCalculationType\":\"Merchant\",\"EstimatedDeliveryDays\":null,\"EstimatedDeliveryDateCalculationType\":null,\"EstimatedDeliveryDateDistributionEffect\":null,\"IgnoredAIEstimatedShippingDate\":null,\"IgnoredAIEstimatedShippingDayCount\":null,\"IgnoredAIEstimatedShippingReason\":null}"
+      },
+      {
+        "dtDueDate": "2026-06-03T20:59:00.000Z",
+        "dtCurrentDate": "2026-06-01T11:35:55.455Z",
+        "dueDate": "/Date(1780520340000+0300)/",
+        "dueDateFormatted": "03.06.2026",
+        "dueText": "Tahmini 3 Haziran Çarşamba günü kargoda",
+        "cutOffTime": 23,
+        "cutOffHour": 23,
+        "cutOffMinute": 59,
+        "checkoutDueText": "Tahmini 3 Haziran Çarşamba Günü Kargoda",
+        "checkoutDueText2": "Tahmini 3 Haziran Çarşamba",
+        "shipmentTimeText": "Tahmini <b>3 Haziran Çarşamba</b> günü kargoda",
+        "shipmentTimeMobileText": "",
+        "shipmentTimeAsDays": 2,
+        "warehouseId": "BIRINCIL",
+        "merchantId": "e82ae592-6ae6-4d89-85f2-f82137421f36",
+        "listingId": "5bc98bb9-1d8a-4241-ae62-9cb67d75b02e",
+        "isBuyBoxWinner": true,
+        "currentDate": "/Date(1780313755455+0300)/",
+        "isFasterMerchant": false,
+        "isJetDelivery": false,
+        "isNextDayDelivery": false,
+        "sku": "HBCV00004D5VKJ",
+        "cargoFirmId": 21,
+        "checkoutOptionType": "StandardDelivery",
+        "basketDeliveryIcon": "https://images.hepsiburada.net/shipping/assets/StandartDeliveryNew@2x.png",
+        "basketDeliveryText": "Tahmini 3 Haziran Çarşamba günü kargoda",
+        "deliveryOptions": [
+          {
+            "optionName": "Standart Teslimat",
+            "rawOptionName": "Standart Teslimat",
+            "text": "Tahmini <b>3 Haziran Çarşamba</b> günü kargoda",
+            "imageUrl": "https://images.hepsiburada.net/shipping/assets/cargo-logo/21.png",
+            "type": "StandardDelivery",
+            "cargoFirmId": 21,
+            "infoList": []
+          }
+        ],
+        "deliveryOptionsMobile": [
+          {
+            "optionName": "Standart Teslimat",
+            "rawOptionName": "Standart Teslimat",
+            "text": "Tahmini <b>3 Haziran Çarşamba</b> günü kargoda",
+            "imageUrl": "https://images.hepsiburada.net/shipping/assets/cargo-logo/21.png",
+            "type": "StandardDelivery",
+            "cargoFirmId": 21,
+            "infoList": []
+          }
+        ],
+        "deliveryOptionsMobileV2": [
+          {
+            "pageOrder": 1,
+            "optionName": "Standart Teslimat",
+            "rawOptionName": "Standart Teslimat",
+            "text": "<b>Tahmini 3 Haziran Çarşamba günü kargoda</b>",
+            "imageUrl": "https://images.hepsiburada.net/shipping/assets/cargo-logo/21.png",
+            "type": "StandardDelivery",
+            "cargoFirmId": 21,
+            "infoList": []
+          }
+        ],
+        "additionalFields": "{\"ShipmentDays\":2,\"ShipmentDaysCalculationType\":\"Merchant\",\"EstimatedDeliveryDays\":null,\"EstimatedDeliveryDateCalculationType\":null,\"EstimatedDeliveryDateDistributionEffect\":null,\"IgnoredAIEstimatedShippingDate\":null,\"IgnoredAIEstimatedShippingDayCount\":null,\"IgnoredAIEstimatedShippingReason\":null}"
+      }
+    ]
+  }
+]
