@@ -29,6 +29,18 @@ class IngestionService:
         self.normalizer = CompetitorNormalizer()
 
     async def run(self, payload: IngestionRunRequest) -> IngestionRunResponse:
+        try:
+            return await asyncio.wait_for(self._run_internal(payload), timeout=180.0)
+        except asyncio.TimeoutError:
+            logger.error(f"Ingestion timeout for product_id={payload.product_id}")
+            return IngestionRunResponse(
+                job_id=payload.product_id,
+                status="FAILED",
+                message="Ingestion operation timed out after 180 seconds",
+                scrape_counts={},
+            )
+
+    async def _run_internal(self, payload: IngestionRunRequest) -> IngestionRunResponse:
         product_id = payload.product_id
         marketplaces = [m.upper() for m in payload.marketplaces]
 
@@ -60,7 +72,9 @@ class IngestionService:
         for marketplace, sp in sp_map.items():
             collector_cls = COLLECTOR_MAP.get(marketplace)
             if collector_cls:
-                tasks[marketplace] = collector_cls().scrape_product_by_url(sp.marketplace_url)
+                tasks[marketplace] = asyncio.wait_for(
+                    collector_cls().scrape_product_by_url(sp.marketplace_url), timeout=60.0
+                )
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         raw_by_marketplace = dict(zip(tasks.keys(), results))

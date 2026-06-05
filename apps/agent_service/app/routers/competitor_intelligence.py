@@ -1,3 +1,6 @@
+import asyncio
+import logging
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -8,6 +11,8 @@ from app.schemas.competitor_intelligence_schema import (
 )
 from app.services.competitor_intelligence_service import CompetitorIntelligenceService
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(
     prefix="/competitor-intelligence",
     tags=["Competitor Intelligence"],
@@ -15,8 +20,29 @@ router = APIRouter(
 
 
 @router.post("/run", response_model=CompetitorIntelligenceRunResponse)
-def run_competitor_intelligence(
+async def run_competitor_intelligence(
     payload: CompetitorIntelligenceRunRequest,
     db: Session = Depends(get_db),
 ):
-    return CompetitorIntelligenceService(db).run(payload)
+    try:
+        result = await asyncio.wait_for(
+            asyncio.to_thread(CompetitorIntelligenceService(db).run, payload),
+            timeout=60.0,
+        )
+        return result
+    except asyncio.TimeoutError:
+        logger.error(f"Competitor intelligence timeout for session_id={payload.session_id}")
+        return CompetitorIntelligenceRunResponse(
+            session_id=payload.session_id,
+            product_id=payload.product_id,
+            total_competitors=0,
+            price_range={"min": None, "max": None, "median": None, "mean": None},
+            buybox_prices={},
+            recommendation={
+                "suggested_price": None,
+                "strategy": "UNKNOWN",
+                "confidence": 0.0,
+                "rationale": "Competitor intelligence timeout after 60 seconds",
+            },
+            competitors=[],
+        )
