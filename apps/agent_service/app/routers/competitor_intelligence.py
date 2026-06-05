@@ -8,7 +8,6 @@ from app.schemas.competitor_intelligence_schema import (
 )
 from app.services.competitor_intelligence_service import CompetitorIntelligenceService
 
-
 router = APIRouter(
     prefix="/competitor-intelligence",
     tags=["Competitor Intelligence"],
