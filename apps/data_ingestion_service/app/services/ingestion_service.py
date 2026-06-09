@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.collectors.amazon_collector import AmazonCollector
 from app.collectors.hepsiburada_collector import HepsiburadaCollector
 from app.collectors.trendyol_collector import TrendyolCollector
+from app.core.circuit_breaker import MarketplaceCircuitBreaker
 from app.normalizers.competitor_normalizer import CompetitorNormalizer
 from app.repositories.competitor_repository import CompetitorRepository
 from app.schemas.ingestion_schema import IngestionRunRequest, IngestionRunResponse
@@ -27,6 +28,17 @@ class IngestionService:
         self.db = db
         self.repo = CompetitorRepository(db)
         self.normalizer = CompetitorNormalizer()
+
+        # Circuit breakers per marketplace
+        self.cb_trendyol = MarketplaceCircuitBreaker("TRENDYOL", failure_threshold=5, reset_timeout=60)
+        self.cb_hepsiburada = MarketplaceCircuitBreaker("HEPSIBURADA", failure_threshold=5, reset_timeout=60)
+        self.cb_amazon = MarketplaceCircuitBreaker("AMAZON", failure_threshold=5, reset_timeout=60)
+
+        self.circuit_breakers = {
+            "TRENDYOL": self.cb_trendyol,
+            "HEPSIBURADA": self.cb_hepsiburada,
+            "AMAZON": self.cb_amazon,
+        }
 
     async def run(self, payload: IngestionRunRequest) -> IngestionRunResponse:
         try:
@@ -69,7 +81,16 @@ class IngestionService:
         self.db.commit()
 
         tasks = {}
+        skipped_marketplaces = {}
         for marketplace, sp in sp_map.items():
+            cb = self.circuit_breakers.get(marketplace)
+
+            # Check circuit breaker availability
+            if cb and not cb.is_available():
+                logger.warning(f"Circuit breaker OPEN for {marketplace}, skipping scrape")
+                skipped_marketplaces[marketplace] = scrape_records[marketplace]
+                continue
+
             collector_cls = COLLECTOR_MAP.get(marketplace)
             if collector_cls:
                 tasks[marketplace] = asyncio.wait_for(
@@ -82,6 +103,15 @@ class IngestionService:
         scrape_counts: dict[str, int] = {}
         success_count = 0
 
+        # Handle skipped marketplaces (circuit breaker OPEN)
+        for marketplace, ms in skipped_marketplaces.items():
+            self.repo.update_marketplace_scrape(
+                scrape_id=ms.id,
+                status="SKIPPED",
+                error_message="Circuit breaker OPEN: marketplace temporarily unavailable",
+            )
+            scrape_counts[marketplace] = 0
+
         for marketplace, raw in raw_by_marketplace.items():
             ms = scrape_records.get(marketplace)
             if ms is None:
@@ -89,6 +119,11 @@ class IngestionService:
 
             if isinstance(raw, Exception):
                 logger.error("Scrape failed for %s: %s", marketplace, raw)
+                # Record failure in circuit breaker
+                cb = self.circuit_breakers.get(marketplace)
+                if cb:
+                    cb.record_failure()
+
                 self.repo.update_marketplace_scrape(
                     scrape_id=ms.id,
                     status="FAILED",
@@ -117,6 +152,11 @@ class IngestionService:
                 scraped_at=scraped_at or datetime.now(timezone.utc),
                 raw_payload=raw,
             )
+
+            # Record success in circuit breaker
+            cb = self.circuit_breakers.get(marketplace)
+            if cb:
+                cb.record_success()
 
             listings, price_histories = self.normalizer.normalize(
                 raw=raw,
