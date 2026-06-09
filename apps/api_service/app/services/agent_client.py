@@ -1,22 +1,14 @@
-from uuid import UUID
-
 import httpx
-
 from app.core.config import settings
+from app.schemas.analysis_schema import RunAnalysisRequest
 
 
 class AgentClient:
-    def __init__(self):
-        self.base_url = settings.agent_service_url
-
-    async def run_intelligence(self, session_id: UUID, product_id: UUID) -> dict:
-        async with httpx.AsyncClient(timeout=60) as client:
+    async def run_analysis(self, payload: RunAnalysisRequest):
+        async with httpx.AsyncClient(timeout=settings.agent_request_timeout_seconds) as client:
             response = await client.post(
-                f"{self.base_url}/competitor-intelligence/run",
-                json={
-                    "session_id": str(session_id),
-                    "product_id": str(product_id),
-                },
+                f"{settings.agent_service_url}/analysis/run",
+                json=payload.model_dump(mode="json"),
             )
             response.raise_for_status()
             return response.json()

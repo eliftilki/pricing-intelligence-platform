@@ -50,6 +50,7 @@ class IngestionService:
             ms = self.repo.create_marketplace_scrape(
                 session_id=session.id,
                 seller_product_id=sp.id,
+                product_id=product_id,
                 marketplace=marketplace,
                 url=sp.marketplace_url,
             )
