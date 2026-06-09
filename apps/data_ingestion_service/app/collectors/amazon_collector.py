@@ -7,9 +7,15 @@ from typing import Any, Dict
 from playwright.async_api import async_playwright
 
 try:
+    from app.core.config import settings
     from app.collectors.base import BaseMarketplaceCollector
 except ImportError:
     from base import BaseMarketplaceCollector
+
+    class _StandaloneSettings:
+        collector_timeout_seconds = 60
+
+    settings = _StandaloneSettings()
 
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -31,7 +37,8 @@ class AmazonCollector(BaseMarketplaceCollector):
             page = await context.new_page()
 
             print(f"[-] Amazon verisi cekiliyor: {url}")
-            await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+            timeout_ms = int(settings.collector_timeout_seconds * 1000)
+            await page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
             await page.wait_for_timeout(4000)
 
             # \\ in Python string → single \ in JavaScript  (e.g. \\d → \d in JS regex)

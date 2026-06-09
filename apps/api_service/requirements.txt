@@ -6,3 +6,6 @@ pydantic
 pydantic-settings
 python-dotenv
 httpx
+supabase
+python-jose[cryptography]
+email-validator

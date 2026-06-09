@@ -10,6 +10,7 @@ class IngestionRunRequest(BaseModel):
 
 
 class ProductCreateRequest(BaseModel):
+    company_id: UUID
     name: str
     brand: Optional[str] = None
     category: Optional[str] = None
