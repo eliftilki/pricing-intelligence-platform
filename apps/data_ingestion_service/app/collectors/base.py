@@ -8,6 +8,12 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
+def _run_in_new_loop(coro):
+    """Coroutine'i yeni bir event loop'ta thread içinde çalıştırır.
+    Playwright, uvicorn'un event loop'uyla çakışır; bu wrapper bunu önler."""
+    return asyncio.run(coro)
+
+
 class BaseMarketplaceCollector(ABC):
     """
     Standart çıktı şeması:
@@ -73,7 +79,9 @@ class BaseMarketplaceCollector(ABC):
 
         for attempt in range(max_retries):
             try:
-                return await coro_func(*args, **kwargs)
+                # Playwright, mevcut bir event loop içinde çalışamaz (Windows/uvicorn uyumsuzluğu).
+                # asyncio.to_thread yeni bir thread + asyncio.run() ile izole bir loop açar.
+                return await asyncio.to_thread(_run_in_new_loop, coro_func(*args, **kwargs))
             except asyncio.TimeoutError as e:
                 last_exception = e
                 if attempt < max_retries - 1:

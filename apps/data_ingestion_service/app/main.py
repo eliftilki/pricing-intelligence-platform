@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.routers.ingestion import router as ingestion_router
+from app.routers.search import router as search_router
 
 
 app = FastAPI(
@@ -35,3 +36,4 @@ def health_check():
 
 
 app.include_router(ingestion_router)
+app.include_router(search_router)
