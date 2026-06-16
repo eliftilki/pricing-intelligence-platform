@@ -59,10 +59,15 @@ class CompetitorNormalizer:
 
             # Platform'un verdiği discount_rate'e güvenmiyoruz.
             # original_price gerçekten price'tan yüksekse kendimiz hesaplıyoruz.
-            if price and original_price and original_price > price:
+            if price is not None and original_price is not None and original_price > price:
                 discount_rate = round((original_price - price) / original_price * 100, 2)
             else:
                 discount_rate = None  # indirim yok veya veri eksik
+            displayed_original_price = (
+                original_price
+                if price is not None and original_price is not None and original_price > price
+                else None
+            )
 
             listing = CompetitorListingCreate(
                 scrape_id=scrape_id,
@@ -74,7 +79,7 @@ class CompetitorNormalizer:
                 seller_city=seller.get("seller_city"),
                 is_authorized=bool(seller.get("is_authorized", False)),
                 price=price,
-                original_price=original_price if (original_price and original_price > price) else None,
+                original_price=displayed_original_price,
                 discount_rate=discount_rate,
                 currency=seller.get("currency") or "TRY",
                 stock=self._to_int(seller.get("stock")),

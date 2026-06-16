@@ -3,8 +3,8 @@ import logging
 from uuid import UUID
 
 import httpx
-
 from app.core.config import settings
+from app.schemas.analysis_schema import RunAnalysisRequest
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 class AgentClient:
     def __init__(self):
         self.base_url = settings.agent_service_url
-        # Timeout: (connect, read, write, pool)
         self.timeout_intelligence = httpx.Timeout(60.0, connect=10.0, read=60.0, write=10.0, pool=10.0)
 
     async def _request_with_retry(
@@ -73,6 +72,15 @@ class AgentClient:
             self.timeout_intelligence,
             max_retries=3,
         )
+
+    async def run_analysis(self, payload: RunAnalysisRequest):
+        async with httpx.AsyncClient(timeout=settings.agent_request_timeout_seconds) as client:
+            response = await client.post(
+                f"{settings.agent_service_url}/analysis/run",
+                json=payload.model_dump(mode="json"),
+            )
+            response.raise_for_status()
+            return response.json()
 
 
 agent_client = AgentClient()

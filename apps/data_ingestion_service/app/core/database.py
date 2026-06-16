@@ -6,9 +6,9 @@ from app.core.config import settings
 
 engine = create_engine(
     settings.database_url,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=10,
+    pool_pre_ping=settings.db_pool_pre_ping,
+    pool_size=settings.db_pool_size,
+    max_overflow=settings.db_max_overflow,
 )
 
 SessionLocal = sessionmaker(
@@ -16,6 +16,13 @@ SessionLocal = sessionmaker(
     autoflush=False,
     bind=engine,
 )
+
+
+def init_db():
+    raise RuntimeError(
+        "Data ingestion service does not manage database schema. "
+        "Create or migrate tables from the owning API/database migration layer."
+    )
 
 
 def get_db():

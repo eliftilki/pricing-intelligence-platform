@@ -2,9 +2,13 @@ import asyncio
 import logging
 
 import httpx
+from fastapi import HTTPException
 
 from app.core.config import settings
-from app.schemas.data_collection_schema import DataCollectionRunRequest
+from app.schemas.data_collection_schema import (
+    DataCollectionProductCreateRequest,
+    DataCollectionRunRequest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +16,6 @@ logger = logging.getLogger(__name__)
 class DataIngestionClient:
     def __init__(self):
         self.base_url = settings.data_ingestion_service_url
-        # Timeout: (connect, read, write, pool)
         self.timeout_run = httpx.Timeout(180.0, connect=10.0, read=180.0, write=10.0, pool=10.0)
         self.timeout_create = httpx.Timeout(30.0, connect=10.0, read=30.0, write=10.0, pool=10.0)
 
@@ -38,6 +41,7 @@ class DataIngestionClient:
                     await asyncio.sleep(wait_time)
                 else:
                     logger.error(f"All {max_retries} retries exhausted for {url}: {type(e).__name__}")
+                    raise HTTPException(status_code=503, detail=f"Data ingestion service timeout: {e}")
             except httpx.HTTPStatusError as e:
                 if e.response.status_code >= 500 and attempt < max_retries - 1:
                     last_exception = e
@@ -48,8 +52,11 @@ class DataIngestionClient:
                     )
                     await asyncio.sleep(wait_time)
                 else:
-                    raise
-            except Exception as e:
+                    raise HTTPException(
+                        status_code=e.response.status_code,
+                        detail=e.response.text,
+                    ) from e
+            except httpx.RequestError as e:
                 last_exception = e
                 if attempt < max_retries - 1:
                     wait_time = 2 ** attempt
@@ -60,6 +67,7 @@ class DataIngestionClient:
                     await asyncio.sleep(wait_time)
                 else:
                     logger.error(f"All {max_retries} retries exhausted: {type(e).__name__}: {e}")
+                    raise HTTPException(status_code=503, detail=f"Data ingestion service is unavailable: {e}")
 
         raise last_exception
 
@@ -72,7 +80,7 @@ class DataIngestionClient:
             max_retries=3,
         )
 
-    async def create_product(self, payload) -> dict:
+    async def create_product(self, payload: DataCollectionProductCreateRequest) -> dict:
         return await self._request_with_retry(
             "POST",
             f"{self.base_url}/ingestion/products",

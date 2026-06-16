@@ -33,6 +33,7 @@ def create_product(payload: ProductCreateRequest, db: Session = Depends(get_db))
     seller_product_ids = {}
     for marketplace, url in payload.marketplace_urls.items():
         sp = repo.create_seller_product(
+            company_id=payload.company_id,
             product_id=product.id,
             marketplace=marketplace.upper(),
             url=url,
