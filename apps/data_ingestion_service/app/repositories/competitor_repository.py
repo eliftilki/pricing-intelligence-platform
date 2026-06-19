@@ -64,6 +64,35 @@ class CompetitorRepository:
         self.db.flush()
         return seller_product
 
+    def get_or_create_seller_product(
+        self,
+        company_id: UUID,
+        product_id: UUID,
+        marketplace: str,
+        url: str,
+    ) -> SellerProduct:
+        marketplace = marketplace.upper()
+        existing = (
+            self.db.query(SellerProduct)
+            .filter(
+                SellerProduct.company_id == company_id,
+                SellerProduct.product_id == product_id,
+                SellerProduct.marketplace == marketplace,
+            )
+            .first()
+        )
+        if existing:
+            if existing.marketplace_url != url:
+                existing.marketplace_url = url
+                self.db.flush()
+            return existing
+        return self.create_seller_product(
+            company_id=company_id,
+            product_id=product_id,
+            marketplace=marketplace,
+            url=url,
+        )
+
     def get_seller_products_for_marketplaces(
         self,
         product_id: UUID,

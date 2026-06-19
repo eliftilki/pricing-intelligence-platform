@@ -61,3 +61,16 @@ class IngestionRunResponse(BaseModel):
     status: str
     message: str
     scrape_counts: dict[str, int] = {}
+
+
+class IngestionRunWithUrlsRequest(BaseModel):
+    product_id: UUID
+    company_id: UUID
+    urls: dict[str, str]  # {"TRENDYOL": "https://...", "HEPSIBURADA": "https://...", "AMAZON": "https://..."}
+
+
+class SearchAndRunRequest(BaseModel):
+    product_id: UUID
+    company_id: UUID
+    query: str
+    marketplaces: List[str] = Field(default_factory=lambda: ["trendyol", "hepsiburada", "amazon"])

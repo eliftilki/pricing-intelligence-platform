@@ -6,6 +6,8 @@ from app.repositories.competitor_repository import CompetitorRepository
 from app.schemas.ingestion_schema import (
     IngestionRunRequest,
     IngestionRunResponse,
+    IngestionRunWithUrlsRequest,
+    SearchAndRunRequest,
     ProductCreateRequest,
     ProductCreateResponse,
 )
@@ -18,6 +20,18 @@ router = APIRouter(prefix="/ingestion", tags=["Ingestion"])
 async def run_ingestion(payload: IngestionRunRequest, db: Session = Depends(get_db)):
     service = IngestionService(db)
     return await service.run(payload)
+
+
+@router.post("/search-and-run", response_model=IngestionRunResponse)
+async def search_and_run(payload: SearchAndRunRequest, db: Session = Depends(get_db)):
+    service = IngestionService(db)
+    return await service.search_and_run(payload)
+
+
+@router.post("/run-with-urls", response_model=IngestionRunResponse)
+async def run_ingestion_with_urls(payload: IngestionRunWithUrlsRequest, db: Session = Depends(get_db)):
+    service = IngestionService(db)
+    return await service.run_with_urls(payload)
 
 
 @router.post("/products", response_model=ProductCreateResponse)
