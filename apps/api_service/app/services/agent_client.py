@@ -4,6 +4,7 @@ from uuid import UUID
 
 import httpx
 from app.core.config import settings
+from app.schemas.analysis_schema import RunAnalysisRequest
 
 logger = logging.getLogger(__name__)
 

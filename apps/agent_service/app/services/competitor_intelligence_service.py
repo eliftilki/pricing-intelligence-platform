@@ -1,108 +1,141 @@
-import statistics
-from typing import Optional
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.intelligence.competitor_scoring import CompetitorScorer
-from app.intelligence.competitor_tiering import CompetitorTierer
-from app.repositories.competitor_intelligence_repository import CompetitorIntelligenceRepository
-from app.schemas.competitor_intelligence_schema import (
-    CompetitorIntelligenceRunRequest,
-    CompetitorIntelligenceRunResponse,
-    PriceRangeSchema,
-    PriceRecommendationSchema,
-    ScoredCompetitorSchema,
-)
+from app.repositories.competitor_repository import CompetitorRepository
+from app.services.competitor_scoring_service import CompetitorScoringService
 
 
 class CompetitorIntelligenceService:
     def __init__(self, db: Session):
-        self.db = db
-        self.repo = CompetitorIntelligenceRepository(db)
-        self.scorer = CompetitorScorer()
-        self.tierer = CompetitorTierer()
+        self.repository = CompetitorRepository(db)
+        self.scoring_service = CompetitorScoringService()
 
-    def run(
-        self, payload: CompetitorIntelligenceRunRequest
-    ) -> CompetitorIntelligenceRunResponse:
-        listings = self.repo.get_listings_by_session(payload.session_id)
-
-        if not listings:
-            return CompetitorIntelligenceRunResponse(
-                session_id=payload.session_id,
-                product_id=payload.product_id,
-                total_competitors=0,
-                price_range=PriceRangeSchema(min=None, max=None, median=None, mean=None),
-                buybox_prices={},
-                recommendation=PriceRecommendationSchema(
-                    suggested_price=None,
-                    strategy="UNKNOWN",
-                    confidence=0.0,
-                    rationale="Bu session icin veri bulunamadi.",
-                ),
-                competitors=[],
-            )
-
-        scored = self.scorer.score_all(listings)
-        tiered = self.tierer.tier_all(scored)
-        recommendation = self.tierer.recommend_price(tiered)
-
-        all_prices = [c.price for c in tiered if c.price is not None and c.is_in_stock]
-        price_range = PriceRangeSchema(
-            min=min(all_prices) if all_prices else None,
-            max=max(all_prices) if all_prices else None,
-            median=round(statistics.median(all_prices), 2) if all_prices else None,
-            mean=round(statistics.mean(all_prices), 2) if all_prices else None,
+    def analyze_product_competitors(self, product_id: UUID, lookback_hours: int = 24) -> dict:
+        agent_run = self.repository.create_agent_run(
+            product_id=product_id,
+            input_payload={"product_id": str(product_id), "lookback_hours": lookback_hours},
         )
 
-        buybox_prices: dict[str, Optional[float]] = {}
-        for competitor in tiered:
-            mp = competitor.marketplace
-            if competitor.is_buybox_winner:
-                buybox_prices[mp] = competitor.price
+        try:
+            listings = self.repository.get_latest_competitor_listings(product_id, lookback_hours)
 
-        competitors_out = [
-            ScoredCompetitorSchema(
-                id=c.id,
-                marketplace=c.marketplace,
-                rank=c.rank,
-                seller_name=c.seller_name,
-                seller_score=c.seller_score,
-                seller_review_count=c.seller_review_count,
-                seller_city=c.seller_city,
-                is_authorized=c.is_authorized,
-                price=c.price,
-                original_price=c.original_price,
-                currency=c.currency,
-                stock=c.stock,
-                is_in_stock=c.is_in_stock,
-                free_shipping=c.free_shipping,
-                fast_shipping=c.fast_shipping,
-                shipment_days=c.shipment_days,
-                tier=c.tier,
-                threat_score=c.threat_score,
-                price_score=c.price_score,
-                seller_quality_score=c.seller_quality_score,
-                availability_score=c.availability_score,
-                shipping_score=c.shipping_score,
-                price_gap_pct=c.price_gap_pct,
-                is_buybox_winner=c.is_buybox_winner,
-            )
-            for c in sorted(tiered, key=lambda x: (x.tier, -(x.threat_score or 0)))
+            if not listings:
+                result = {
+                    "product_id": product_id,
+                    "status": "SUCCESS",
+                    "analyzed_count": 0,
+                    "inserted_count": 0,
+                    "message": "No competitor listings found for selected product.",
+                    "results": [],
+                }
+                self.repository.finish_agent_run(agent_run, "SUCCESS", output_payload=self._serialize_result(result))
+                self.repository.commit()
+                return result
+
+            market_prices = self.scoring_service.calculate_market_prices(listings)
+            listing_ids = [item.id for item in listings]
+            results = []
+            inserted_count = 0
+
+            self.repository.delete_existing_tiers_for_listings(listing_ids)
+
+            for listing in listings:
+                price_history_summary = self.repository.get_price_history_summary(
+                    product_id=product_id,
+                    marketplace=listing.marketplace,
+                    seller_name=listing.seller_name,
+                    lookback_hours=168,
+                )
+
+                strength_score, strength_reasons = self.scoring_service.calculate_competitor_strength_score(
+                    listing=listing,
+                    min_price=market_prices["min_price"],
+                    avg_price=market_prices["avg_price"],
+                )
+
+                aggression_score, aggression_reasons = self.scoring_service.calculate_price_aggression_score(
+                    listing=listing,
+                    min_price=market_prices["min_price"],
+                    avg_price=market_prices["avg_price"],
+                    price_history_summary=price_history_summary,
+                )
+
+                buybox_score, buybox_reasons = self.scoring_service.calculate_buybox_threat_score(
+                    listing=listing,
+                    strength_score=strength_score,
+                    price_aggression_score=aggression_score
+                )
+
+                tier, tier_reasons = self.scoring_service.assign_tier(
+                    listing=listing,
+                    strength_score=strength_score,
+                    buybox_threat_score=buybox_score,
+                    price_aggression_score=aggression_score,
+                )
+
+                reason_codes = list(dict.fromkeys(strength_reasons + aggression_reasons + buybox_reasons + tier_reasons))
+
+                self.repository.create_competitor_tier(
+                    product_id=product_id,
+                    listing=listing,
+                    tier=tier,
+                    competitor_strength_score=round(strength_score, 2),
+                    buybox_threat_score=round(buybox_score, 2),
+                    price_aggression_score=round(aggression_score, 2),
+                    reason_codes=reason_codes,
+                )
+
+                inserted_count += 1
+
+                results.append(
+                    {
+                        "competitor_listing_id": listing.id,
+                        "competitor_seller_id": listing.competitor_seller_id,
+                        "marketplace": listing.marketplace,
+                        "seller_name": listing.seller_name,
+                        "tier": tier,
+                        "competitor_strength_score": round(strength_score, 2),
+                        "buybox_threat_score": round(buybox_score, 2),
+                        "price_aggression_score": round(aggression_score, 2),
+                        "reason_codes": reason_codes,
+                    }
+                )
+
+            result = {
+                "product_id": product_id,
+                "status": "SUCCESS",
+                "analyzed_count": len(listings),
+                "inserted_count": inserted_count,
+                "message": "Competitor intelligence analysis completed successfully.",
+                "results": results,
+            }
+
+            self.repository.finish_agent_run(agent_run, "SUCCESS", output_payload=self._serialize_result(result))
+            self.repository.commit()
+            return result
+
+        except Exception as exc:
+            self.repository.rollback()
+            failed_result = {
+                "product_id": product_id,
+                "status": "FAILED",
+                "analyzed_count": 0,
+                "inserted_count": 0,
+                "message": str(exc),
+                "results": [],
+            }
+            return failed_result
+
+    def _serialize_result(self, result: dict) -> dict:
+        serialized = dict(result)
+        serialized["product_id"] = str(serialized["product_id"])
+        serialized["results"] = [
+            {
+                **item,
+                "competitor_listing_id": str(item["competitor_listing_id"]),
+                "competitor_seller_id": str(item["competitor_seller_id"]) if item.get("competitor_seller_id") else None,
+            }
+            for item in serialized.get("results", [])
         ]
-
-        return CompetitorIntelligenceRunResponse(
-            session_id=payload.session_id,
-            product_id=payload.product_id,
-            total_competitors=len(tiered),
-            price_range=price_range,
-            buybox_prices=buybox_prices,
-            recommendation=PriceRecommendationSchema(
-                suggested_price=recommendation.suggested_price,
-                strategy=recommendation.strategy,
-                confidence=recommendation.confidence,
-                rationale=recommendation.rationale,
-            ),
-            competitors=competitors_out,
-        )
+        return serialized
