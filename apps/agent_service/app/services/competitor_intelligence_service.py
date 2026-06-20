@@ -64,6 +64,7 @@ class CompetitorIntelligenceService:
                 buybox_score, buybox_reasons = self.scoring_service.calculate_buybox_threat_score(
                     listing=listing,
                     strength_score=strength_score,
+                    price_aggression_score=aggression_score
                 )
 
                 tier, tier_reasons = self.scoring_service.assign_tier(
