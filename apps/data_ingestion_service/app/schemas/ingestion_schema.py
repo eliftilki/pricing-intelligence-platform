@@ -1,8 +1,42 @@
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
+
+# ---------- Search ----------
+
+class SearchRequest(BaseModel):
+    query: str
+    marketplaces: List[str] = Field(default_factory=lambda: ["trendyol", "hepsiburada", "amazon"])
+    max_results: int = Field(default=10, ge=1, le=50)
+
+
+class SearchResultItem(BaseModel):
+    name: Optional[str] = None
+    brand: Optional[str] = None
+    url: str
+    asin: Optional[str] = None
+    price: Optional[float] = None
+    original_price: Optional[float] = None
+    rating: Optional[float] = None
+    image_url: Optional[str] = None
+
+
+class MarketplaceSearchResult(BaseModel):
+    source: str
+    query: str
+    total_found: int
+    results: List[SearchResultItem]
+
+
+class SearchResponse(BaseModel):
+    query: str
+    marketplaces_searched: List[str]
+    results: dict[str, MarketplaceSearchResult]
+
+
+# ---------- Ingestion ----------
 
 class IngestionRunRequest(BaseModel):
     product_id: UUID
@@ -27,3 +61,16 @@ class IngestionRunResponse(BaseModel):
     status: str
     message: str
     scrape_counts: dict[str, int] = {}
+
+
+class IngestionRunWithUrlsRequest(BaseModel):
+    product_id: UUID
+    company_id: UUID
+    urls: dict[str, str]  # {"TRENDYOL": "https://...", "HEPSIBURADA": "https://...", "AMAZON": "https://..."}
+
+
+class SearchAndRunRequest(BaseModel):
+    product_id: UUID
+    company_id: UUID
+    query: str
+    marketplaces: List[str] = Field(default_factory=lambda: ["trendyol", "hepsiburada", "amazon"])
