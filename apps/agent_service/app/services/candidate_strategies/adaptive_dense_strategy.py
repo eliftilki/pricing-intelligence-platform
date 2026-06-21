@@ -5,6 +5,16 @@ from app.schemas.candidate_price_schema import (
     DenseRegion,
     IgnoredCompetitor,
 )
+from app.services.candidate_strategies.current_price_policy import (
+    current_price_candidates,
+    current_price_constraint,
+    normalize_prices_to_step,
+)
+from app.services.candidate_strategies.dynamic_step_policy import (
+    choose_dense_step,
+    choose_step,
+    generate_aligned_range,
+)
 
 
 class AdaptiveDenseStrategy:
@@ -36,9 +46,35 @@ class AdaptiveDenseStrategy:
 
         prices: list[float] = []
         dense_regions: list[DenseRegion] = []
+        constraints_applied = [
+            "NOISE_COMPETITOR_EXCLUDED",
+            "PRICE_STEP_NORMALIZATION",
+        ]
 
         if cluster:
+            constraints_applied.append("DENSE_MARKET_CLUSTER_DETECTED")
             start_price, end_price = cluster
+            cluster_center = (start_price + end_price) / 2
+            relevant_competitor_prices = [
+                competitor.price
+                for competitor in relevant_competitors
+                if competitor.price > 0
+            ]
+            general_min_price = (
+                min(relevant_competitor_prices)
+                if relevant_competitor_prices
+                else start_price
+            )
+            general_max_price = (
+                max(relevant_competitor_prices)
+                if relevant_competitor_prices
+                else end_price
+            )
+            general_step = choose_step(
+                general_min_price,
+                general_max_price,
+            )
+            dense_step = choose_dense_step(start_price, end_price)
 
             dense_regions.append(
                 DenseRegion(
@@ -48,22 +84,50 @@ class AdaptiveDenseStrategy:
                 )
             )
 
-            current = start_price
-            while current <= end_price:
-                prices.append(current)
-                current += context.dense_price_step
-
             prices.extend(
+                generate_aligned_range(
+                    general_min_price,
+                    general_max_price,
+                    general_step,
+                )
+            )
+            prices.extend(
+                generate_aligned_range(
+                    start_price,
+                    end_price,
+                    dense_step,
+                    include_ceiling=True,
+                )
+            )
+            prices.extend(
+                current_price_candidates(
+                    current_price=context.current_price,
+                    market_reference_price=cluster_center,
+                    step=general_step,
+                )
+            )
+            constraints_applied.extend(
                 [
-                    end_price + context.base_price_step,
-                    end_price + context.base_price_step * 2,
-                    context.current_price,
+                    f"DYNAMIC_GENERAL_STEP_{general_step}",
+                    f"DYNAMIC_DENSE_STEP_{dense_step}",
                 ]
+            )
+            constraints_applied.append(
+                current_price_constraint(
+                    current_price=context.current_price,
+                    market_reference_price=cluster_center,
+                )
             )
         else:
             prices = [context.current_price]
+            constraints_applied.append("CURRENT_PRICE_USED_AS_FALLBACK")
 
-        prices = self._normalize_prices(prices)
+        normalization_step = (
+            dense_step
+            if cluster
+            else context.dense_price_step
+        )
+        prices = normalize_prices_to_step(prices, normalization_step)
 
         return CandidatePriceGenerateResponse(
             product_id=context.product_id,
@@ -71,11 +135,7 @@ class AdaptiveDenseStrategy:
             selected_strategy=CandidateStrategy.ADAPTIVE_DENSE_MARKET_WINDOW,
             candidate_prices=prices,
             reason="Adaptive dense market window was selected because competitor prices are clustered.",
-            constraints_applied=[
-                "NOISE_COMPETITOR_EXCLUDED",
-                "DENSE_MARKET_CLUSTER_DETECTED",
-                "PRICE_STEP_NORMALIZATION",
-            ],
+            constraints_applied=constraints_applied,
             ignored_competitors=ignored_competitors,
             dense_regions=dense_regions,
         )
@@ -105,5 +165,3 @@ class AdaptiveDenseStrategy:
 
         return min(best_cluster), max(best_cluster)
 
-    def _normalize_prices(self, prices: list[float]) -> list[float]:
-        return sorted(set(round(price, 2) for price in prices if price > 0))

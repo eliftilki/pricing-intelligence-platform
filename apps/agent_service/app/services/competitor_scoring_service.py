@@ -373,7 +373,13 @@ class CompetitorScoringService:
         ):
             return "TIER_1", ["RANK_1_PRICE_LEADER"]
 
-        if price_aggression_score >= 90 and listing.stock and listing.stock > 10:
+        if (
+            price_aggression_score >= 90
+            and strength_score >= 55
+            and buybox_threat_score >= 50
+            and listing.stock
+            and listing.stock > 10
+        ):
             return "TIER_1", ["CRITICAL_PRICE_DUMPING_BYPASS"]
 
         # Standart Ağırlıklı Hesaplama
@@ -391,7 +397,7 @@ class CompetitorScoringService:
             return "TIER_2", ["MEDIUM_IMPACT_COMPETITOR"]
 
         # Fallback Kuralı
-        if listing.rank == 1 and strength_score >= 40:
+        if listing.rank == 1 and strength_score >= 40 and buybox_threat_score >= 30:
             return "TIER_2", ["RANK_1_COMPETITOR_SOFT_BYPASS"]
 
         return "NOISE", ["LOW_IMPACT_COMPETITOR"]

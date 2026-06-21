@@ -5,6 +5,12 @@ from app.schemas.candidate_price_schema import (
     CandidatePriceGenerateResponse,
     CandidateStrategy,
 )
+from app.services.candidate_strategies.current_price_policy import (
+    current_price_candidates,
+    current_price_constraint,
+    normalize_prices_to_step,
+)
+from app.services.candidate_strategies.dynamic_step_policy import choose_step
 
 
 class BasicRangeStrategy:
@@ -12,20 +18,50 @@ class BasicRangeStrategy:
         self,
         context: CandidatePriceContext,
     ) -> CandidatePriceGenerateResponse:
-        min_competitor = context.min_competitor_price or context.current_price
-        max_competitor = context.max_competitor_price or context.current_price
-
-        lower_bound = min(min_competitor * 0.98, context.current_price)
-        upper_bound = max(max_competitor * 1.02, context.current_price)
-
-        prices = self._generate_range(
-            lower_bound=lower_bound,
-            upper_bound=upper_bound,
-            step=context.price_step,
+        has_market_range = (
+            context.min_competitor_price is not None
+            and context.max_competitor_price is not None
+            and context.min_competitor_price > 0
+            and context.max_competitor_price > 0
         )
+        constraints_applied = [
+            "BASIC_COMPETITOR_RANGE",
+            "PRICE_STEP_NORMALIZATION",
+        ]
 
-        prices.append(context.current_price)
-        prices = self._normalize_prices(prices)
+        if has_market_range:
+            min_competitor = context.min_competitor_price
+            max_competitor = context.max_competitor_price
+            market_center = (min_competitor + max_competitor) / 2
+            dynamic_step = choose_step(min_competitor, max_competitor)
+
+            prices = self._generate_range(
+                lower_bound=min_competitor * 0.98,
+                upper_bound=max_competitor * 1.02,
+                step=dynamic_step,
+            )
+            prices.extend(
+                current_price_candidates(
+                    current_price=context.current_price,
+                    market_reference_price=market_center,
+                    step=dynamic_step,
+                )
+            )
+            constraints_applied.append(
+                f"DYNAMIC_GENERAL_STEP_{dynamic_step}"
+            )
+            constraints_applied.append(
+                current_price_constraint(
+                    current_price=context.current_price,
+                    market_reference_price=market_center,
+                )
+            )
+        else:
+            prices = [context.current_price]
+            dynamic_step = context.price_step
+            constraints_applied.append("CURRENT_PRICE_USED_AS_FALLBACK")
+
+        prices = normalize_prices_to_step(prices, dynamic_step)
 
         return CandidatePriceGenerateResponse(
             product_id=context.product_id,
@@ -33,10 +69,7 @@ class BasicRangeStrategy:
             selected_strategy=CandidateStrategy.BASIC_COMPETITOR_RANGE,
             candidate_prices=prices,
             reason="Basic competitor range was selected because tier-based or dense-market signals were not available.",
-            constraints_applied=[
-                "BASIC_COMPETITOR_RANGE",
-                "PRICE_STEP_NORMALIZATION",
-            ],
+            constraints_applied=constraints_applied,
         )
 
     def _generate_range(
@@ -57,5 +90,3 @@ class BasicRangeStrategy:
 
         return prices
 
-    def _normalize_prices(self, prices: list[float]) -> list[float]:
-        return sorted(set(round(price, 2) for price in prices if price > 0))
