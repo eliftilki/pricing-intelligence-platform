@@ -9,7 +9,7 @@ from app.routers.competitors import router as competitors_router
 from app.routers.analysis import router as analysis_router
 from app.routers.recommendations import router as recommendations_router
 
-app = FastAPI(title="Pricing Intelligence API", version="0.1.0")
+app = FastAPI(title="feraSet API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,

@@ -11,6 +11,11 @@ class RunAnalysisRequest(BaseModel):
     )
 
 
+class RunProductAnalysisRequest(RunAnalysisRequest):
+    company_id: UUID
+    query: str
+
+
 class PriceRangeOut(BaseModel):
     min: Optional[float] = None
     max: Optional[float] = None

@@ -15,7 +15,7 @@ from app.routers.search import router as search_router
 app = FastAPI(
     title="Data Ingestion Service",
     version="0.1.0",
-    description="Marketplace competitor data collection service.",
+    description="feraSet marketplace competitor data collection service.",
 )
 
 app.add_middleware(

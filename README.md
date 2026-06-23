@@ -1,6 +1,6 @@
-# Pricing Intelligence Platform
+# feraSet
 
-Pricing Intelligence Platform; e-ticaret satıcıları için pazaryeri verilerini toplayan, rakipleri analiz eden ve açıklanabilir fiyat adayları üreten yapay zekâ destekli bir fiyatlandırma platformudur.
+feraSet; e-ticaret satıcıları için pazaryeri verilerini toplayan, rakipleri analiz eden ve açıklanabilir fiyat adayları üreten yapay zekâ destekli bir fiyatlandırma platformudur.
 
 ## Projenin amacı
 

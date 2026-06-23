@@ -9,7 +9,7 @@ from app.routers.candidate_price import router as candidate_price_router
 app = FastAPI(
     title="Agent Service",
     version="0.1.0",
-    description="Pricing Intelligence Agent Service",
+    description="feraSet Agent Service",
 )
 
 app.add_middleware(
