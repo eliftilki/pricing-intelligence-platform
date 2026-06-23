@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.schemas.data_collection_schema import (
     DataCollectionProductCreateRequest,
     DataCollectionRunRequest,
+    DataCollectionSearchAndRunRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -78,6 +79,15 @@ class DataIngestionClient:
             payload.model_dump(mode="json"),
             self.timeout_run,
             max_retries=3,
+        )
+
+    async def search_and_run(self, payload: DataCollectionSearchAndRunRequest) -> dict:
+        return await self._request_with_retry(
+            "POST",
+            f"{self.base_url}/ingestion/search-and-run",
+            payload.model_dump(mode="json"),
+            self.timeout_run,
+            max_retries=2,
         )
 
     async def create_product(self, payload: DataCollectionProductCreateRequest) -> dict:

@@ -10,6 +10,15 @@ class DataCollectionRunRequest(BaseModel):
     )
 
 
+class DataCollectionSearchAndRunRequest(BaseModel):
+    product_id: UUID
+    company_id: UUID
+    query: str
+    marketplaces: List[str] = Field(
+        default_factory=lambda: ["TRENDYOL", "HEPSIBURADA", "AMAZON"]
+    )
+
+
 class DataCollectionRunResponse(BaseModel):
     job_id: UUID
     status: str
