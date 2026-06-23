@@ -83,10 +83,15 @@ export type CompetitorListing = {
   id?: UUID;
   product_id?: UUID;
   marketplace?: string | null;
+  rank?: number | null;
   seller_name?: string | null;
+  seller_score?: string | number | null;
   price?: string | number | null;
   shipping_price?: string | number | null;
   stock_status?: string | null;
+  is_in_stock?: boolean | null;
+  fast_shipping?: boolean | null;
+  free_shipping?: boolean | null;
   product_url?: string | null;
   scraped_at?: string | null;
 };
@@ -100,6 +105,8 @@ export type CompetitorTier = {
   competitor_strength_score?: string | number | null;
   price_aggression_score?: string | number | null;
   buybox_threat_score?: string | number | null;
+  reason_codes?: string[] | string | null;
+  analyzed_at?: string | null;
   rationale?: string | null;
 };
 
@@ -221,7 +228,12 @@ export const pricingApi = {
       method: "POST",
       body,
     }),
-  runAnalysis: (body: { product_id: UUID; marketplaces: string[] }) =>
+  runAnalysis: (body: {
+    product_id: UUID;
+    company_id?: UUID;
+    query?: string;
+    marketplaces: string[];
+  }) =>
     request<AnalysisResponse>("/analysis/run", { method: "POST", body }),
   runProductAnalysis: (body: {
     product_id: UUID;

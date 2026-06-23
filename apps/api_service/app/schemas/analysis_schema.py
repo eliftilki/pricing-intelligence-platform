@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 
 class RunAnalysisRequest(BaseModel):
     product_id: UUID
+    company_id: Optional[UUID] = None
+    query: Optional[str] = None
     marketplaces: List[str] = Field(
         default_factory=lambda: ["TRENDYOL", "HEPSIBURADA", "AMAZON"]
     )
