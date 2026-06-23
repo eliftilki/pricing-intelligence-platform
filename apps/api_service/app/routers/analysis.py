@@ -48,12 +48,22 @@ async def build_analysis_response(product_id: UUID, ingestion_result: dict) -> R
 
 @router.post("/run", response_model=RunAnalysisResponse)
 async def run_analysis(payload: RunAnalysisRequest):
-    ingestion_result = await data_ingestion_client.run_collection(
-        DataCollectionRunRequest(
-            product_id=payload.product_id,
-            marketplaces=payload.marketplaces,
+    if payload.company_id and payload.query:
+        ingestion_result = await data_ingestion_client.search_and_run(
+            DataCollectionSearchAndRunRequest(
+                product_id=payload.product_id,
+                company_id=payload.company_id,
+                query=payload.query,
+                marketplaces=payload.marketplaces,
+            )
         )
-    )
+    else:
+        ingestion_result = await data_ingestion_client.run_collection(
+            DataCollectionRunRequest(
+                product_id=payload.product_id,
+                marketplaces=payload.marketplaces,
+            )
+        )
 
     return await build_analysis_response(payload.product_id, ingestion_result)
 
