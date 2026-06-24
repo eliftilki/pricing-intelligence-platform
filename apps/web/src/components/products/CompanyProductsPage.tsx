@@ -215,9 +215,17 @@ function analysisMessage(result: AnalysisResponse) {
   const marketplacesWithData = Object.entries(result.scrape_counts || {})
     .filter(([, count]) => count > 0)
     .map(([marketplace]) => marketplace);
+  const ingestionMessage = result.ingestion_message?.toLocaleLowerCase("tr-TR") || "";
+  const usedCachedData =
+    ingestionMessage.includes("cached") ||
+    ingestionMessage.includes("basarili scrape kullanildi");
 
   if (result.ingestion_status === "FAILED") {
     return "Analiz başlatıldı ancak pazaryerlerinden rakip verisi alınamadı. Ürün adını ve pazaryeri seçimini kontrol edip tekrar deneyin.";
+  }
+
+  if (usedCachedData && marketplacesWithData.length) {
+    return `Son 12 saat i\u00e7inde toplanan g\u00fcncel veriler kullan\u0131ld\u0131; yeniden scraping yap\u0131lmad\u0131. ${marketplacesWithData.join(", ")} \u00fczerinden ${total} rakip analiz edildi.`;
   }
 
   if (marketplacesWithData.length) {
