@@ -57,7 +57,6 @@ class SellerProduct(Base):
 
     our_price: Mapped[float | None] = mapped_column(Numeric(12, 2))
     cost_price: Mapped[float | None] = mapped_column(Numeric(12, 2))
-    commission_rate: Mapped[float | None] = mapped_column(Numeric(5, 4), default=0)
     shipping_cost: Mapped[float | None] = mapped_column(Numeric(12, 2), default=0)
     packaging_cost: Mapped[float | None] = mapped_column(Numeric(12, 2), default=0)
     stock_quantity: Mapped[int] = mapped_column(Integer, default=0)

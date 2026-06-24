@@ -24,9 +24,35 @@ import {
   SellerProduct,
   pricingApi,
 } from "@/lib/pricing-api";
-import { BoltIcon, BoxIconLine, DollarLineIcon, PlusIcon } from "@/icons";
+import {
+  BoltIcon,
+  BoxIconLine,
+  DollarLineIcon,
+  EyeIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashBinIcon,
+} from "@/icons";
 
 const marketplaces = ["TRENDYOL", "HEPSIBURADA", "AMAZON"];
+const categoryOptions = [
+  "Telefon",
+  "Bilgisayar",
+  "Tablet",
+  "Klavye",
+  "Kulaklık",
+  "Mouse",
+  "Monitor",
+  "Akıllı Saat",
+  "Oyun Konsolu",
+  "Hoparlor",
+  "Şarj Aleti",
+  "Kablo",
+  "Aksesuar",
+  "Ev Elektroniği",
+];
+const brandOptions = ["Apple", "Samsung", "Xiaomi", "Huawei", "Lenovo", "Asus", "HP", "Dell"];
+const colorOptions = ["Siyah", "Beyaz", "Gri", "Gümüş", "Mavi", "Yeşil", "Kırmızı", "Altın"];
 
 type Toast = {
   type: "success" | "error" | "info";
@@ -41,11 +67,39 @@ type ProductInsight = {
   tiers: CompetitorTier[];
 };
 
+type ProductFormState = {
+  name: string;
+  brand: string;
+  category: string;
+  color: string;
+  model: string;
+  ourPrice: string;
+  costPrice: string;
+};
+
 const cardClass =
   "rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]";
+const selectClass =
+  "h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800";
 
-function buildQuery(product: Product) {
-  return [product.brand, product.name, product.category].filter(Boolean).join(" ");
+function primarySellerProduct(row: ProductInsight) {
+  return row.sellerProducts[0];
+}
+
+function productDisplayName(row: ProductInsight) {
+  return primarySellerProduct(row)?.display_name || row.product.name;
+}
+
+function buildQuery(row: ProductInsight) {
+  return [
+    row.product.brand,
+    productDisplayName(row),
+    row.product.model,
+    row.product.color,
+    row.product.category,
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function toMoney(value: string | number | null | undefined) {
@@ -66,6 +120,16 @@ function toPercent(value: string | number | null | undefined) {
   return `${new Intl.NumberFormat("tr-TR", {
     maximumFractionDigits: 1,
   }).format(Math.abs(numeric) <= 1 ? numeric * 100 : numeric)}%`;
+}
+
+function optionalNumber(value: string) {
+  if (!value.trim()) return undefined;
+  const numeric = Number(value);
+  return Number.isNaN(numeric) ? undefined : numeric;
+}
+
+function toInputValue(value: string | number | null | undefined) {
+  return value === null || value === undefined ? "" : String(value);
 }
 
 function latestRecommendation(row: ProductInsight) {
@@ -96,19 +160,19 @@ function riskLevel(row: ProductInsight) {
   if (recommendationRisk) return recommendationRisk;
 
   const buyboxScore = maxBuyboxScore(row);
-  if (buyboxScore >= 70) return "Yuksek";
+  if (buyboxScore >= 70) return "Yüksek";
   if (buyboxScore >= 40) return "Orta";
-  return latestAnalysisDate(row) ? "Dusuk" : "-";
+  return latestAnalysisDate(row) ? "Düşük" : "-";
 }
 
 function statusText(row: ProductInsight, activeProductId: string) {
-  if (activeProductId === row.product.id) return "Analiz Calisiyor";
-  return latestAnalysisDate(row) ? "Analiz Tamamlandi" : "Analiz Bekliyor";
+  if (activeProductId === row.product.id) return "Analiz Çalışıyor";
+  return latestAnalysisDate(row) ? "Analiz Tamamlandı" : "Analiz Bekliyor";
 }
 
 function statusColor(status: string) {
-  if (status.includes("Calisiyor")) return "info";
-  if (status.includes("Tamamlandi")) return "success";
+  if (status.includes("Çalışıyor")) return "info";
+  if (status.includes("Tamamlandı")) return "success";
   return "warning";
 }
 
@@ -127,20 +191,20 @@ function reasonCodes(tier: CompetitorTier) {
 
 function humanReason(code: string) {
   const labels: Record<string, string> = {
-    RANK_1_BUYBOX_POSITION: "Buybox pozisyonunda veya en gorunur rakiplerden biri.",
-    RANK_2_STRONG_VISIBILITY: "Arama sonucunda yuksek gorunurluge sahip.",
-    RANK_3_VISIBLE_COMPETITOR: "Ilk siralarda gorunen bir rakip.",
-    BUYBOX_PRICE_PRESSURE: "Fiyat baskisi buybox riskini artiriyor.",
-    BUYBOX_FAST_SHIPPING_ADVANTAGE: "Hizli kargo avantaji var.",
-    BUYBOX_FREE_SHIPPING_ADVANTAGE: "Ucretsiz kargo avantaji var.",
-    COMPETITOR_UNDER_CUTTING_US_HIGH_THREAT: "Sizden belirgin sekilde daha dusuk fiyatli.",
-    COMPETITOR_PRICE_SLIGHTLY_HIGHER: "Fiyati size yakin oldugu icin takip edilmeli.",
-    VERY_AGGRESSIVE_PRICE: "Agresif fiyat politikasi uyguluyor.",
-    DESTRUCTIVE_PRICE_DUMPING: "Cok agresif fiyat dususu var.",
-    HIGH_IMPACT_COMPETITOR: "Fiyat ve gorunurluk etkisi yuksek.",
+    RANK_1_BUYBOX_POSITION: "Buybox pozisyonunda veya en görünür rakiplerden biri.",
+    RANK_2_STRONG_VISIBILITY: "Arama sonucunda yüksek görünürlüğe sahip.",
+    RANK_3_VISIBLE_COMPETITOR: "İlk sıralarda görünen bir rakip.",
+    BUYBOX_PRICE_PRESSURE: "Fiyat baskısı buybox riskini artırıyor.",
+    BUYBOX_FAST_SHIPPING_ADVANTAGE: "Hızlı kargo avantajı var.",
+    BUYBOX_FREE_SHIPPING_ADVANTAGE: "Ücretsiz kargo avantajı var.",
+    COMPETITOR_UNDER_CUTTING_US_HIGH_THREAT: "Sizden belirgin şekilde daha düşük fiyatlı.",
+    COMPETITOR_PRICE_SLIGHTLY_HIGHER: "Fiyatı size yakın olduğu için takip edilmeli.",
+    VERY_AGGRESSIVE_PRICE: "Agresif fiyat politikası uyguluyor.",
+    DESTRUCTIVE_PRICE_DUMPING: "Çok agresif fiyat düşüşü var.",
+    HIGH_IMPACT_COMPETITOR: "Fiyat ve görünürlük etkisi yüksek.",
     MEDIUM_IMPACT_COMPETITOR: "Orta seviyede etkili rakip.",
-    RANK_1_PRICE_LEADER: "Pazar lideri fiyata yakin konumda.",
-    CRITICAL_PRICE_DUMPING_BYPASS: "Kritik fiyat baskisi olusturuyor.",
+    RANK_1_PRICE_LEADER: "Pazar lideri fiyata yakın konumda.",
+    CRITICAL_PRICE_DUMPING_BYPASS: "Kritik fiyat baskısı oluşturuyor.",
   };
 
   return labels[code] || code.replaceAll("_", " ").toLocaleLowerCase("tr-TR");
@@ -153,14 +217,14 @@ function analysisMessage(result: AnalysisResponse) {
     .map(([marketplace]) => marketplace);
 
   if (result.ingestion_status === "FAILED") {
-    return "Analiz baslatildi ancak pazaryerlerinden rakip verisi alinamadi. Urun adini kontrol ederek tekrar deneyin.";
+    return "Analiz başlatıldı ancak pazaryerlerinden rakip verisi alınamadı. Ürün adını ve pazaryeri seçimini kontrol edip tekrar deneyin.";
   }
 
   if (marketplacesWithData.length) {
-    return `Analiz tamamlandi. ${marketplacesWithData.join(", ")} uzerinden ${total} rakip bulundu.`;
+    return `Analiz tamamlandı. ${marketplacesWithData.join(", ")} üzerinden ${total} rakip bulundu.`;
   }
 
-  return "Analiz tamamlandi. Sonuclari urun detayindan inceleyebilirsiniz.";
+  return "Analiz tamamlandı. Sonuçları ürün detayından inceleyebilirsiniz.";
 }
 
 export default function CompanyProductsPage() {
@@ -175,10 +239,16 @@ export default function CompanyProductsPage() {
   const [activeProductId, setActiveProductId] = useState("");
   const [expandedProductId, setExpandedProductId] = useState("");
   const [advancedProductId, setAdvancedProductId] = useState("");
-  const [form, setForm] = useState({
+  const [editingProductId, setEditingProductId] = useState("");
+  const [editForm, setEditForm] = useState<ProductFormState | null>(null);
+  const [form, setForm] = useState<ProductFormState>({
     name: "",
     brand: "",
     category: "",
+    color: "",
+    model: "",
+    ourPrice: "",
+    costPrice: "",
   });
 
   const selectedRow = useMemo(
@@ -267,21 +337,32 @@ export default function CompanyProductsPage() {
     );
   }
 
+  function productFormPayload(currentForm: ProductFormState) {
+    return {
+      name: currentForm.name,
+      brand: currentForm.brand || undefined,
+      category: currentForm.category || undefined,
+      color: currentForm.color || undefined,
+      model: currentForm.model || undefined,
+      display_name: currentForm.name,
+      our_price: optionalNumber(currentForm.ourPrice),
+      cost_price: optionalNumber(currentForm.costPrice),
+    };
+  }
+
   async function createCompanyProduct(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!session) return;
 
     if (!selectedMarketplaces.length) {
-      setToast({ type: "error", message: "En az bir pazaryeri secin." });
+      setToast({ type: "error", message: "Devam etmek için en az bir pazaryeri seçin." });
       return;
     }
 
     setIsLoading(true);
     try {
       const product = await pricingApi.createProduct({
-        name: form.name,
-        brand: form.brand || undefined,
-        category: form.category || undefined,
+        ...productFormPayload(form),
       });
 
       await Promise.all(
@@ -290,16 +371,88 @@ export default function CompanyProductsPage() {
             company_id: session.company_id,
             product_id: product.id,
             marketplace,
+            display_name: form.name,
+            our_price: optionalNumber(form.ourPrice),
+            cost_price: optionalNumber(form.costPrice),
             stock_quantity: 0,
           }),
         ),
       );
 
-      setForm({ name: "", brand: "", category: "" });
+      setForm({
+        name: "",
+        brand: "",
+        category: "",
+        color: "",
+        model: "",
+        ourPrice: "",
+        costPrice: "",
+      });
       setToast({
         type: "success",
-        message: "Urun eklendi. Analizi hazir oldugunda satirdaki Analiz Baslat butonuyla calistirabilirsiniz.",
+        message: "Ürün listenize eklendi. Hazır olduğunuzda satırdaki Analiz Başlat butonuyla rakip analizini çalıştırabilirsiniz.",
       });
+      await loadData(session);
+    } catch (error) {
+      setToast({ type: "error", message: errorMessage(error) });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function startEditing(row: ProductInsight) {
+    const sellerProduct = primarySellerProduct(row);
+    setEditingProductId(row.product.id);
+    setEditForm({
+      name: productDisplayName(row),
+      brand: row.product.brand || "",
+      category: row.product.category || "",
+      color: row.product.color || "",
+      model: row.product.model || "",
+      ourPrice: toInputValue(sellerProduct?.our_price),
+      costPrice: toInputValue(sellerProduct?.cost_price),
+    });
+  }
+
+  async function updateCompanyProduct(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session || !editForm || !editingProductId) return;
+
+    setIsLoading(true);
+    try {
+      await pricingApi.updateCompanyProduct(
+        session.company_id,
+        editingProductId,
+        productFormPayload(editForm),
+      );
+      setToast({ type: "success", message: "Ürün bilgileri güncellendi." });
+      setEditingProductId("");
+      setEditForm(null);
+      await loadData(session);
+    } catch (error) {
+      setToast({ type: "error", message: errorMessage(error) });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function deleteCompanyProduct(row: ProductInsight) {
+    if (!session) return;
+
+    const confirmed = window.confirm(
+      `${productDisplayName(row)} ürününü şirket listenizden kaldırmak istiyor musunuz?`,
+    );
+    if (!confirmed) return;
+
+    setIsLoading(true);
+    try {
+      await pricingApi.deleteCompanyProduct(session.company_id, row.product.id);
+      setToast({ type: "success", message: "Ürün şirket listenizden kaldırıldı." });
+      if (expandedProductId === row.product.id) setExpandedProductId("");
+      if (editingProductId === row.product.id) {
+        setEditingProductId("");
+        setEditForm(null);
+      }
       await loadData(session);
     } catch (error) {
       setToast({ type: "error", message: errorMessage(error) });
@@ -317,14 +470,14 @@ export default function CompanyProductsPage() {
     setActiveProductId(row.product.id);
     setToast({
       type: "info",
-      message: `${row.product.name} icin analiz calisiyor. Sonuc tamamlandiginda satir otomatik guncellenecek.`,
+      message: `${productDisplayName(row)} için analiz çalışıyor. Sonuç hazır olduğunda satır otomatik güncellenecek.`,
     });
 
     try {
       const result = await pricingApi.runAnalysis({
         product_id: row.product.id,
         company_id: session.company_id,
-        query: buildQuery(row.product),
+        query: buildQuery(row),
         marketplaces: productMarketplaces.length ? productMarketplaces : marketplaces,
       });
       setToast({ type: "success", message: analysisMessage(result) });
@@ -352,10 +505,10 @@ export default function CompanyProductsPage() {
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-            Urunler
+            Ürünler
           </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {company?.name || "Sirketiniz"} icin urun ekleyin, analiz baslatin ve fiyat onerilerini inceleyin.
+            {company?.name || "Şirketiniz"} için ürün ekleyin, analiz başlatın ve fiyat önerilerini inceleyin.
           </p>
         </div>
         <Button variant="outline" onClick={() => void loadData()} disabled={isLoading}>
@@ -384,21 +537,21 @@ export default function CompanyProductsPage() {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Sirket urunu ekle
+              Şirket ürünü ekle
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Bu adim yalnizca urunu listenize ekler; analiz butonuyla rakip verileri toplanir.
+              Ürünü şirket listenize ekleyin; analiz butonuyla rakip verilerini dilediğiniz zaman toplayabilirsiniz.
             </p>
           </div>
         </div>
 
         <form
-          className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_0.9fr_auto]"
+          className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_0.8fr_auto]"
           onSubmit={(event) => void createCompanyProduct(event)}
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:col-span-1">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:col-span-1 xl:grid-cols-4">
             <div>
-              <Label>Urun adi</Label>
+              <Label>Ürün adı</Label>
               <Input
                 placeholder="Orn. Samsung S24 FE"
                 value={form.name}
@@ -410,20 +563,86 @@ export default function CompanyProductsPage() {
             <div>
               <Label>Marka</Label>
               <Input
+                list="product-brand-options"
                 placeholder="Orn. Samsung"
                 value={form.brand}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, brand: event.target.value }))
                 }
               />
+              <datalist id="product-brand-options">
+                {brandOptions.map((brand) => (
+                  <option key={brand} value={brand} />
+                ))}
+              </datalist>
             </div>
             <div>
               <Label>Kategori</Label>
-              <Input
-                placeholder="Orn. Telefon"
+              <select
+                className={selectClass}
                 value={form.category}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, category: event.target.value }))
+                }
+              >
+                <option value="">Kategori seçin</option>
+                {categoryOptions.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>Renk</Label>
+              <select
+                className={selectClass}
+                value={form.color}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, color: event.target.value }))
+                }
+              >
+                <option value="">Renk seçin</option>
+                {colorOptions.map((color) => (
+                  <option key={color} value={color}>
+                    {color}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>Model</Label>
+              <Input
+                placeholder="Orn. SM-S711B"
+                value={form.model}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, model: event.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <Label>Satış fiyatı</Label>
+              <Input
+                type="number"
+                min="0"
+                step={0.01}
+                placeholder="Orn. 24999"
+                value={form.ourPrice}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, ourPrice: event.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <Label>Maliyet</Label>
+              <Input
+                type="number"
+                min="0"
+                step={0.01}
+                placeholder="Orn. 21000"
+                value={form.costPrice}
+                onChange={(event) =>
+                  setForm((current) => ({ ...current, costPrice: event.target.value }))
                 }
               />
             </div>
@@ -454,24 +673,164 @@ export default function CompanyProductsPage() {
               disabled={isLoading || !form.name || !selectedMarketplaces.length}
               startIcon={<PlusIcon />}
             >
-              Urun Ekle
+              Ürün Ekle
             </Button>
           </div>
         </form>
       </section>
 
+      {editForm && (
+        <section className={cardClass}>
+          <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Ürün bilgilerini düzenle
+              </h2>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Değişiklikler bu şirketin aktif pazaryeri kayıtlarına uygulanır.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setEditingProductId("");
+                setEditForm(null);
+              }}
+            >
+              Vazgeç
+            </Button>
+          </div>
+
+          <form
+            className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
+            onSubmit={(event) => void updateCompanyProduct(event)}
+          >
+            <div>
+              <Label>Ürün adı</Label>
+              <Input
+                value={editForm.name}
+                onChange={(event) =>
+                  setEditForm((current) =>
+                    current ? { ...current, name: event.target.value } : current,
+                  )
+                }
+              />
+            </div>
+            <div>
+              <Label>Marka</Label>
+              <Input
+                list="product-brand-options"
+                value={editForm.brand}
+                onChange={(event) =>
+                  setEditForm((current) =>
+                    current ? { ...current, brand: event.target.value } : current,
+                  )
+                }
+              />
+            </div>
+            <div>
+              <Label>Kategori</Label>
+              <select
+                className={selectClass}
+                value={editForm.category}
+                onChange={(event) =>
+                  setEditForm((current) =>
+                    current ? { ...current, category: event.target.value } : current,
+                  )
+                }
+              >
+                <option value="">Kategori seçin</option>
+                {categoryOptions.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>Renk</Label>
+              <select
+                className={selectClass}
+                value={editForm.color}
+                onChange={(event) =>
+                  setEditForm((current) =>
+                    current ? { ...current, color: event.target.value } : current,
+                  )
+                }
+              >
+                <option value="">Renk seçin</option>
+                {colorOptions.map((color) => (
+                  <option key={color} value={color}>
+                    {color}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label>Model</Label>
+              <Input
+                value={editForm.model}
+                onChange={(event) =>
+                  setEditForm((current) =>
+                    current ? { ...current, model: event.target.value } : current,
+                  )
+                }
+              />
+            </div>
+            <div>
+              <Label>Satış fiyatı</Label>
+              <Input
+                type="number"
+                min="0"
+                step={0.01}
+                value={editForm.ourPrice}
+                onChange={(event) =>
+                  setEditForm((current) =>
+                    current ? { ...current, ourPrice: event.target.value } : current,
+                  )
+                }
+              />
+            </div>
+            <div>
+              <Label>Maliyet</Label>
+              <Input
+                type="number"
+                min="0"
+                step={0.01}
+                value={editForm.costPrice}
+                onChange={(event) =>
+                  setEditForm((current) =>
+                    current ? { ...current, costPrice: event.target.value } : current,
+                  )
+                }
+              />
+            </div>
+            <div className="flex items-end">
+              <Button
+                disabled={isLoading || !editForm.name || !editingProductId}
+                startIcon={<PlusIcon />}
+              >
+                Değişiklikleri Kaydet
+              </Button>
+            </div>
+          </form>
+        </section>
+      )}
+
       <section className={cardClass}>
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Sirket urunleri
+              Şirket ürünleri
             </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Fiyat kararini urun bazinda buradan yonetin.
+              Fiyat kararlarını ürün bazında buradan yönetin.
             </p>
           </div>
           <Badge color="light" size="sm">
-            {rows.length} urun
+            {rows.length} ürün
           </Badge>
         </div>
 
@@ -479,7 +838,7 @@ export default function CompanyProductsPage() {
           <Table>
             <TableHeader className="border-y border-gray-100 dark:border-gray-800">
               <TableRow>
-                {["Urun", "Durum", "Son Analiz", "Onerilen Fiyat", "Buybox Riski", "Aksiyon"].map((heading) => (
+                {["Ürün", "Durum", "Son Analiz", "Önerilen Fiyat", "Buybox Riski", "Aksiyon"].map((heading) => (
                   <TableCell
                     key={heading}
                     isHeader
@@ -505,10 +864,10 @@ export default function CompanyProductsPage() {
                         </div>
                         <div>
                           <p className="font-medium text-gray-900 text-theme-sm dark:text-white">
-                            {row.product.name}
+                            {productDisplayName(row)}
                           </p>
                           <p className="text-theme-xs text-gray-500 dark:text-gray-400">
-                            {[row.product.brand, row.product.category].filter(Boolean).join(" / ") || "-"}
+                            {[row.product.brand, row.product.model, row.product.color, row.product.category].filter(Boolean).join(" / ") || "-"}
                           </p>
                         </div>
                       </div>
@@ -535,7 +894,24 @@ export default function CompanyProductsPage() {
                       <RiskBadge row={row} />
                     </TableCell>
                     <TableCell className="py-3">
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex min-w-[260px] flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => startEditing(row)}
+                          startIcon={<PencilIcon className="size-4" />}
+                          className="text-gray-700 dark:text-gray-300"
+                        >
+                          Düzenle
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          onClick={() => void deleteCompanyProduct(row)}
+                          startIcon={<TrashBinIcon className="size-4" />}
+                        >
+                          Sil
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"
@@ -544,8 +920,9 @@ export default function CompanyProductsPage() {
                               current === row.product.id ? "" : row.product.id,
                             )
                           }
+                          startIcon={<EyeIcon className="size-4" />}
                         >
-                          {expandedProductId === row.product.id ? "Detayi Kapat" : "Detay"}
+                          {expandedProductId === row.product.id ? "Kapat" : "Detay"}
                         </Button>
                         <Button
                           size="sm"
@@ -554,10 +931,10 @@ export default function CompanyProductsPage() {
                           startIcon={<BoltIcon className="size-4" />}
                         >
                           {activeProductId === row.product.id
-                            ? "Analiz Calisiyor..."
+                            ? "Analiz Çalışıyor..."
                             : latestAt
                               ? "Yeniden Analiz Et"
-                              : "Analiz Baslat"}
+                              : "Analiz Başlat"}
                         </Button>
                       </div>
                     </TableCell>
@@ -567,7 +944,7 @@ export default function CompanyProductsPage() {
               {!rows.length && (
                 <TableRow>
                   <TableCell className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                    Henuz sirketinize ait urun yok.
+                    Henüz şirketinize ait ürün yok.
                   </TableCell>
                 </TableRow>
               )}
@@ -630,7 +1007,7 @@ function ProductDetail({
   const summaryReasons = [
     topTier?.seller_name
       ? `${topTier.seller_name} en onemli rakip olarak takip ediliyor.`
-      : "Rakip verisi geldikce en onemli saticilar burada ozetlenir.",
+      : "Rakip verisi geldikçe en önemli satıcılar burada özetlenir.",
     maxBuyboxScore(row) >= 70
       ? "Buybox kaybetme riski yuksek seviyede."
       : maxBuyboxScore(row) >= 40
@@ -646,10 +1023,10 @@ function ProductDetail({
       <div className="mb-5 flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {row.product.name} Analiz Ozeti
+            {productDisplayName(row)} Analiz Özeti
           </h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Varsayilan gorunum fiyat onerisi, risk ve kisa gerekceyi gosterir.
+            Varsayılan görünüm fiyat önerisi, risk ve kısa gerekçeyi gösterir.
           </p>
         </div>
         <RiskBadge row={row} />
@@ -657,7 +1034,7 @@ function ProductDetail({
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <MetricCard
-          label="Onerilen Fiyat"
+          label="Önerilen Fiyat"
           value={toMoney(recommendation?.recommended_price)}
           icon={<DollarLineIcon className="size-5" />}
         />
@@ -675,7 +1052,7 @@ function ProductDetail({
 
       <div className="mt-5 rounded-lg bg-gray-50 p-4 dark:bg-gray-900/60">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-          Gerekce
+          Gerekçe
         </h3>
         <ul className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-300">
           {summaryReasons.map((reason) => (
@@ -689,19 +1066,19 @@ function ProductDetail({
 
       <div className="mt-6 border-t border-gray-100 pt-5 dark:border-gray-800">
         <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-          Detayli Analiz
+          Detaylı Analiz
         </h3>
         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
           <InfoPill label="Rakip Sayisi" value={row.listings.length} />
-          <InfoPill label="Analizde Kullanilan" value={usedCompetitorCount} />
-          <InfoPill label="Goz Ardi Edilen" value={ignoredCompetitorCount} />
+          <InfoPill label="Analizde Kullanılan" value={usedCompetitorCount} />
+          <InfoPill label="Göz Ardı Edilen" value={ignoredCompetitorCount} />
         </div>
 
         <div className="mt-4 max-w-full overflow-x-auto">
           <Table>
             <TableHeader className="border-y border-gray-100 dark:border-gray-800">
               <TableRow>
-                {["Satici", "Fiyat", "Tehdit", "Neden onemli"].map((heading) => (
+                {["Satıcı", "Fiyat", "Tehdit", "Neden önemli"].map((heading) => (
                   <TableCell
                     key={heading}
                     isHeader
@@ -739,7 +1116,7 @@ function ProductDetail({
               {!strongestTiers.length && (
                 <TableRow>
                   <TableCell className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                    Henuz rakip analizi yok.
+                    Henüz rakip analizi yok.
                   </TableCell>
                 </TableRow>
               )}
@@ -814,7 +1191,7 @@ function InfoPill({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 function ThreatBadge({ score }: { score: number }) {
-  const label = score >= 70 ? "Yuksek" : score >= 40 ? "Orta" : "Dusuk";
+  const label = score >= 70 ? "Yüksek" : score >= 40 ? "Orta" : "Düşük";
   const color = score >= 70 ? "error" : score >= 40 ? "warning" : "success";
 
   return (
@@ -825,5 +1202,5 @@ function ThreatBadge({ score }: { score: number }) {
 }
 
 function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Beklenmeyen bir hata olustu.";
+  return error instanceof Error ? error.message : "Beklenmeyen bir hata oluştu.";
 }

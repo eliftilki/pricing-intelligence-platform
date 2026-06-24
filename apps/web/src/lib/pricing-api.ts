@@ -19,6 +19,7 @@ export type Product = {
   brand?: string | null;
   model?: string | null;
   category?: string | null;
+  color?: string | null;
   barcode?: string | null;
   description?: string | null;
   created_at: string;
@@ -29,6 +30,7 @@ export type SellerProduct = {
   company_id: UUID;
   product_id: UUID;
   marketplace: string;
+  display_name?: string | null;
   marketplace_url?: string | null;
   marketplace_product_id?: string | null;
   our_price?: string | number | null;
@@ -134,6 +136,26 @@ type RequestOptions = Omit<RequestInit, "body"> & {
   token?: string;
 };
 
+function formatApiError(status: number, detail: string) {
+  const trimmedDetail = detail.trim();
+  const productConflictMessages = [
+    "This product already exists for the selected marketplace.",
+    "Bu ürün seçtiğiniz pazaryerinde zaten şirket listenizde var.",
+  ];
+
+  if (
+    status === 409 &&
+    productConflictMessages.some((message) => trimmedDetail.includes(message))
+  ) {
+    return (
+      "Bu ürün seçtiğiniz pazaryerinde zaten şirket listenizde var. " +
+      "Mevcut ürünü düzenleyebilir veya farklı bir pazaryeri seçebilirsiniz."
+    );
+  }
+
+  return trimmedDetail || `İşlem tamamlanamadı. Lütfen tekrar deneyin.`;
+}
+
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
@@ -163,7 +185,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     } catch {
       detail = await response.text();
     }
-    throw new Error(`${response.status} ${detail}`);
+    throw new Error(formatApiError(response.status, detail));
   }
 
   if (response.status === 204) {
@@ -198,6 +220,7 @@ export const pricingApi = {
     brand?: string;
     model?: string;
     category?: string;
+    color?: string;
     barcode?: string;
     description?: string;
   }) => request<Product>("/products", { method: "POST", body }),
@@ -205,6 +228,7 @@ export const pricingApi = {
     company_id: UUID;
     product_id: UUID;
     marketplace: string;
+    display_name?: string;
     marketplace_url?: string;
     marketplace_product_id?: string;
     our_price?: number;
@@ -213,6 +237,31 @@ export const pricingApi = {
   }) => request<SellerProduct>("/products/seller-products", { method: "POST", body }),
   listSellerProducts: (companyId: UUID) =>
     request<SellerProduct[]>(`/products/seller-products/company/${companyId}`),
+  updateCompanyProduct: (
+    companyId: UUID,
+    productId: UUID,
+    body: {
+      name?: string;
+      brand?: string;
+      model?: string;
+      category?: string;
+      color?: string;
+      connection_type?: string;
+      display_name?: string;
+      our_price?: number;
+      cost_price?: number;
+      stock_quantity?: number;
+    },
+  ) =>
+    request<SellerProduct[]>(
+      `/products/company-products/${companyId}/${productId}`,
+      { method: "PATCH", body },
+    ),
+  deleteCompanyProduct: (companyId: UUID, productId: UUID) =>
+    request<{ status: string; product_id: UUID }>(
+      `/products/company-products/${companyId}/${productId}`,
+      { method: "DELETE" },
+    ),
   runDataCollection: (body: { product_id: UUID; marketplaces: string[] }) =>
     request<DataCollectionResponse>("/data-collection/run", {
       method: "POST",

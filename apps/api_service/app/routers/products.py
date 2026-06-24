@@ -3,7 +3,15 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
-from app.schemas.product_schema import ProductCreate, ProductOut, SellerProductCreate, SellerProductOut, UpdatePriceRequest, UpdateStockRequest
+from app.schemas.product_schema import (
+    CompanyProductUpdate,
+    ProductCreate,
+    ProductOut,
+    SellerProductCreate,
+    SellerProductOut,
+    UpdatePriceRequest,
+    UpdateStockRequest,
+)
 from app.services.product_service import ProductService
 
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -36,6 +44,23 @@ def list_seller_products(
     db: Session = Depends(get_db),
 ):
     return ProductService(db).list_seller_products_by_company(company_id, limit, offset)
+
+@router.patch("/company-products/{company_id}/{product_id}", response_model=list[SellerProductOut])
+def update_company_product(
+    company_id: UUID,
+    product_id: UUID,
+    payload: CompanyProductUpdate,
+    db: Session = Depends(get_db),
+):
+    return ProductService(db).update_company_product(company_id, product_id, payload)
+
+@router.delete("/company-products/{company_id}/{product_id}")
+def delete_company_product(
+    company_id: UUID,
+    product_id: UUID,
+    db: Session = Depends(get_db),
+):
+    return ProductService(db).delete_company_product(company_id, product_id)
 
 @router.patch("/seller-products/{seller_product_id}/price", response_model=SellerProductOut)
 def update_price(seller_product_id: UUID, payload: UpdatePriceRequest, db: Session = Depends(get_db), user=Depends(get_current_user)):
