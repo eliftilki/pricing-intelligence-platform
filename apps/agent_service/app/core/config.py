@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_debug: bool = True
     cors_allow_origins: list[str] = ["http://localhost:3000"]
+    admin_api_key: str | None = None
 
     class Config:
         env_file = ".env"

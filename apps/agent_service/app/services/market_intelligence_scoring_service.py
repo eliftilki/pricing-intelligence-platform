@@ -26,6 +26,9 @@ class MarketIntelligenceScoringService:
     HIGH_SIGNAL_THRESHOLD = 1.15
     MEDIUM_SIGNAL_THRESHOLD = 1.05
 
+    MIN_DEMAND_MULTIPLIER = 0.5
+    MAX_DEMAND_MULTIPLIER = 1.8
+
     def compute(
         self,
         trend: dict,
@@ -102,6 +105,10 @@ class MarketIntelligenceScoringService:
         multiplier += self.TREND_WEIGHT * (interest_change_7d or 0.0)
         multiplier += self.CATEGORY_WEIGHT * (category_demand_change or 0.0)
         multiplier += self.EVENT_WEIGHT * event_confidence
+        # Anormal/asiri sinyal (örn. tek bir SerpApi spike'i) ham carpani
+        # makul olmayan bir degere tasimasin - gercek kalibrasyon verisi
+        # gelene kadar guvenlik siniri.
+        multiplier = max(self.MIN_DEMAND_MULTIPLIER, min(self.MAX_DEMAND_MULTIPLIER, multiplier))
         return round(multiplier, 4)
 
     def _bucket(self, multiplier: float) -> str:

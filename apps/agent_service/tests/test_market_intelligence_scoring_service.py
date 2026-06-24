@@ -87,6 +87,23 @@ def test_market_demand_signal_buckets():
     assert svc._bucket(1.0) == "LOW"
 
 
+def test_extreme_negative_signal_is_clamped_to_min_multiplier():
+    result = svc.compute(
+        _trend(interest_change_7d=-5.0), _event(), _category(category_demand_change=-5.0), event_category_match=False
+    )
+
+    assert result["recommended_demand_multiplier"] == svc.MIN_DEMAND_MULTIPLIER
+
+
+def test_extreme_positive_signal_is_clamped_to_max_multiplier():
+    event = _event(detected=True, days_until_event=0, base_impact=1.0)
+    result = svc.compute(
+        _trend(interest_change_7d=5.0), event, _category(category_demand_change=5.0), event_category_match=True
+    )
+
+    assert result["recommended_demand_multiplier"] == svc.MAX_DEMAND_MULTIPLIER
+
+
 def test_missing_values_do_not_crash_and_use_neutral_defaults():
     result = svc.compute(
         trend={"trend_score": None, "interest_change_7d": None, "interest_change_30d": None},
