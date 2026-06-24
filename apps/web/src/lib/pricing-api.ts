@@ -64,6 +64,7 @@ export type AnalysisResponse = {
   session_id: UUID;
   product_id: UUID;
   ingestion_status: string;
+  ingestion_message?: string | null;
   scrape_counts: Record<string, number>;
   total_competitors: number;
   price_range: {

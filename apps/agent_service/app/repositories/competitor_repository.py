@@ -2,7 +2,7 @@ from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.competitor import CompetitorListing, CompetitorPriceHistory, CompetitorTier
@@ -17,30 +17,35 @@ class CompetitorRepository:
     def get_latest_competitor_listings(self, product_id: UUID, lookback_hours: int) -> list[CompetitorListing]:
         cutoff = datetime.now(timezone.utc) - timedelta(hours=lookback_hours)
 
-        subquery = (
+        ranked_listings = (
             self.db.query(
-                CompetitorListing.marketplace.label("marketplace"),
-                CompetitorListing.seller_name.label("seller_name"),
-                func.max(CompetitorListing.scraped_at).label("max_scraped_at"),
+                CompetitorListing.id.label("listing_id"),
+                func.row_number()
+                .over(
+                    partition_by=[
+                        CompetitorListing.marketplace,
+                        func.lower(func.trim(CompetitorListing.seller_name)),
+                    ],
+                    order_by=[
+                        CompetitorListing.scraped_at.desc(),
+                        CompetitorListing.created_at.desc(),
+                        CompetitorListing.id.desc(),
+                    ],
+                )
+                .label("row_number"),
             )
             .join(MarketplaceScrape, MarketplaceScrape.id == CompetitorListing.scrape_id)
             .filter(MarketplaceScrape.product_id == product_id, CompetitorListing.scraped_at >= cutoff)
-            .group_by(CompetitorListing.marketplace, CompetitorListing.seller_name)
             .subquery()
         )
 
         return (
             self.db.query(CompetitorListing)
-            .join(MarketplaceScrape, MarketplaceScrape.id == CompetitorListing.scrape_id)
             .join(
-                subquery,
-                and_(
-                    CompetitorListing.marketplace == subquery.c.marketplace,
-                    CompetitorListing.seller_name == subquery.c.seller_name,
-                    CompetitorListing.scraped_at == subquery.c.max_scraped_at,
-                ),
+                ranked_listings,
+                CompetitorListing.id == ranked_listings.c.listing_id,
             )
-            .filter(MarketplaceScrape.product_id == product_id)
+            .filter(ranked_listings.c.row_number == 1)
             .order_by(CompetitorListing.marketplace, CompetitorListing.rank.asc().nullslast())
             .all()
         )

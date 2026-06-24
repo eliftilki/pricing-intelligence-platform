@@ -91,6 +91,7 @@ async def build_analysis_response(
         session_id=session_id,
         product_id=product_id,
         ingestion_status=ingestion_result["status"],
+        ingestion_message=ingestion_result.get("message"),
         scrape_counts=ingestion_result.get("scrape_counts", {}),
         total_competitors=total_competitors,
         price_range=intelligence.get("price_range") or _build_price_range(listings),
