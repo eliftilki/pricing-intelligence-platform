@@ -10,30 +10,30 @@ import {
 
 const features = [
   {
-    title: "Pazaryeri verilerini tek akista topla",
+    title: "Pazaryeri verilerini tek akışta topla",
     description:
-      "Trendyol, Hepsiburada ve Amazon kaynaklarindan rakip ilanlarini analiz akisi icin hazir hale getir.",
+      "Trendyol, Hepsiburada ve Amazon kaynaklarından rakip ilanlarını analiz akışı için hazır hale getir.",
     icon: <BoltIcon className="size-6 text-brand-500" />,
   },
   {
-    title: "Rakipleri fiyat tehdidine gore sirala",
+    title: "Rakipleri fiyat tehdidine göre sırala",
     description:
-      "Guc, agresiflik ve buybox tehdidi sinyallerini kullanarak hangi rakiplerin kritik oldugunu gor.",
+      "Güç, agresiflik ve buybox tehdidi sinyallerini kullanarak hangi rakiplerin kritik olduğunu gör.",
     icon: <PieChartIcon className="size-6 text-brand-500" />,
   },
   {
-    title: "Aciklanabilir fiyat adaylari uret",
+    title: "Açıklanabilir fiyat adayları üret",
     description:
-      "Tek bir kara kutu fiyat yerine stratejisi, guveni ve gerekcesi gorunen aday fiyatlarla karar ver.",
+      "Tek bir kara kutu fiyat yerine stratejisi, güveni ve gerekçesi görünen aday fiyatlarla karar ver.",
     icon: <DollarLineIcon className="size-6 text-brand-500" />,
   },
 ];
 
 const workflow = [
-  "Urun ve satici kayitlari",
+  "Ürün ve satıcı kayıtları",
   "Veri toplama",
   "Rakip analizi",
-  "Fiyat onerisi",
+  "Fiyat önerisi",
 ];
 
 export default function FeraSetLanding() {
@@ -62,13 +62,13 @@ export default function FeraSetLanding() {
 
           <nav className="hidden items-center gap-7 text-sm font-medium text-gray-600 dark:text-gray-300 md:flex">
             <a href="#features" className="hover:text-brand-500">
-              Ozellikler
+              Özellikler
             </a>
             <a href="#workflow" className="hover:text-brand-500">
-              Akis
+              Akış
             </a>
             <a href="#start" className="hover:text-brand-500">
-              Basla
+              Başla
             </a>
           </nav>
 
@@ -76,7 +76,7 @@ export default function FeraSetLanding() {
             href="/signin"
             className="inline-flex h-10 items-center justify-center rounded-full bg-brand-500 px-5 text-sm font-medium text-white transition hover:bg-brand-600"
           >
-            Giris Yap
+            Giriş Yap
           </Link>
         </div>
       </header>
@@ -89,24 +89,24 @@ export default function FeraSetLanding() {
               E-ticaret fiyat karar merkezi
             </div>
             <h1 className="max-w-3xl text-4xl font-bold leading-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
-              feraSet ile rakip verisini fiyat kararina donustur.
+              feraSet ile rakip verisini fiyat kararına dönüştür.
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-gray-600 dark:text-gray-300">
-              Pazaryerlerinden veri topla, rakiplerini skorla ve aciklanabilir
-              fiyat onerileriyle operasyon ekibinin karar surecini hizlandir.
+              Pazaryerlerinden veri topla, rakiplerini skorla ve açıklanabilir
+              fiyat önerileriyle operasyon ekibinin karar sürecini hızlandır.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/signup"
                 className="inline-flex h-12 items-center justify-center rounded-full bg-brand-500 px-6 text-sm font-semibold text-white shadow-theme-md transition hover:bg-brand-600"
               >
-                Sirket Hesabi Olustur
+                Şirket Hesabı Oluştur
               </Link>
               <a
                 href="#workflow"
                 className="inline-flex h-12 items-center justify-center rounded-full border border-gray-300 px-6 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-white/15 dark:text-gray-200 dark:hover:bg-white/5"
               >
-                Akisi Incele
+                Akışı İncele
               </a>
             </div>
           </div>
@@ -130,11 +130,11 @@ export default function FeraSetLanding() {
         <div className="mx-auto max-w-7xl">
           <div className="mb-10 max-w-2xl">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Projenin backend servislerine hazir karsilama ekrani
+              Projenin backend servislerine hazır karşılama ekranı
             </h2>
             <p className="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
-              Bu sayfa kullaniciyi dogrudan dashboard'a atmak yerine urun,
-              rakip ve fiyat onerisi akisini kisaca anlatir.
+              Bu sayfa kullanıcıyı doğrudan dashboard'a atmak yerine ürün,
+              rakip ve fiyat önerisi akışını kısaca anlatır.
             </p>
           </div>
 
@@ -164,11 +164,11 @@ export default function FeraSetLanding() {
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
             <div>
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Veri toplamadan oneriyi uygulamaya kadar tek panel.
+                Veri toplamadan öneriyi uygulamaya kadar tek panel.
               </h2>
               <p className="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-300">
                 feraSet dashboard'u mevcut API, agent ve data ingestion
-                servislerini ayni operasyon ekraninda birlestirir.
+                servislerini aynı operasyon ekranında birleştirir.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-4">
@@ -193,17 +193,17 @@ export default function FeraSetLanding() {
       <section id="start" className="px-5 pb-16 sm:px-7">
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-5 rounded-lg bg-gray-900 p-6 text-white dark:bg-brand-500 lg:flex-row lg:items-center lg:p-8">
           <div>
-            <h2 className="text-2xl font-bold">Analiz paneline gecmeye hazir misin?</h2>
+            <h2 className="text-2xl font-bold">Analiz paneline geçmeye hazır mısın?</h2>
             <p className="mt-2 text-sm text-white/70">
-              Sirket ve urun kayitlarini olustur, veri toplama akisini baslat ve
-              fiyat onerilerini yonet.
+              Şirket ve ürün kayıtlarını oluştur, veri toplama akışını başlat ve
+              fiyat önerilerini yönet.
             </p>
           </div>
           <Link
             href="/signin"
             className="inline-flex h-12 shrink-0 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-gray-900 transition hover:bg-gray-100"
           >
-            Panele Giris Yap
+            Panele Giriş Yap
           </Link>
         </div>
       </section>

@@ -36,7 +36,7 @@ export default function SignUpForm() {
       setError(
         registerError instanceof Error
           ? registerError.message
-          : "Kayit olusturulamadi. Bilgileri kontrol edin.",
+          : "Kayıt oluşturulamadı. Lütfen bilgileri kontrol edin.",
       );
     } finally {
       setIsSubmitting(false);
@@ -51,17 +51,17 @@ export default function SignUpForm() {
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon />
-          feraSet ana sayfasi
+          feraSet ana sayfası
         </Link>
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Sirket Hesabi Olustur
+              Şirket Hesabı Oluştur
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              feraSet panelini kendi sirket verilerinizle kullanmaya baslayin.
+              feraSet panelini kendi şirket verilerinizle kullanmaya başlayın.
             </p>
           </div>
           <div>
@@ -74,11 +74,11 @@ export default function SignUpForm() {
               <div className="space-y-5">
                 <div>
                   <Label>
-                    Sirket Adi<span className="text-error-500">*</span>
+                    Şirket Adı<span className="text-error-500">*</span>
                   </Label>
                   <Input
                     type="text"
-                    placeholder="Sirketiniz"
+                    placeholder="Şirketiniz"
                     value={companyName}
                     onChange={(event) => setCompanyName(event.target.value)}
                   />
@@ -89,7 +89,7 @@ export default function SignUpForm() {
                   </Label>
                   <Input
                     type="text"
-                    placeholder="Adiniz Soyadiniz"
+                    placeholder="Adınız Soyadınız"
                     value={fullName}
                     onChange={(event) => setFullName(event.target.value)}
                   />
@@ -107,11 +107,11 @@ export default function SignUpForm() {
                 </div>
                 <div>
                   <Label>
-                    Sifre<span className="text-error-500">*</span>
+                    Şifre<span className="text-error-500">*</span>
                   </Label>
                   <div className="relative">
                     <Input
-                      placeholder="Sifreniz"
+                      placeholder="Şifreniz"
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
@@ -133,7 +133,7 @@ export default function SignUpForm() {
                     disabled={isSubmitting || !companyName || !fullName || !email || !password}
                     className="flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {isSubmitting ? "Hesap olusturuluyor..." : "Hesap Olustur"}
+                    {isSubmitting ? "Hesap oluşturuluyor..." : "Hesap Oluştur"}
                   </button>
                 </div>
               </div>
@@ -141,12 +141,12 @@ export default function SignUpForm() {
 
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                Zaten hesabiniz var mi?{" "}
+                Zaten hesabınız var mı?{" "}
                 <Link
                   href="/signin"
                   className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
-                  Giris Yap
+                  Giriş Yap
                 </Link>
               </p>
             </div>

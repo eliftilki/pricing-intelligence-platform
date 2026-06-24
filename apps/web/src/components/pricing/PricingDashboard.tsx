@@ -69,6 +69,10 @@ function latestRecommendation(summary: ProductSummary) {
   )[0];
 }
 
+function productDisplayName(summary: ProductSummary) {
+  return summary.sellerProducts[0]?.display_name || summary.product.name;
+}
+
 function isRisky(summary: ProductSummary) {
   const recommendation = latestRecommendation(summary);
   const risk = recommendation?.risk_level?.toLocaleLowerCase("tr-TR") || "";
@@ -163,7 +167,7 @@ export default function PricingDashboard() {
 
     return [
       {
-        label: "Toplam Urun",
+        label: "Toplam Ürün",
         value: summaries.length,
         icon: <BoxIconLine className="text-gray-800 dark:text-white/90" />,
       },
@@ -173,7 +177,7 @@ export default function PricingDashboard() {
         icon: <BoltIcon className="text-gray-800 size-6 dark:text-white/90" />,
       },
       {
-        label: "Riskli Urun",
+        label: "Riskli Ürün",
         value: risky.length,
         icon: <DollarLineIcon className="text-gray-800 size-6 dark:text-white/90" />,
       },
@@ -218,7 +222,7 @@ export default function PricingDashboard() {
             {company?.name || "feraSet"} Dashboard
           </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Urun portfoyunuzun analiz durumunu ve risk ozetini takip edin.
+            Ürün portföyünüzün analiz durumunu ve risk özetini takip edin.
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -230,7 +234,7 @@ export default function PricingDashboard() {
             Yenile
           </Button>
           <Link href="/products">
-            <Button>Urunlere Git</Button>
+            <Button>Ürünlere Git</Button>
           </Link>
         </div>
       </div>
@@ -269,17 +273,17 @@ export default function PricingDashboard() {
         <section className={`${cardClass} xl:col-span-2`}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Son Calisan Analizler
+              Son Çalışan Analizler
             </h2>
             <Badge color="light" size="sm">
-              {recentAnalyses.length} kayit
+              {recentAnalyses.length} kayıt
             </Badge>
           </div>
           <div className="max-w-full overflow-x-auto">
             <Table>
               <TableHeader className="border-y border-gray-100 dark:border-gray-800">
                 <TableRow>
-                  {["Urun", "Onerilen Fiyat", "Risk", "Son Analiz"].map((heading) => (
+                  {["Ürün", "Önerilen Fiyat", "Risk", "Son Analiz"].map((heading) => (
                     <TableCell
                       key={heading}
                       isHeader
@@ -305,7 +309,7 @@ export default function PricingDashboard() {
                   return (
                     <TableRow key={summary.product.id}>
                       <TableCell className="py-3 text-theme-sm font-medium text-gray-900 dark:text-white">
-                        {summary.product.name}
+                        {productDisplayName(summary)}
                       </TableCell>
                       <TableCell className="py-3 text-theme-sm text-gray-700 dark:text-gray-300">
                         {toMoney(recommendation?.recommended_price)}
@@ -322,7 +326,7 @@ export default function PricingDashboard() {
                 {!recentAnalyses.length && (
                   <TableRow>
                     <TableCell className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                      Henuz calismis analiz yok.
+                      Henüz çalışmış analiz yok.
                     </TableCell>
                   </TableRow>
                 )}
@@ -337,7 +341,7 @@ export default function PricingDashboard() {
               Bekleyen Analizler
             </h2>
             <Badge color={pendingAnalyses.length ? "warning" : "success"} size="sm">
-              {pendingAnalyses.length} urun
+              {pendingAnalyses.length} ürün
             </Badge>
           </div>
           <div className="space-y-3">
@@ -347,10 +351,10 @@ export default function PricingDashboard() {
                 className="rounded-lg border border-gray-100 p-3 dark:border-gray-800"
               >
                 <p className="font-medium text-gray-900 text-theme-sm dark:text-white">
-                  {summary.product.name}
+                  {productDisplayName(summary)}
                 </p>
                 <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
-                  Analiz baslatilmayi bekliyor.
+                  Analiz başlatılmayı bekliyor.
                 </p>
               </div>
             ))}
@@ -368,7 +372,7 @@ export default function PricingDashboard() {
 
 function RiskBadge({ summary }: { summary: ProductSummary }) {
   const recommendation = latestRecommendation(summary);
-  const risk = recommendation?.risk_level || (isRisky(summary) ? "Yuksek" : "Dusuk");
+  const risk = recommendation?.risk_level || (isRisky(summary) ? "Yüksek" : "Düşük");
   const normalizedRisk = risk.toLocaleLowerCase("tr-TR");
   const color =
     normalizedRisk.includes("high") || normalizedRisk.includes("yuksek")
@@ -385,5 +389,5 @@ function RiskBadge({ summary }: { summary: ProductSummary }) {
 }
 
 function errorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "Beklenmeyen bir hata olustu.";
+  return error instanceof Error ? error.message : "Beklenmeyen bir hata oluştu.";
 }

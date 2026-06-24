@@ -30,7 +30,7 @@ export default function AuthLayout({
                   />
                 </Link>
                 <p className="text-center text-gray-400 dark:text-white/60">
-                  Sirketinize ait urun, rakip ve fiyat onerilerini tek panelde yonetin.
+                  Şirketinize ait ürün, rakip ve fiyat önerilerini tek panelde yönetin.
                 </p>
               </div>
             </div>

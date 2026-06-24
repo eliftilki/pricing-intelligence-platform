@@ -185,8 +185,8 @@ class IngestionService:
         for marketplace, ms in skipped_marketplaces.items():
             self.repo.update_marketplace_scrape(
                 scrape_id=ms.id,
-                status="SKIPPED",
-                error_message="Circuit breaker OPEN: marketplace temporarily unavailable",
+                status="FAILED",
+                error_message="Skipped because circuit breaker is open: marketplace temporarily unavailable",
             )
             scrape_counts[marketplace] = 0
 
@@ -253,9 +253,10 @@ class IngestionService:
         self.db.commit()
 
         total = sum(scrape_counts.values())
+        attempted_count = len(scrape_records)
         if success_count == 0:
             status = "FAILED"
-        elif success_count < len(tasks):
+        elif success_count < attempted_count:
             status = "PARTIAL"
         else:
             status = "COMPLETED"
@@ -270,7 +271,7 @@ class IngestionService:
         marketplace_summary = ", ".join(
             f"{m}: {c}" for m, c in scrape_counts.items()
         )
-        message = f"Scraped {success_count}/{len(tasks)} marketplaces. {total} competitors found. ({marketplace_summary})"
+        message = f"Scraped {success_count}/{attempted_count} marketplaces. {total} competitors found. ({marketplace_summary})"
 
         return IngestionRunResponse(
             job_id=session.id,
