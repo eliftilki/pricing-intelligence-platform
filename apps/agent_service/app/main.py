@@ -1,9 +1,13 @@
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+load_dotenv()
 
 from app.core.config import settings
 from app.routers.competitor_intelligence import router as competitor_intelligence_router
 from app.routers.candidate_price import router as candidate_price_router
+from app.routers.admin import router as admin_router
 
 
 app = FastAPI(
@@ -28,3 +32,4 @@ def health_check():
 
 app.include_router(competitor_intelligence_router)
 app.include_router(candidate_price_router)
+app.include_router(admin_router)

@@ -1,7 +1,15 @@
-from typing import List, Optional
+from typing import List, Literal, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
+
+# event_calendar seed data (agent_service) ile birebir ayni 12 kategori.
+# Serbest metin kategori girisi (eski "Mouse", "headset", "Kulaklık" gibi
+# tutarsizliklara yol acmisti) event matching'i kirdigi icin kapatildi.
+ProductCategory = Literal[
+    "Elektronik", "Moda", "Ev", "Gıda", "Kırtasiye", "Spor",
+    "Takı", "Güzellik", "Hediye", "Aletler", "Oyuncak", "Kozmetik",
+]
 
 
 # ---------- Search ----------
@@ -47,7 +55,7 @@ class ProductCreateRequest(BaseModel):
     company_id: UUID
     name: str
     brand: Optional[str] = None
-    category: Optional[str] = None
+    category: Optional[ProductCategory] = None
     marketplace_urls: dict[str, str]
 
 

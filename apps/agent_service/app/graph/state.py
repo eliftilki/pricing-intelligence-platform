@@ -21,3 +21,6 @@ class CompetitorGraphState(TypedDict, total=False):
     candidate_price_result: dict
     candidate_prices: list[float]
     selected_candidate_strategy: str
+
+    pricing_features: dict
+    market_event_features: dict
