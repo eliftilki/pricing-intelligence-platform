@@ -13,6 +13,7 @@ class AgentClient:
     def __init__(self):
         self.base_url = settings.agent_service_url
         self.timeout_intelligence = httpx.Timeout(60.0, connect=10.0, read=60.0, write=10.0, pool=10.0)
+        self.timeout_optimization = httpx.Timeout(30.0, connect=10.0, read=30.0, write=10.0, pool=10.0)
 
     async def _request_with_retry(
         self, method: str, url: str, json_payload: dict, timeout: httpx.Timeout, max_retries: int = 3
@@ -71,6 +72,24 @@ class AgentClient:
             },
             self.timeout_intelligence,
             max_retries=3,
+        )
+
+    async def run_optimization(self, payload: dict) -> dict:
+        return await self._request_with_retry(
+            "POST",
+            f"{self.base_url}/optimization/run",
+            payload,
+            self.timeout_optimization,
+            max_retries=2,
+        )
+
+    async def run_optimization_from_db(self, seller_product_id: UUID, payload: dict) -> dict:
+        return await self._request_with_retry(
+            "POST",
+            f"{self.base_url}/optimization/run-from-db/{seller_product_id}",
+            payload,
+            self.timeout_optimization,
+            max_retries=2,
         )
 
 
