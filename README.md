@@ -1,225 +1,418 @@
 # feraSet
 
-feraSet; e-ticaret satıcıları için pazaryeri verilerini toplayan, rakipleri analiz eden ve açıklanabilir fiyat adayları üreten yapay zekâ destekli bir fiyatlandırma platformudur.
+feraSet, e-ticaret saticilari icin pazaryeri verilerini toplayan, rakipleri analiz eden, aday fiyatlar ureten ve bu adaylari komisyon/maliyet/marj kurallarina gore optimize eden fiyatlandirma platformudur.
 
-## Projenin amacı
+Platform tek bir "sihirli fiyat" uretmek yerine fiyat kararini izlenebilir asamalara ayirir:
 
-Platformun temel amacı, tek bir “doğru fiyat” vermek yerine karar sürecinin her aşamasını ayrı ve izlenebilir bileşenlere ayırmaktır:
-
-1. Pazaryerlerinden ürün ve rakip verileri toplanır.
-2. Rakipler güç, fiyat agresifliği ve buybox tehdidine göre analiz edilir.
-3. Fiyatlandırmada kullanılacak özellikler hazırlanır.
-4. Pazar yapısına uygun strateji seçilerek birden fazla aday fiyat üretilir.
-5. İlerleyen aşamalarda adaylar tahmin, optimizasyon ve risk kontrollerinden geçirilerek nihai öneriye dönüştürülür.
+1. Pazaryerlerinden rakip ve fiyat verileri toplanir.
+2. Rakipler guc, fiyat agresifligi ve buybox tehdidine gore analiz edilir.
+3. Pazar yapisina gore birden fazla aday fiyat uretilir.
+4. Marketplace ve sirket ozel komisyonlari ayri Commission Service katmanindan cozulur.
+5. Aday fiyatlar beklenen satis ve kar kurallariyla optimize edilir.
+6. SLM servisinden fiyat kararini kullaniciya aciklayan metin alinabilir.
 
 ## Servisler
 
 | Servis | Sorumluluk |
 | --- | --- |
-| `api_service` | Şirket, ürün, kimlik doğrulama, analiz ve öneri API'lerini sunar; diğer servislerle iletişimi yönetir. |
-| `agent_service` | LangGraph tabanlı rakip analizi, feature engineering ve aday fiyat üretim akışlarını çalıştırır. |
-| `data_ingestion_service` | Pazaryerlerinden rakip ve fiyat verilerini toplar ve normalize eder. |
+| `apps/web` | Next.js tabanli yonetim arayuzu. Sirket urunleri, analiz baslatma ve sonuc goruntuleme ekranlarini sunar. |
+| `apps/api_service` | Kimlik, sirket, urun, analiz, competitor, recommendation API'lerini sunar; diger servislerle HTTP uzerinden konusur. |
+| `apps/agent_service` | Pricing pipeline orchestration, competitor intelligence, candidate price generation, commission lookup, optimization ve SLM explanation client katmanlarini calistirir. |
+| `apps/data_ingestion_service` | Trendyol, Hepsiburada ve Amazon icin arama/scrape akisini calistirir; rakip ilanlarini normalize eder. |
+| `apps/slm_service` | Hugging Face tabanli lokal SLM ile fiyat onerisi aciklamasi uretir. |
+| `apps/ml_service` | Su anda placeholder klasordur; aktif FastAPI servisi veya endpoint icermiyor. |
 
-Planlanan üst seviye akış:
+## Ana Akis
 
 ```text
-Veri Toplama
-    ↓
-Competitor Intelligence
-    ↓
-Feature Engineering
-    ↓
-Candidate Price Generator
-    ↓
-ML Prediction → Optimization → Risk Control
-    ↓
-Recommendation → SLM Explanation
+Data Ingestion
+    |
+    v
+Pricing Pipeline Graph
+    |
+    +-- Competitor Intelligence Node
+    |
+    +-- Candidate Price Generator Node
+    |
+    +-- Optimization Node
+    |       |
+    |       +-- Commission Service
+    |               |
+    |               +-- Commission Repository
+    |                       |
+    |                       +-- Database
+    |
+    +-- SLM Explanation Node
 ```
 
-## Agent Service mimarisi
+`/pricing-intelligence/run` ana agent pipeline girisidir. Graph her zaman `competitor_intelligence` node ile baslar. `run_candidate_prices` ve `run_optimization` bayraklariyla sonraki adimlar acilip kapatilabilir.
+
+`/competitor-intelligence/run` endpoint'i korunur, ancak graph orkestrasyonu calistirmaz; sadece rakip analizini dogrudan calistirir.
+
+## Agent Service Mimarisi
 
 ```text
 apps/agent_service/app/
-│
-├── core/
-│   ├── config.py
-│   └── database.py
-│
-├── graph/
-│   ├── state.py
-│   └── competitor_graph.py
-│
-├── models/
-│   ├── base.py
-│   ├── company.py
-│   ├── product.py
-│   ├── scrape.py
-│   ├── competitor.py
-│   ├── agent_run.py
-│   ├── pricing_feature.py
-│   └── candidate_price.py
-│
-├── nodes/
-│   ├── competitor_intelligence_node.py
-│   ├── feature_engineering_node.py
-│   └── candidate_price_generator_node.py
-│
-├── repositories/
-│   ├── competitor_intelligence_repository.py
-│   ├── pricing_feature_repository.py
-│   └── candidate_price_repository.py
-│
-├── routers/
-│   ├── competitor_intelligence.py
-│   └── candidate_price.py
-│
-├── schemas/
-│   ├── competitor_intelligence_schema.py
-│   ├── pricing_feature_schema.py
-│   └── candidate_price_schema.py
-│
-├── services/
-│   ├── competitor_scoring_service.py
-│   ├── competitor_tiering_service.py
-│   ├── pricing_feature_engineering_service.py
-│   ├── candidate_price_generator_service.py
-│   ├── candidate_strategy_selector.py
-│   └── candidate_strategies/
-│       ├── __init__.py
-│       ├── base_candidate_strategy.py
-│       ├── basic_range_strategy.py
-│       ├── tier_based_strategy.py
-│       └── adaptive_dense_strategy.py
-│
-└── main.py
+|
++-- core/
+|   +-- config.py
+|   +-- database.py
+|
++-- graph/
+|   +-- state.py
+|   +-- pricing_pipeline_graph.py
+|
++-- nodes/
+|   +-- competitor_intelligence_node.py
+|   +-- candidate_price_generator_node.py
+|   +-- optimization_node.py
+|   +-- slm_explanation_node.py
+|
++-- services/
+|   +-- competitor_intelligence_service.py
+|   +-- competitor_scoring_service.py
+|   +-- candidate_price_generator_service.py
+|   +-- candidate_strategy_selector.py
+|   +-- candidate_strategies/
+|   +-- commission_service.py
+|   +-- optimization_service.py
+|   +-- slm_explanation_client.py
+|
++-- repositories/
+|   +-- competitor_repository.py
+|   +-- candidate_price_repository.py
+|   +-- commission_repository.py
+|   +-- optimization_repository.py
+|
++-- routers/
+|   +-- competitor_intelligence.py
+|   +-- candidate_price.py
+|   +-- optimization.py
+|   +-- pricing_intelligence.py
+|
++-- schemas/
+|   +-- competitor_schema.py
+|   +-- candidate_price_schema.py
+|   +-- optimization_schema.py
+|   +-- pricing_intelligence_schema.py
+|   +-- slm_explanation_schema.py
+|
++-- models/
+|   +-- base.py
+|   +-- product.py
+|   +-- competitor.py
+|   +-- candidate_price.py
+|   +-- commission.py
+|   +-- optimization.py
+|   +-- agent_run.py
+|
++-- main.py
 ```
 
-> Bu ağaç, Agent Service için hedeflenen güncel modül sınırlarını gösterir. Bazı bileşenler geliştirme aşamasında olabilir.
+### Pricing Pipeline Graph
 
-### Modül sorumlulukları
+Graph dosyasi:
 
-#### Competitor Intelligence
+```text
+apps/agent_service/app/graph/pricing_pipeline_graph.py
+```
 
-- Güncel rakip ilanlarını ve fiyat geçmişini okur.
-- Rakip gücü, fiyat agresifliği ve buybox tehdit skorlarını hesaplar.
-- Rakipleri `TIER_1`, `TIER_2` gibi önem seviyelerine ayırır.
-- Analiz sonucunu ve çalışma durumunu kalıcı olarak kaydeder.
+Mevcut graph sirasi:
 
-#### Feature Engineering
+```text
+START
+  -> competitor_intelligence
+  -> candidate_price_generator   run_candidate_prices=true ise
+  -> optimization                run_optimization=true ise
+  -> slm_explanation             optimization calisirsa
+  -> END
+```
 
-- Competitor Intelligence çıktısını fiyatlandırmada kullanılabilecek özelliklere dönüştürür.
-- Mevcut fiyat, rakip fiyat aralığı, pazar yoğunluğu ve ilgili rakipleri tek bir feature çıktısında birleştirir.
-- Candidate Price Generator'ın ihtiyaç duyduğu veri sözleşmesini sağlar.
+`run_optimization=false` ise pipeline rakip analizi veya aday fiyat adimindan sonra biter; bu durumda SLM explanation node calismaz.
 
-#### Candidate Price Generator
+Not: `slm_explanation_node` su anda `state["recommendation"]` bekler. Recommendation node henuz eklenmedigi icin SLM node calissa bile recommendation yoksa `RECOMMENDATION_NOT_FOUND_FOR_SLM` hatasini `state["errors"]` icine yazar.
 
-- Feature Engineering çıktısını tüketir.
-- `AUTO` modunda pazar yapısına göre uygun stratejiyi seçer.
-- Tek bir nihai fiyat yerine, sonraki optimizasyon aşamalarında değerlendirilecek aday fiyatlar üretir.
-- Seçilen stratejiyi, uygulanan kısıtları ve üretim gerekçesini sonuçla birlikte döndürür.
+## Modul Sorumluluklari
 
-Candidate üretimi mümkün olduğunda `seller_product_id` üzerinden yürütülür. Böylece aynı ürünün farklı pazaryerlerindeki mevcut fiyat, maliyet, komisyon ve marj koşulları birbirinden ayrılır.
+### Competitor Intelligence
 
-### Candidate fiyat stratejileri
+- Guncel rakip ilanlarini ve fiyat gecmisini okur.
+- Rakip gucu, fiyat agresifligi ve buybox tehdit skorlarini hesaplar.
+- Rakipleri `TIER_1`, `TIER_2`, `NOISE` gibi siniflara ayirir.
+- Sonuclari `competitor_tiers` ve `agent_runs` ile izlenebilir hale getirir.
 
-| Strateji | Kullanım amacı |
+### Candidate Price Generator
+
+- Rakip fiyat araligi ve mevcut fiyattan aday fiyatlar uretir.
+- `AUTO` modunda pazar yapisina gore strateji secer.
+- Nihai fiyat secmez; optimization asamasina verilecek fiyat adaylarini uretir.
+
+Desteklenen stratejiler:
+
+| Strateji | Amac |
 | --- | --- |
-| `BASIC_COMPETITOR_RANGE` | Yeterli tier veya yoğunluk bilgisi olmadığında temel rakip fiyat aralığından aday üretir. |
-| `TIER_BASED_COMPETITOR_WINDOW` | Öncelikli rakip tier'larını dikkate alarak daha hedefli bir fiyat penceresi oluşturur. |
-| `ADAPTIVE_DENSE_MARKET_WINDOW` | Rakip fiyatlarının yoğunlaştığı bölgelerde daha küçük adımlarla aday üretir. |
-| `AUTO` | Feature verisini inceleyerek yukarıdaki stratejilerden uygun olanı seçer. |
+| `BASIC_COMPETITOR_RANGE` | Temel rakip fiyat araligindan aday uretir. |
+| `TIER_BASED_COMPETITOR_WINDOW` | Oncelikli rakip tier'larini dikkate alir. |
+| `ADAPTIVE_DENSE_MARKET_WINDOW` | Yogun fiyat bolgelerinde daha ince adimlarla aday uretir. |
+| `AUTO` | Uygun stratejiyi otomatik secer. |
 
-## Katmanların görevleri
+### Commission Service
 
-- `routers`: HTTP isteklerini ve yanıt modellerini yönetir.
-- `schemas`: Servisler arası veri sözleşmelerini Pydantic modelleriyle tanımlar.
-- `graph`: Node'ların çalışma sırasını ve ortak state'i yönetir.
-- `nodes`: Graph state ile servis katmanı arasındaki adaptasyonu yapar.
-- `services`: İş kurallarını ve fiyat üretim algoritmalarını içerir.
-- `repositories`: Veritabanı okuma ve yazma işlemlerini kapsüller.
-- `models`: SQLAlchemy veritabanı modellerini tanımlar.
+Optimization agent komisyonu kendisi hesaplamaz. Komisyon orani ayri `CommissionService` uzerinden cozulur.
 
-## Yerel kurulum
+Oncelik sirasi:
 
-### Gereksinimler
+1. `company_marketplace_commission_overrides`
+2. `marketplace_commission_rules`
+3. Hicbiri yoksa `COMMISSION_RATE_NOT_FOUND`
 
-- Python 3.11 veya üzeri
-- PostgreSQL
-- Playwright tarayıcıları (`data_ingestion_service` için)
-- Supabase projesi veya geliştirme ortamına uygun Supabase bilgileri
+Komisyon eslesmesi `category` text degeriyle degil, `category_id` ile yapilir. Bu nedenle `products.category_id`, `marketplace_commission_rules.category_id` ve override tablosundaki `category_id` alanlari dolu olmalidir.
 
-### Ortam değişkenleri
+### Optimization
 
-Kök dizindeki örnek dosyayı kopyalayın:
+- Demand prediction ciktisini ve marketplace cost context'ini alir.
+- Komisyon, kargo, paketleme, maliyet ve minimum marj kurallarini uygular.
+- Her marketplace icin en yuksek beklenen kar adayini secer.
+- Sonuclari `pricing_optimization_results` tablosuna kaydedebilir.
+
+### SLM Explanation
+
+`slm_service`, fiyat onerisi icin kullaniciya okunabilir Turkce aciklama uretir.
+
+Agent service, SLM service'e su endpoint uzerinden gider:
+
+```text
+POST http://localhost:8003/explanations/generate
+```
+
+SLM servisinin model yuklemesi runtime'da Hugging Face model erisimi, disk, RAM/GPU durumuna baglidir.
+
+## Onemli Endpointler
+
+### API Service
+
+```text
+POST /analysis/run
+POST /analysis/search-and-run
+GET  /products
+POST /products
+GET  /recommendations/seller-products/{seller_product_id}
+```
+
+### Agent Service
+
+```text
+POST /competitor-intelligence/run
+POST /pricing-intelligence/run
+POST /candidate-prices/generate
+POST /optimization/run
+POST /optimization/run-from-db/{seller_product_id}
+```
+
+Ornek pricing pipeline istegi:
+
+```json
+{
+  "product_id": "PRODUCT_UUID",
+  "seller_product_id": "SELLER_PRODUCT_UUID",
+  "lookback_hours": 24,
+  "run_candidate_prices": true,
+  "run_optimization": true,
+  "persist_candidate_prices": true,
+  "persist_optimization": true,
+  "demand_predictions": [
+    { "price": 1000, "expected_sales": 12 },
+    { "price": 1100, "expected_sales": 10 }
+  ]
+}
+```
+
+### Data Ingestion Service
+
+```text
+POST /ingestion/search-and-run
+POST /ingestion/run
+POST /ingestion/run-with-urls
+POST /search
+```
+
+Scrape cache su anda 12 saattir. Tum marketplace'ler cache'ten gelirse yeni scraping calismaz. Kismi cache durumunda sadece eksik marketplace'ler scrape edilir.
+
+### SLM Service
+
+```text
+GET  /health
+POST /explanations/generate
+```
+
+## Veritabani Beklentileri
+
+Kodun guncel hali su tablolarin varligini bekler:
+
+- `product_categories`
+- `products.category_id`
+- `marketplace_commission_rules.category_id`
+- `company_marketplace_commission_overrides`
+- `pricing_optimization_results`
+- `candidate_price_batches`
+- `candidate_prices`
+- `competitor_tiers`
+- `agent_runs`
+
+Komisyon lookup icin kritik alanlar:
+
+```text
+products.category_id
+marketplace_commission_rules.marketplace
+marketplace_commission_rules.category_id
+company_marketplace_commission_overrides.company_id
+company_marketplace_commission_overrides.marketplace
+company_marketplace_commission_overrides.category_id
+```
+
+Default komisyon ornegi:
+
+```sql
+INSERT INTO public.marketplace_commission_rules
+    (marketplace, category_id, category, commission_rate, is_active)
+SELECT 'TRENDYOL', id, code, 0.18, true
+FROM public.product_categories
+WHERE code = 'HEADSET';
+```
+
+Sirket ozel komisyon ornegi:
+
+```sql
+INSERT INTO public.company_marketplace_commission_overrides
+    (company_id, marketplace, category_id, commission_rate, is_active)
+SELECT 'COMPANY_UUID_HERE', 'TRENDYOL', id, 0.14, true
+FROM public.product_categories
+WHERE code = 'HEADSET';
+```
+
+## Ortam Degiskenleri
+
+Kok dizindeki `.env.example` dosyasindan `.env` olusturun:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Ardından `.env` içindeki veritabanı ve Supabase bilgilerini kendi ortamınıza göre düzenleyin. Temel değişkenler:
+Kok `.env.example` icindeki temel degiskenler:
 
-- `DATABASE_URL`
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `AGENT_SERVICE_URL`
-- `DATA_INGESTION_SERVICE_URL`
-- `CORS_ORIGINS`
+```text
+DATABASE_URL
+SUPABASE_URL
+SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+AGENT_SERVICE_URL
+DATA_INGESTION_SERVICE_URL
+CORS_ORIGINS
+```
 
-### Bağımlılıkların kurulması
+Agent service icin ek SLM ayarlari opsiyoneldir; verilmezse kod varsayilan olarak `http://localhost:8003` ve `60` saniye kullanir:
 
-Her servis için ayrı bir sanal ortam kullanılması önerilir:
+```text
+SLM_SERVICE_URL=http://localhost:8003
+SLM_EXPLANATION_TIMEOUT_SECONDS=60
+```
+
+SLM service icin:
+
+```text
+HF_TOKEN
+HF_MODEL_NAME=Qwen/Qwen2.5-3B-Instruct
+MAX_NEW_TOKENS=350
+TEMPERATURE=0.3
+TOP_P=0.9
+```
+
+## Yerel Kurulum
+
+Python servisleri icin ayri sanal ortam kullanilmasi onerilir:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
+
 pip install -r apps/api_service/requirements.txt
 pip install -r apps/agent_service/requirements.txt
 pip install -r apps/data_ingestion_service/requirements.txt
+pip install -r apps/slm_service/requirements.txt
+```
+
+Web uygulamasi:
+
+```powershell
+cd apps/web
+npm install
+```
+
+Playwright tabanli collector kullanimi icin:
+
+```powershell
 playwright install
 ```
 
-### Servislerin çalıştırılması
+## Servisleri Calistirma
 
-Komutları proje kök dizininden, ayrı terminallerde çalıştırın:
+Proje kok dizininden ayri terminallerde:
 
 ```powershell
 uvicorn app.main:app --app-dir apps/api_service --reload --port 8000
 uvicorn app.main:app --app-dir apps/agent_service --reload --port 8001
+uvicorn app.main:app --app-dir apps/slm_service --reload --port 8003
 uvicorn app.main:app --app-dir apps/data_ingestion_service --reload --port 8004
 ```
 
-Servislerin sağlık kontrolü:
+Web:
+
+```powershell
+cd apps/web
+npm run dev
+```
+
+Saglik kontrolleri:
 
 ```text
 GET http://localhost:8000/health
 GET http://localhost:8001/health
+GET http://localhost:8003/health
 GET http://localhost:8004/health
 ```
 
-FastAPI dokümantasyonları `/docs` adresinden görüntülenebilir:
+FastAPI dokumantasyonu:
 
 ```text
 http://localhost:8000/docs
 http://localhost:8001/docs
+http://localhost:8003/docs
 http://localhost:8004/docs
 ```
 
-## Geliştirme ilkeleri
+## Test ve Dogrulama
 
-- Her agent yalnızca kendi sorumluluğundaki çıktıyı üretir.
-- Feature Engineering hesaplamaları Candidate Price Generator içinde tekrarlanmaz.
-- Candidate Price Generator nihai fiyat seçmez; açıklanabilir fiyat seçenekleri üretir.
-- Stratejiler veritabanına doğrudan erişmez; kendilerine verilen context üzerinden çalışır.
-- Fiyat ve finansal hesaplamalarda kayan nokta hatalarını önlemek için `Decimal` kullanılması tercih edilir.
-- Agent çalışmaları `agent_runs` üzerinden takip edilebilir olmalıdır.
-- Üretilen adaylar, kullanılan feature kaydı ve stratejiyle ilişkilendirilerek geriye dönük izlenebilirlik korunmalıdır.
+Agent service testleri:
 
-## Ekip sorumlulukları
+```powershell
+$env:PYTHONPATH='apps/agent_service'
+python -m unittest discover apps/agent_service/tests
+```
 
-| Alan | Sorumluluk |
-| --- | --- |
-| Competitor Intelligence | Rakip verilerinin skorlanması ve tier'lara ayrılması |
-| Feature Engineering | Rakip analizi çıktılarından fiyatlandırma feature'larının hazırlanması |
-| Candidate Price Generator | Uygun stratejinin seçilmesi ve aday fiyatların üretilmesi |
-| Optimization / Recommendation | Adaylar arasından hedeflere ve risk kurallarına uygun nihai fiyatın seçilmesi |
+Web production build:
+
+```powershell
+cd apps/web
+npm run build
+```
+
+## Gelistirme Ilkeleri
+
+- Orchestration sadece `pricing_pipeline_graph.py` icinde tutulur.
+- Node'lar yalnizca graph state ile servis katmani arasinda adaptor gorevi gorur.
+- Business logic servislerde, veritabani erisimi repository katmaninda kalir.
+- Candidate price generator nihai fiyat secmez; sadece aday uretir.
+- Optimization komisyonu hesaplamaz; komisyonu `CommissionService` ister.
+- Finansal hesaplamalarda `Decimal` tercih edilir.
+- Category eslesmeleri text ile degil `category_id` ile yapilir.
+- SLM servis fiyat secmez; yalnizca verilen oneriyi aciklar.
