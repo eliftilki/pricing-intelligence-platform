@@ -5,9 +5,9 @@ psycopg2-binary
 pydantic
 pydantic-settings
 python-dotenv
+httpx
 langgraph
 typing-extensions
 pytrends
-python-dotenv
 hijridate
 pytest

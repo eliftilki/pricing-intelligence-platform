@@ -8,6 +8,21 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 
 
+class ProductCategory(Base):
+    __tablename__ = "product_categories"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    code: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    parent_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("product_categories.id", ondelete="SET NULL"),
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 class Product(Base):
     __tablename__ = "products"
 
@@ -16,6 +31,10 @@ class Product(Base):
     brand: Mapped[str | None] = mapped_column(String(200))
     model: Mapped[str | None] = mapped_column(String(200))
     category: Mapped[str | None] = mapped_column(String(200))
+    category_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("product_categories.id", ondelete="SET NULL"),
+    )
     barcode: Mapped[str | None] = mapped_column(String(200), unique=True)
     description: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
@@ -38,7 +57,6 @@ class SellerProduct(Base):
     marketplace_product_id: Mapped[str | None] = mapped_column(String(200))
     our_price: Mapped[float | None] = mapped_column(Numeric(12, 2))
     cost_price: Mapped[float | None] = mapped_column(Numeric(12, 2))
-    commission_rate: Mapped[float | None] = mapped_column(Numeric(5, 4), default=0)
     shipping_cost: Mapped[float | None] = mapped_column(Numeric(12, 2), default=0)
     packaging_cost: Mapped[float | None] = mapped_column(Numeric(12, 2), default=0)
     stock_quantity: Mapped[int] = mapped_column(Integer, default=0)

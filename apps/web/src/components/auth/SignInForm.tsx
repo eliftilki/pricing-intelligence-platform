@@ -30,7 +30,7 @@ export default function SignInForm() {
       setError(
         loginError instanceof Error
           ? loginError.message
-          : "Giris yapilamadi. Bilgileri kontrol edin.",
+          : "Giriş yapılamadı. E-posta ve şifre bilgilerinizi kontrol edin.",
       );
     } finally {
       setIsSubmitting(false);
@@ -45,17 +45,17 @@ export default function SignInForm() {
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon />
-          feraSet ana sayfasi
+          feraSet ana sayfası
         </Link>
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Giris Yap
+              Giriş Yap
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Sirket panelinizi acmak icin hesap bilgilerinizle giris yapin.
+              Şirket panelinizi açmak için hesap bilgilerinizle giriş yapın.
             </p>
           </div>
           <div>
@@ -79,12 +79,12 @@ export default function SignInForm() {
                 </div>
                 <div>
                   <Label>
-                    Password <span className="text-error-500">*</span>{" "}
+                    Şifre <span className="text-error-500">*</span>{" "}
                   </Label>
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Sifreniz"
+                      placeholder="Şifreniz"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
                     />
@@ -102,7 +102,7 @@ export default function SignInForm() {
                 </div>
                 <div>
                   <Button className="w-full" size="sm" disabled={isSubmitting || !email || !password}>
-                    {isSubmitting ? "Giris yapiliyor..." : "Giris Yap"}
+                    {isSubmitting ? "Giriş yapılıyor..." : "Giriş Yap"}
                   </Button>
                 </div>
               </div>
@@ -110,12 +110,12 @@ export default function SignInForm() {
 
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
-                Hesabiniz yok mu? {""}
+                Hesabınız yok mu? {""}
                 <Link
                   href="/signup"
                   className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
                 >
-                  Sirket hesabi olustur
+                  Şirket hesabı oluştur
                 </Link>
               </p>
             </div>

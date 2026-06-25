@@ -36,6 +36,7 @@ class RunAnalysisResponse(BaseModel):
     session_id: UUID
     product_id: UUID
     ingestion_status: str
+    ingestion_message: Optional[str] = None
     scrape_counts: dict[str, int] = Field(default_factory=dict)
     total_competitors: int
     price_range: PriceRangeOut

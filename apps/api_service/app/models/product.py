@@ -5,13 +5,28 @@ from sqlalchemy.sql import func
 from app.models.base import Base
 
 
+class ProductCategory(Base):
+    __tablename__ = "product_categories"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    code = Column(String, nullable=False, unique=True)
+    name = Column(String, nullable=False)
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("product_categories.id", ondelete="SET NULL"))
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class Product(Base):
     __tablename__ = "products"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, nullable=False)
+    normalized_key = Column(String)
     brand = Column(String)
     model = Column(String)
     category = Column(String)
+    category_id = Column(UUID(as_uuid=True), ForeignKey("product_categories.id", ondelete="SET NULL"))
+    color = Column(String)
+    connection_type = Column(String)
     barcode = Column(String, unique=True)
     description = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -24,11 +39,11 @@ class SellerProduct(Base):
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
     product_id = Column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"))
     marketplace = Column(String, nullable=False)
+    display_name = Column(String)
     marketplace_url = Column(String)
     marketplace_product_id = Column(String)
     our_price = Column(Numeric(12, 2))
     cost_price = Column(Numeric(12, 2))
-    commission_rate = Column(Numeric(5, 4), default=0)
     shipping_cost = Column(Numeric(12, 2), default=0)
     packaging_cost = Column(Numeric(12, 2), default=0)
     stock_quantity = Column(Integer, default=0)
@@ -37,6 +52,18 @@ class SellerProduct(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now())
     __table_args__ = (UniqueConstraint("company_id", "product_id", "marketplace"),)
+
+
+class MarketplaceCommissionRule(Base):
+    __tablename__ = "marketplace_commission_rules"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    marketplace = Column(String, nullable=False)
+    category = Column(String, nullable=False)
+    category_id = Column(UUID(as_uuid=True), ForeignKey("product_categories.id", ondelete="RESTRICT"))
+    commission_rate = Column(Numeric, nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
 class SellerPriceHistory(Base):

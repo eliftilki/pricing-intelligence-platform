@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+transformers
+accelerate
+torch
+sentencepiece
+protobuf
+python-dotenv

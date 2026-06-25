@@ -15,9 +15,25 @@ ProductCategory = Literal[
 
 class ProductCreate(BaseModel):
     name: str
+    normalized_key: Optional[str] = None
     brand: Optional[str] = None
     model: Optional[str] = None
     category: Optional[ProductCategory] = None
+    category_id: Optional[UUID] = None
+    color: Optional[str] = None
+    connection_type: Optional[str] = None
+    barcode: Optional[str] = None
+    description: Optional[str] = None
+
+
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    brand: Optional[str] = None
+    model: Optional[str] = None
+    category: Optional[ProductCategory] = None
+    category_id: Optional[UUID] = None
+    color: Optional[str] = None
+    connection_type: Optional[str] = None
     barcode: Optional[str] = None
     description: Optional[str] = None
 
@@ -33,19 +49,36 @@ class SellerProductCreate(BaseModel):
     company_id: UUID
     product_id: UUID
     marketplace: str
+    display_name: Optional[str] = None
     marketplace_url: Optional[str] = None
     marketplace_product_id: Optional[str] = None
     our_price: Optional[Decimal] = None
     cost_price: Optional[Decimal] = None
-    commission_rate: Decimal = Decimal("0")
     shipping_cost: Decimal = Decimal("0")
     packaging_cost: Decimal = Decimal("0")
     stock_quantity: int = 0
     min_margin_rate: Decimal = Decimal("0.15")
 
 
+class SellerProductUpdate(BaseModel):
+    display_name: Optional[str] = None
+    marketplace_url: Optional[str] = None
+    marketplace_product_id: Optional[str] = None
+    our_price: Optional[Decimal] = None
+    cost_price: Optional[Decimal] = None
+    shipping_cost: Optional[Decimal] = None
+    packaging_cost: Optional[Decimal] = None
+    stock_quantity: Optional[int] = None
+    min_margin_rate: Optional[Decimal] = None
+
+
+class CompanyProductUpdate(ProductUpdate, SellerProductUpdate):
+    pass
+
+
 class SellerProductOut(SellerProductCreate):
     id: UUID
+    commission_rate: Decimal = Decimal("0")
     is_active: bool
     created_at: datetime
     class Config:

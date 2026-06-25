@@ -31,6 +31,8 @@ COLLECTOR_MAP = {
     "AMAZON": AmazonCollector,
 }
 
+SCRAPE_CACHE_TTL_HOURS = 12
+
 
 class IngestionService:
     def __init__(self, db: Session):
@@ -49,9 +51,61 @@ class IngestionService:
             "AMAZON": self.cb_amazon,
         }
 
+    def _get_cached_scrapes(self, product_id: UUID, marketplaces: list[str]):
+        cached_scrapes = {}
+        for marketplace in marketplaces:
+            cached_scrape = self.repo.get_recent_successful_scrape(
+                product_id=product_id,
+                marketplace=marketplace,
+                max_age_hours=SCRAPE_CACHE_TTL_HOURS,
+            )
+            if cached_scrape:
+                cached_scrapes[marketplace] = cached_scrape
+        return cached_scrapes
+
+    def _build_cached_response(
+        self,
+        product_id: UUID,
+        cached_scrapes: dict,
+        requested_marketplaces: list[str],
+    ) -> IngestionRunResponse:
+        scrape_counts = {
+            marketplace: self.repo.count_listings_for_scrape(scrape.id)
+            for marketplace, scrape in cached_scrapes.items()
+        }
+        latest_scrape = max(
+            cached_scrapes.values(),
+            key=lambda scrape: scrape.scraped_at or scrape.updated_at,
+        )
+        marketplace_summary = ", ".join(
+            f"{marketplace}: {scrape_counts.get(marketplace, 0)}"
+            for marketplace in requested_marketplaces
+        )
+
+        return IngestionRunResponse(
+            job_id=latest_scrape.session_id or product_id,
+            status="COMPLETED",
+            message=(
+                f"Son {SCRAPE_CACHE_TTL_HOURS} saat icindeki basarili scrape kullanildi; "
+                f"yeni scraping calistirilmadi. ({marketplace_summary})"
+            ),
+            scrape_counts=scrape_counts,
+        )
+
     async def search_and_run(self, payload: SearchAndRunRequest) -> IngestionRunResponse:
         """Ürün adıyla 3 sitede URL arar, seller_products'a kaydeder, ardından scrape çalıştırır."""
         marketplaces = [m.upper() for m in payload.marketplaces]
+        cached_scrapes = self._get_cached_scrapes(payload.product_id, marketplaces)
+        marketplaces_to_search = [
+            marketplace for marketplace in marketplaces if marketplace not in cached_scrapes
+        ]
+
+        if cached_scrapes and not marketplaces_to_search:
+            return self._build_cached_response(
+                product_id=payload.product_id,
+                cached_scrapes=cached_scrapes,
+                requested_marketplaces=marketplaces,
+            )
 
         # Her marketplace için paralel arama
         async def _search_one(marketplace: str) -> tuple[str, str | None]:
@@ -67,10 +121,10 @@ class IngestionService:
                 logger.error(f"{marketplace} arama hatası: {e}")
             return marketplace, None
 
-        pairs = await asyncio.gather(*[_search_one(m) for m in marketplaces])
+        pairs = await asyncio.gather(*[_search_one(m) for m in marketplaces_to_search])
         found_urls = {m: url for m, url in pairs if url}
 
-        if not found_urls:
+        if not found_urls and not cached_scrapes:
             return IngestionRunResponse(
                 job_id=payload.product_id,
                 status="FAILED",
@@ -93,7 +147,7 @@ class IngestionService:
         # Scrape çalıştır
         return await self._run_internal(IngestionRunRequest(
             product_id=payload.product_id,
-            marketplaces=list(found_urls.keys()),
+            marketplaces=list(found_urls.keys()) + list(cached_scrapes.keys()),
         ))
 
     async def run_with_urls(self, payload: IngestionRunWithUrlsRequest) -> IngestionRunResponse:
@@ -142,12 +196,25 @@ class IngestionService:
                 scrape_counts={},
             )
 
+        sp_map = {sp.marketplace: sp for sp in seller_products}
+        cached_scrapes = self._get_cached_scrapes(product_id, list(sp_map.keys()))
+        marketplaces_to_scrape = [
+            marketplace for marketplace in sp_map if marketplace not in cached_scrapes
+        ]
+
+        if cached_scrapes and not marketplaces_to_scrape:
+            return self._build_cached_response(
+                product_id=product_id,
+                cached_scrapes=cached_scrapes,
+                requested_marketplaces=list(sp_map.keys()),
+            )
+
         session = self.repo.create_session(product_id)
         self.db.commit()
 
-        sp_map = {sp.marketplace: sp for sp in seller_products}
         scrape_records = {}
-        for marketplace, sp in sp_map.items():
+        for marketplace in marketplaces_to_scrape:
+            sp = sp_map[marketplace]
             ms = self.repo.create_marketplace_scrape(
                 session_id=session.id,
                 seller_product_id=sp.id,
@@ -160,7 +227,8 @@ class IngestionService:
 
         tasks = {}
         skipped_marketplaces = {}
-        for marketplace, sp in sp_map.items():
+        for marketplace in marketplaces_to_scrape:
+            sp = sp_map[marketplace]
             cb = self.circuit_breakers.get(marketplace)
 
             # Check circuit breaker availability
@@ -178,15 +246,18 @@ class IngestionService:
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         raw_by_marketplace = dict(zip(tasks.keys(), results))
 
-        scrape_counts: dict[str, int] = {}
-        success_count = 0
+        scrape_counts: dict[str, int] = {
+            marketplace: self.repo.count_listings_for_scrape(scrape.id)
+            for marketplace, scrape in cached_scrapes.items()
+        }
+        success_count = len(cached_scrapes)
 
         # Handle skipped marketplaces (circuit breaker OPEN)
         for marketplace, ms in skipped_marketplaces.items():
             self.repo.update_marketplace_scrape(
                 scrape_id=ms.id,
-                status="SKIPPED",
-                error_message="Circuit breaker OPEN: marketplace temporarily unavailable",
+                status="FAILED",
+                error_message="Skipped because circuit breaker is open: marketplace temporarily unavailable",
             )
             scrape_counts[marketplace] = 0
 
@@ -253,9 +324,10 @@ class IngestionService:
         self.db.commit()
 
         total = sum(scrape_counts.values())
+        attempted_count = len(sp_map)
         if success_count == 0:
             status = "FAILED"
-        elif success_count < len(tasks):
+        elif success_count < attempted_count:
             status = "PARTIAL"
         else:
             status = "COMPLETED"
@@ -270,7 +342,17 @@ class IngestionService:
         marketplace_summary = ", ".join(
             f"{m}: {c}" for m, c in scrape_counts.items()
         )
-        message = f"Scraped {success_count}/{len(tasks)} marketplaces. {total} competitors found. ({marketplace_summary})"
+        cached_count = len(cached_scrapes)
+        fresh_scrape_count = success_count - cached_count
+        cache_summary = (
+            f", used cached data for {cached_count}"
+            if cached_count
+            else ""
+        )
+        message = (
+            f"Scraped {fresh_scrape_count}/{len(scrape_records)} marketplaces"
+            f"{cache_summary}. {total} competitors found. ({marketplace_summary})"
+        )
 
         return IngestionRunResponse(
             job_id=session.id,

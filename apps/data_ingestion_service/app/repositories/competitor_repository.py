@@ -1,7 +1,8 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from uuid import UUID
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.competitor import CompetitorListing, CompetitorSeller
@@ -108,6 +109,34 @@ class CompetitorRepository:
                 SellerProduct.is_active.is_(True),
             )
             .all()
+        )
+
+    def get_recent_successful_scrape(
+        self,
+        product_id: UUID,
+        marketplace: str,
+        max_age_hours: int,
+    ) -> MarketplaceScrape | None:
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
+
+        return (
+            self.db.query(MarketplaceScrape)
+            .filter(
+                MarketplaceScrape.product_id == product_id,
+                MarketplaceScrape.marketplace == marketplace.upper(),
+                MarketplaceScrape.status == "SUCCESS",
+                MarketplaceScrape.scraped_at >= cutoff,
+            )
+            .order_by(MarketplaceScrape.scraped_at.desc())
+            .first()
+        )
+
+    def count_listings_for_scrape(self, scrape_id: UUID) -> int:
+        return int(
+            self.db.query(func.count(CompetitorListing.id))
+            .filter(CompetitorListing.scrape_id == scrape_id)
+            .scalar()
+            or 0
         )
 
     def create_session(self, product_id: UUID) -> ScrapeSession:
@@ -261,7 +290,16 @@ class CompetitorRepository:
         self,
         listings: List[CompetitorListingCreate],
     ) -> None:
+        seen_sellers: set[tuple[str, str]] = set()
         for listing in listings:
+            seller_key = (
+                listing.marketplace.upper(),
+                listing.seller_name.strip().lower(),
+            )
+            if seller_key in seen_sellers:
+                continue
+            seen_sellers.add(seller_key)
+
             competitor_seller = self.upsert_competitor_seller(
                 marketplace=listing.marketplace,
                 seller_name=listing.seller_name,
@@ -301,7 +339,16 @@ class CompetitorRepository:
         self,
         entries: List[PriceHistoryCreate],
     ) -> None:
+        seen_sellers: set[tuple[str, str]] = set()
         for entry in entries:
+            seller_key = (
+                entry.marketplace.upper(),
+                entry.seller_name.strip().lower(),
+            )
+            if seller_key in seen_sellers:
+                continue
+            seen_sellers.add(seller_key)
+
             competitor_seller = (
                 self.db.query(CompetitorSeller)
                 .filter(
