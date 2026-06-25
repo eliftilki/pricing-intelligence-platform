@@ -11,6 +11,7 @@ class ProductCreate(BaseModel):
     brand: Optional[str] = None
     model: Optional[str] = None
     category: Optional[str] = None
+    category_id: Optional[UUID] = None
     color: Optional[str] = None
     connection_type: Optional[str] = None
     barcode: Optional[str] = None
@@ -22,6 +23,7 @@ class ProductUpdate(BaseModel):
     brand: Optional[str] = None
     model: Optional[str] = None
     category: Optional[str] = None
+    category_id: Optional[UUID] = None
     color: Optional[str] = None
     connection_type: Optional[str] = None
     barcode: Optional[str] = None

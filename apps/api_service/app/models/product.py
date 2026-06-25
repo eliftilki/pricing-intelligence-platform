@@ -5,6 +5,17 @@ from sqlalchemy.sql import func
 from app.models.base import Base
 
 
+class ProductCategory(Base):
+    __tablename__ = "product_categories"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    code = Column(String, nullable=False, unique=True)
+    name = Column(String, nullable=False)
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("product_categories.id", ondelete="SET NULL"))
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class Product(Base):
     __tablename__ = "products"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -13,6 +24,7 @@ class Product(Base):
     brand = Column(String)
     model = Column(String)
     category = Column(String)
+    category_id = Column(UUID(as_uuid=True), ForeignKey("product_categories.id", ondelete="SET NULL"))
     color = Column(String)
     connection_type = Column(String)
     barcode = Column(String, unique=True)
@@ -47,6 +59,7 @@ class MarketplaceCommissionRule(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     marketplace = Column(String, nullable=False)
     category = Column(String, nullable=False)
+    category_id = Column(UUID(as_uuid=True), ForeignKey("product_categories.id", ondelete="RESTRICT"))
     commission_rate = Column(Numeric, nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

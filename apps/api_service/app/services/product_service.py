@@ -48,7 +48,7 @@ class ProductService:
         product = self.repo.get_product(seller_product.product_id)
         commission_rate = self.repo.get_commission_rate(
             marketplace=seller_product.marketplace,
-            category=product.category if product else None,
+            category_id=product.category_id if product else None,
         )
 
         return {
@@ -103,6 +103,7 @@ class ProductService:
                 "brand",
                 "model",
                 "category",
+                "category_id",
                 "color",
                 "connection_type",
                 "barcode",
@@ -115,6 +116,7 @@ class ProductService:
             brand=product_values.get("brand", product.brand),
             model=product_values.get("model", product.model),
             category=product_values.get("category", product.category),
+            category_id=product_values.get("category_id", product.category_id),
             color=product_values.get("color", product.color),
             connection_type=product_values.get("connection_type", product.connection_type),
             barcode=product_values.get("barcode", product.barcode),

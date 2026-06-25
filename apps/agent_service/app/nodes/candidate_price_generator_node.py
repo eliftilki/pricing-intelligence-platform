@@ -20,7 +20,7 @@ def candidate_price_generator_node(state: dict, db: Session) -> dict:
         product_id=product_id,
         seller_product_id=state.get("seller_product_id"),
         strategy=CandidateStrategy.AUTO,
-        persist=True,
+        persist=bool(state.get("persist_candidate_prices", True)),
         price_step=state.get("price_step", 250),
         base_price_step=state.get("base_price_step", 250),
         dense_price_step=state.get("dense_price_step", 50),
@@ -47,6 +47,7 @@ def candidate_price_generator_node(state: dict, db: Session) -> dict:
     state["candidate_price_result"] = result.model_dump()
     state["candidate_prices"] = result.candidate_prices
     state["selected_candidate_strategy"] = result.selected_strategy.value
+    state["seller_product_id"] = result.seller_product_id
     state["status"] = "SUCCESS"
 
     return state

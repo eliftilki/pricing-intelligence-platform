@@ -216,19 +216,26 @@ function analysisMessage(result: AnalysisResponse) {
     .filter(([, count]) => count > 0)
     .map(([marketplace]) => marketplace);
   const ingestionMessage = result.ingestion_message?.toLocaleLowerCase("tr-TR") || "";
-  const usedCachedData =
-    ingestionMessage.includes("cached") ||
+  const usedOnlyCachedData =
+    ingestionMessage.includes("yeni scraping calistirilmadi") ||
+    ingestionMessage.includes("yeniden scraping yapılmadı") ||
     ingestionMessage.includes("basarili scrape kullanildi");
+  const cachedCountMatch = ingestionMessage.match(/used cached data for (\d+)/);
+  const cachedCount = cachedCountMatch ? Number(cachedCountMatch[1]) : 0;
 
   if (result.ingestion_status === "FAILED") {
     return "Analiz başlatıldı ancak pazaryerlerinden rakip verisi alınamadı. Ürün adını ve pazaryeri seçimini kontrol edip tekrar deneyin.";
   }
 
-  if (usedCachedData && marketplacesWithData.length) {
+  if (usedOnlyCachedData && marketplacesWithData.length) {
     return `Son 12 saat i\u00e7inde toplanan g\u00fcncel veriler kullan\u0131ld\u0131; yeniden scraping yap\u0131lmad\u0131. ${marketplacesWithData.join(", ")} \u00fczerinden ${total} rakip analiz edildi.`;
   }
 
   if (marketplacesWithData.length) {
+    if (cachedCount > 0) {
+      return `Analiz tamamland\u0131. ${marketplacesWithData.join(", ")} \u00fczerinden ${total} rakip bulundu; baz\u0131 pazaryerlerinde son 12 saat i\u00e7indeki veriler kullan\u0131ld\u0131.`;
+    }
+
     return `Analiz tamamlandı. ${marketplacesWithData.join(", ")} üzerinden ${total} rakip bulundu.`;
   }
 

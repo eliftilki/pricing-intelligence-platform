@@ -89,14 +89,14 @@ class ProductRepository(BaseRepository):
     def get_product(self, product_id: UUID):
         return self.db.query(Product).filter(Product.id == product_id).first()
 
-    def get_commission_rate(self, marketplace: str, category: str | None):
-        if not category:
+    def get_commission_rate(self, marketplace: str, category_id: UUID | None):
+        if not category_id:
             return None
 
         rule = (
             self.db.query(MarketplaceCommissionRule)
             .filter(MarketplaceCommissionRule.marketplace == marketplace.upper())
-            .filter(MarketplaceCommissionRule.category == category)
+            .filter(MarketplaceCommissionRule.category_id == category_id)
             .filter(MarketplaceCommissionRule.is_active.is_(True))
             .first()
         )
