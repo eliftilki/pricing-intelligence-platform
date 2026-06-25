@@ -5,11 +5,16 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from app.repositories.commission_repository import CommissionRepository
 from app.repositories.optimization_repository import OptimizationRepository
 from app.schemas.optimization_schema import (
     DemandPredictionItem,
     MarketplaceOptimizationInput,
     OptimizationRequest,
+)
+from app.services.commission_service import (
+    CommissionRateNotFoundError,
+    CommissionService,
 )
 from app.services.optimization_service import OptimizationService
 
@@ -26,12 +31,23 @@ def optimization_node(state: dict, db: Session) -> dict:
         return state
 
     repository = OptimizationRepository(db)
+    commission_service = CommissionService(CommissionRepository(db))
 
     try:
         seller_product_id = UUID(str(state["seller_product_id"]))
         seller_context = repository.get_seller_product_context(seller_product_id)
-        marketplaces = _build_marketplaces(state, repository, seller_product_id)
+        marketplaces = _build_marketplaces(
+            state=state,
+            repository=repository,
+            commission_service=commission_service,
+            seller_context=seller_context,
+        )
         cost_price = state.get("cost_price") or seller_context.get("cost_price")
+    except CommissionRateNotFoundError as exc:
+        state["status"] = "FAILED"
+        state["message"] = str(exc)
+        state["error_code"] = exc.code
+        return state
     except (ValueError, KeyError) as exc:
         state["status"] = "FAILED"
         state["message"] = str(exc)
@@ -74,7 +90,8 @@ def optimization_node(state: dict, db: Session) -> dict:
 def _build_marketplaces(
     state: dict,
     repository: OptimizationRepository,
-    seller_product_id: UUID,
+    commission_service: CommissionService,
+    seller_context: dict,
 ) -> list[MarketplaceOptimizationInput]:
     marketplaces_raw = state.get("marketplaces") or state.get("marketplace_contexts")
 
@@ -84,4 +101,15 @@ def _build_marketplaces(
             for item in marketplaces_raw
         ]
 
-    return [repository.build_marketplace_input_from_db(seller_product_id)]
+    commission_rate = commission_service.get_commission_rate(
+        company_id=seller_context["company_id"],
+        marketplace=seller_context["marketplace"],
+        category_id=seller_context.get("category_id"),
+    )
+
+    return [
+        repository.build_marketplace_input_from_context(
+            context=seller_context,
+            commission_rate=commission_rate,
+        )
+    ]

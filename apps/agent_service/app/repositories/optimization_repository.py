@@ -3,8 +3,6 @@ from __future__ import annotations
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.models.optimization import PricingOptimizationResult
@@ -21,36 +19,6 @@ class OptimizationRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_marketplace_commission_rate(
-        self,
-        marketplace: Marketplace,
-        category: str | None,
-    ) -> Decimal | None:
-        if not category:
-            return None
-
-        query = text(
-            """
-            SELECT commission_rate
-            FROM public.marketplace_commission_rules
-            WHERE marketplace = :marketplace
-              AND category = :category
-              AND is_active = true
-            LIMIT 1
-            """
-        )
-
-        try:
-            row = self.db.execute(
-                query,
-                {"marketplace": marketplace.value, "category": category},
-            ).mappings().first()
-        except SQLAlchemyError:
-            self.db.rollback()
-            return None
-
-        return Decimal(str(row["commission_rate"])) if row else None
-
     def get_seller_product_context(self, seller_product_id: UUID) -> dict:
         row = (
             self.db.query(SellerProduct, Product)
@@ -66,7 +34,9 @@ class OptimizationRepository:
 
         return {
             "seller_product_id": seller_product.id,
+            "company_id": seller_product.company_id,
             "product_id": seller_product.product_id,
+            "category_id": product.category_id,
             "marketplace": seller_product.marketplace,
             "current_price": seller_product.our_price,
             "cost_price": seller_product.cost_price,
@@ -79,22 +49,31 @@ class OptimizationRepository:
     def build_marketplace_input_from_db(
         self,
         seller_product_id: UUID,
+        commission_rate: Decimal,
     ) -> MarketplaceOptimizationInput:
         context = self.get_seller_product_context(seller_product_id)
+        return self.build_marketplace_input_from_context(context, commission_rate)
+
+    def build_marketplace_input_from_context(
+        self,
+        context: dict,
+        commission_rate: Decimal,
+    ) -> MarketplaceOptimizationInput:
         marketplace = Marketplace(str(context["marketplace"]).upper())
-        commission_rate = self.get_marketplace_commission_rate(
-            marketplace=marketplace,
-            category=context.get("category"),
-        )
 
         return MarketplaceOptimizationInput(
             marketplace=marketplace,
+            category_id=context.get("category_id"),
             current_price=self._to_decimal(context.get("current_price")),
             commission_rate=commission_rate,
             shipping_cost=self._to_decimal(context.get("shipping_cost")) or Decimal("0"),
             packaging_cost=self._to_decimal(context.get("packaging_cost")) or Decimal("0"),
             min_margin_rate=self._to_decimal(context.get("min_margin_rate")) or Decimal("0.10"),
-            metadata={"source": "database", "category": context.get("category")},
+            metadata={
+                "source": "database",
+                "category": context.get("category"),
+                "category_id": str(context.get("category_id")) if context.get("category_id") else None,
+            },
         )
 
     def save_response(
@@ -113,6 +92,7 @@ class OptimizationRepository:
             record = OptimizationRecordCreate(
                 seller_product_id=response.seller_product_id,
                 product_id=response.product_id,
+                category_id=marketplace_context.category_id,
                 run_id=response.run_id,
                 marketplace=result.marketplace,
                 recommended_price=result.recommended_price,
@@ -147,6 +127,7 @@ class OptimizationRepository:
         db_record = PricingOptimizationResult(
             seller_product_id=record.seller_product_id,
             product_id=record.product_id,
+            category_id=record.category_id,
             run_id=record.run_id,
             marketplace=record.marketplace.value,
             recommended_price=record.recommended_price,

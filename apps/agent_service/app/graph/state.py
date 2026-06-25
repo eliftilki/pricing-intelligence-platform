@@ -7,8 +7,13 @@ class CompetitorGraphState(TypedDict, total=False):
     seller_product_id: UUID | None
 
     lookback_hours: int
+    run_candidate_prices: bool
+    run_optimization: bool
+    persist_candidate_prices: bool
+    persist_optimization: bool
 
     status: str
+    error_code: str
     analyzed_count: int
     inserted_count: int
     message: str
@@ -25,3 +30,7 @@ class CompetitorGraphState(TypedDict, total=False):
     demand_predictions: list[dict]
     optimization_result: dict
     marketplace_recommendations: list[dict]
+
+    recommendation: dict
+    slm_explanation: dict | None
+    errors: list[str]

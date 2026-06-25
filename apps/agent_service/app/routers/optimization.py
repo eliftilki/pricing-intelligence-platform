@@ -8,11 +8,16 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.repositories.commission_repository import CommissionRepository
 from app.repositories.optimization_repository import OptimizationRepository
 from app.schemas.optimization_schema import (
     OptimizationFromDbRequest,
     OptimizationRequest,
     OptimizationResponse,
+)
+from app.services.commission_service import (
+    CommissionRateNotFoundError,
+    CommissionService,
 )
 from app.services.optimization_service import OptimizationService
 
@@ -47,10 +52,24 @@ def run_optimization_from_db(
     db: Session = Depends(get_db),
 ) -> OptimizationResponse:
     repository = OptimizationRepository(db)
+    commission_service = CommissionService(CommissionRepository(db))
 
     try:
-        marketplace_context = repository.build_marketplace_input_from_db(seller_product_id)
         seller_context = repository.get_seller_product_context(seller_product_id)
+        commission_rate = commission_service.get_commission_rate(
+            company_id=seller_context["company_id"],
+            marketplace=seller_context["marketplace"],
+            category_id=seller_context.get("category_id"),
+        )
+        marketplace_context = repository.build_marketplace_input_from_context(
+            context=seller_context,
+            commission_rate=commission_rate,
+        )
+    except CommissionRateNotFoundError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={"code": exc.code, "message": str(exc)},
+        ) from exc
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except ValidationError as exc:

@@ -42,6 +42,7 @@ class DemandPredictionItem(BaseModel):
 
 class MarketplaceOptimizationInput(BaseModel):
     marketplace: Marketplace
+    category_id: UUID | None = None
     current_price: Decimal | None = Field(default=None, gt=0)
     commission_rate: Decimal | None = Field(default=None, ge=0, le=1)
     shipping_cost: Decimal = Field(default=Decimal("0"), ge=0)
@@ -124,6 +125,7 @@ class OptimizationResponse(BaseModel):
 class OptimizationRecordCreate(BaseModel):
     seller_product_id: UUID
     product_id: UUID | None = None
+    category_id: UUID | None = None
     run_id: UUID | None = None
     marketplace: Marketplace
     recommended_price: Decimal | None = None

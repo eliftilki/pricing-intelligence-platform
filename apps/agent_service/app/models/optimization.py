@@ -24,6 +24,11 @@ class PricingOptimizationResult(Base):
         ForeignKey("products.id", ondelete="CASCADE"),
         index=True,
     )
+    category_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("product_categories.id", ondelete="SET NULL"),
+        index=True,
+    )
     run_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), index=True)
 
     marketplace: Mapped[str] = mapped_column(String(50), nullable=False, index=True)

@@ -74,6 +74,15 @@ class AgentClient:
             max_retries=3,
         )
 
+    async def run_pricing_intelligence(self, payload: dict) -> dict:
+        return await self._request_with_retry(
+            "POST",
+            f"{self.base_url}/pricing-intelligence/run",
+            payload,
+            self.timeout_intelligence,
+            max_retries=3,
+        )
+
     async def run_optimization(self, payload: dict) -> dict:
         return await self._request_with_retry(
             "POST",

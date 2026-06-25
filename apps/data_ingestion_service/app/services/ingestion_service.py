@@ -343,10 +343,15 @@ class IngestionService:
             f"{m}: {c}" for m, c in scrape_counts.items()
         )
         cached_count = len(cached_scrapes)
+        fresh_scrape_count = success_count - cached_count
+        cache_summary = (
+            f", used cached data for {cached_count}"
+            if cached_count
+            else ""
+        )
         message = (
-            f"Scraped {success_count - cached_count}/{len(scrape_records)} marketplaces, "
-            f"used cached data for {cached_count}. "
-            f"{total} competitors found. ({marketplace_summary})"
+            f"Scraped {fresh_scrape_count}/{len(scrape_records)} marketplaces"
+            f"{cache_summary}. {total} competitors found. ({marketplace_summary})"
         )
 
         return IngestionRunResponse(
