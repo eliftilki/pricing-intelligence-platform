@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -6,6 +6,9 @@ from app.core.database import get_db
 from app.services.event_calendar_generator_service import EventCalendarGeneratorService
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+MIN_EVENT_YEAR = 2020
+MAX_EVENT_YEAR = 2100
 
 
 def verify_admin_key(x_admin_key: str | None = Header(default=None)):
@@ -16,7 +19,10 @@ def verify_admin_key(x_admin_key: str | None = Header(default=None)):
 
 
 @router.post("/generate-events", dependencies=[Depends(verify_admin_key)])
-def generate_events(year: int = 2026, db: Session = Depends(get_db)):
+def generate_events(
+    year: int = Query(default=2026, ge=MIN_EVENT_YEAR, le=MAX_EVENT_YEAR),
+    db: Session = Depends(get_db),
+):
     """
     Türkiye'nin belirli bir yılı için önemli günleri otomatik olarak
     event_calendar tablosuna ekler. Startup'ta veya admin panelden çağrılır.

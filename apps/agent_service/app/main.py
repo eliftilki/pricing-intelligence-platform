@@ -1,3 +1,5 @@
+import logging
+
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +11,7 @@ from app.routers.competitor_intelligence import router as competitor_intelligenc
 from app.routers.candidate_price import router as candidate_price_router
 from app.routers.admin import router as admin_router
 
+logger = logging.getLogger("agent_service")
 
 app = FastAPI(
     title="Agent Service",
@@ -23,6 +26,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def warn_if_admin_key_missing_in_production():
+    if settings.app_env == "production" and not settings.admin_api_key:
+        logger.warning(
+            "ADMIN_API_KEY tanimli degil: production ortaminda /admin endpoint'leri kapali olacak."
+        )
 
 
 @app.get("/health")

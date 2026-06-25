@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from hijri_converter import Hijri, Gregorian
+from hijridate import Hijri, Gregorian
 from sqlalchemy.orm import Session
 
 from app.models.market_event import EventCalendar
@@ -114,7 +114,7 @@ class EventCalendarGeneratorService:
         """
         Dini günler (Hijri takvime göre hesaplanan). Ramazan ve Kurban Bayramı.
         Hijri yıl, dogrusal bir formulle TAHMIN EDILMEZ - hedef Gregorian yilin
-        baslangic/bitis tarihleri gercekten Hijri'ye cevrilip (hijri_converter),
+        baslangic/bitis tarihleri gercekten Hijri'ye cevrilip (hijridate),
         o yila denk gelen gercek Hijri yil(lar) bulunur. Boylece ay dongusundeki
         kayma (yaklasik formulun +-1 yil hata payi) ortadan kalkar.
         """

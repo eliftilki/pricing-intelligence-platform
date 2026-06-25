@@ -9,5 +9,5 @@ langgraph
 typing-extensions
 pytrends
 python-dotenv
-hijri-converter
+hijridate
 pytest

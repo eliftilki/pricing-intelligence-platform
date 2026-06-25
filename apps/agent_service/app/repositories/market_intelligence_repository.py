@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.models.agent_run import AgentRun
 from app.models.market_event import EventCalendar, MarketEventFeatures
 from app.models.product import Product
+from app.services.category_taxonomy import normalize_category
 
 
 class MarketIntelligenceRepository:
@@ -29,12 +30,13 @@ class MarketIntelligenceRepository:
             return None
 
         today = today or datetime.now(timezone.utc).date()
+        parent_category = normalize_category(category)
 
         return (
             self.db.query(EventCalendar)
             .filter(
                 EventCalendar.end_date >= today,
-                EventCalendar.affected_categories.contains([category]),
+                EventCalendar.affected_categories.contains([parent_category]),
             )
             .order_by(EventCalendar.start_date.asc())
             .first()

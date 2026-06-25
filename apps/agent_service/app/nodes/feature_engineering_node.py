@@ -67,6 +67,7 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
         current_price=current_price,
         stock_quantity=stock_quantity,
         competitor_features=competitor_features,
+        market_event_features=state.get("market_event_features"),
     )
 
     if features.is_monopoly:
@@ -91,10 +92,5 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
     state["current_price"] = current_price
     state["stock_quantity"] = stock_quantity
     state["pricing_features"] = pricing_features_to_dict(features)
-
-    # event_agent_node zaten tam hesaplanmis sonucu state'e yazmisti (rakip
-    # verisinin aksine burada ham/parcali bir veri yok, DB'ye tekrar gitmeye
-    # gerek yok) - sadece nihai feature paketine tasiniyor.
-    state.setdefault("market_event_features", {})
 
     return state

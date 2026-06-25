@@ -43,6 +43,12 @@ class PricingFeatures:
     hour_of_day: int
     is_weekend: bool
 
+    # event_agent_node'un (Market Intelligence Agent) urettigi sinyaller.
+    # market_event_features state'i yoksa/bos ise notr varsayilanlar kullanilir.
+    recommended_demand_multiplier: float
+    event_confidence: float
+    market_demand_signal: str
+
     generated_at: str
 
 
@@ -61,9 +67,11 @@ class FeatureEngineeringService:
         current_price: Optional[float],
         stock_quantity: Optional[int],
         competitor_features: list[dict[str, Any]],
+        market_event_features: Optional[dict[str, Any]] = None,
         reference_time: Optional[datetime] = None,
     ) -> PricingFeatures:
         time_features = self._time_features(reference_time or datetime.now(timezone.utc))
+        event_features = self._extract_event_features(market_event_features)
 
         relevant = self._filter_relevant_competitors(competitor_features, marketplace)
         priced = [c for c in relevant if self._extract_price(c) is not None]
@@ -75,6 +83,7 @@ class FeatureEngineeringService:
                 current_price=current_price,
                 stock_quantity=stock_quantity,
                 time_features=time_features,
+                event_features=event_features,
             )
 
         prices = [self._extract_price(c) for c in priced]
@@ -104,8 +113,35 @@ class FeatureEngineeringService:
             day_of_week=time_features["day_of_week"],
             hour_of_day=time_features["hour_of_day"],
             is_weekend=time_features["is_weekend"],
+            recommended_demand_multiplier=event_features["recommended_demand_multiplier"],
+            event_confidence=event_features["event_confidence"],
+            market_demand_signal=event_features["market_demand_signal"],
             generated_at=datetime.now(timezone.utc).isoformat(),
         )
+
+    # ------------------------------------------------------------------
+    # event_agent_node sinyalleri (Market Intelligence Agent)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _extract_event_features(market_event_features: Optional[dict[str, Any]]) -> dict[str, Any]:
+        """
+        event_agent_node'un urettigi sinyalleri notr varsayilanlarla guvenli
+        sekilde okur. market_event_features eksik/bos olabilir (event_agent
+        hata verdiyse veya hic calismadiysa) - bu durumda "talep normal"
+        anlamina gelen notr degerler kullanilir.
+        """
+        market_event_features = market_event_features or {}
+
+        multiplier = market_event_features.get("recommended_demand_multiplier")
+        confidence = market_event_features.get("event_confidence")
+        signal = market_event_features.get("market_demand_signal")
+
+        return {
+            "recommended_demand_multiplier": 1.0 if multiplier is None else multiplier,
+            "event_confidence": 0.0 if confidence is None else confidence,
+            "market_demand_signal": "LOW" if signal is None else signal,
+        }
 
     # ------------------------------------------------------------------
     # Filtreleme: pazar yeri eslesmesi + stok + NOISE/TIER_3 disarida birakma
@@ -227,6 +263,7 @@ class FeatureEngineeringService:
         current_price: Optional[float],
         stock_quantity: Optional[int],
         time_features: dict[str, Any],
+        event_features: dict[str, Any],
     ) -> PricingFeatures:
         return PricingFeatures(
             product_id=product_id,
@@ -246,6 +283,9 @@ class FeatureEngineeringService:
             day_of_week=time_features["day_of_week"],
             hour_of_day=time_features["hour_of_day"],
             is_weekend=time_features["is_weekend"],
+            recommended_demand_multiplier=event_features["recommended_demand_multiplier"],
+            event_confidence=event_features["event_confidence"],
+            market_demand_signal=event_features["market_demand_signal"],
             generated_at=datetime.now(timezone.utc).isoformat(),
         )
 
