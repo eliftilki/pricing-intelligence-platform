@@ -3,9 +3,12 @@ import asyncio
 from langgraph.graph import END, START, StateGraph
 from sqlalchemy.orm import Session
 
+from app.core.database import SessionLocal
 from app.graph.state import CompetitorGraphState
 from app.nodes.candidate_price_generator_node import candidate_price_generator_node
 from app.nodes.competitor_intelligence_node import competitor_intelligence_node
+from app.nodes.event_agent_node import event_agent_node
+from app.nodes.feature_engineering_node import feature_engineering_node
 from app.nodes.optimization_node import optimization_node
 from app.nodes.slm_explanation_node import slm_explanation_node
 
@@ -15,6 +18,18 @@ def build_pricing_pipeline_graph(db: Session):
 
     def run_competitor_intelligence(state: CompetitorGraphState):
         return competitor_intelligence_node(state, db)
+
+    def run_event_agent(state: CompetitorGraphState):
+        # competitor_intelligence ile paralel calistigi icin (ayni superstep)
+        # ayri bir Session kullanir - SQLAlchemy Session thread-safe degildir.
+        event_db = SessionLocal()
+        try:
+            return event_agent_node(state, event_db)
+        finally:
+            event_db.close()
+
+    def run_feature_engineering(state: CompetitorGraphState):
+        return feature_engineering_node(state, db)
 
     def run_candidate_price_generator(state: CompetitorGraphState):
         return candidate_price_generator_node(state, db)
@@ -26,14 +41,20 @@ def build_pricing_pipeline_graph(db: Session):
         return asyncio.run(slm_explanation_node(state))
 
     graph.add_node("competitor_intelligence", run_competitor_intelligence)
+    graph.add_node("event_agent", run_event_agent)
+    graph.add_node("feature_engineering", run_feature_engineering)
     graph.add_node("candidate_price_generator", run_candidate_price_generator)
     graph.add_node("optimization", run_optimization)
     graph.add_node("slm_explanation", run_slm_explanation)
 
     graph.add_edge(START, "competitor_intelligence")
+    graph.add_edge(START, "event_agent")
+    graph.add_edge("competitor_intelligence", "feature_engineering")
+    graph.add_edge("event_agent", "feature_engineering")
+
     graph.add_conditional_edges(
-        "competitor_intelligence",
-        _route_after_competitor_intelligence,
+        "feature_engineering",
+        _route_after_feature_engineering,
         {
             "candidate_price_generator": "candidate_price_generator",
             "optimization": "optimization",
@@ -54,7 +75,7 @@ def build_pricing_pipeline_graph(db: Session):
     return graph.compile()
 
 
-def _route_after_competitor_intelligence(state: CompetitorGraphState) -> str:
+def _route_after_feature_engineering(state: CompetitorGraphState) -> str:
     if state.get("status") == "FAILED":
         return "end"
 

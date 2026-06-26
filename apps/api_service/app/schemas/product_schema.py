@@ -1,16 +1,14 @@
 from pydantic import BaseModel
-from typing import Literal, Optional
+from typing import Optional
 from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
 
-# event_calendar seed data (agent_service) ile birebir ayni 12 kategori.
-# Serbest metin kategori girisi (eski "Mouse", "headset", "Kulaklık" gibi
-# tutarsizliklara yol acmisti) event matching'i kirdigi icin kapatildi.
-ProductCategory = Literal[
-    "Elektronik", "Moda", "Ev", "Gıda", "Kırtasiye", "Spor",
-    "Takı", "Güzellik", "Hediye", "Aletler", "Oyuncak", "Kozmetik",
-]
+# category: kullanicinin girdigi/sectigi serbest metin alt kategori (orn.
+# "Kulaklık", "Telefon"). Ust kategoriye ("Elektronik" vb.) cevirme islemi
+# event eslestirmesi icin agent_service/category_taxonomy.normalize_category
+# tarafindan dinamik yapilir - burada kisitlanmaz, aksi halde Elif'in
+# frontend'teki alt kategori secimleri (Kulaklık, Mouse, Klavye...) reddedilir.
 
 
 class ProductCreate(BaseModel):
@@ -18,7 +16,7 @@ class ProductCreate(BaseModel):
     normalized_key: Optional[str] = None
     brand: Optional[str] = None
     model: Optional[str] = None
-    category: Optional[ProductCategory] = None
+    category: Optional[str] = None
     category_id: Optional[UUID] = None
     color: Optional[str] = None
     connection_type: Optional[str] = None
@@ -30,7 +28,7 @@ class ProductUpdate(BaseModel):
     name: Optional[str] = None
     brand: Optional[str] = None
     model: Optional[str] = None
-    category: Optional[ProductCategory] = None
+    category: Optional[str] = None
     category_id: Optional[UUID] = None
     color: Optional[str] = None
     connection_type: Optional[str] = None
@@ -41,6 +39,7 @@ class ProductUpdate(BaseModel):
 class ProductOut(ProductCreate):
     id: UUID
     created_at: datetime
+
     class Config:
         from_attributes = True
 
