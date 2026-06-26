@@ -27,3 +27,5 @@ class CompetitorIntelligenceRunResponse(BaseModel):
     inserted_count: int
     message: str
     results: list[CompetitorTierResult]
+    pricing_features: dict | None = None
+    market_event_features: dict | None = None

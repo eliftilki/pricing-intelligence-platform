@@ -4,6 +4,12 @@ from uuid import UUID
 from decimal import Decimal
 from datetime import datetime
 
+# category: kullanicinin girdigi/sectigi serbest metin alt kategori (orn.
+# "Kulaklık", "Telefon"). Ust kategoriye ("Elektronik" vb.) cevirme islemi
+# event eslestirmesi icin agent_service/category_taxonomy.normalize_category
+# tarafindan dinamik yapilir - burada kisitlanmaz, aksi halde Elif'in
+# frontend'teki alt kategori secimleri (Kulaklık, Mouse, Klavye...) reddedilir.
+
 
 class ProductCreate(BaseModel):
     name: Optional[str] = None
@@ -43,6 +49,7 @@ class ProductUpdate(BaseModel):
 class ProductOut(ProductCreate):
     id: UUID
     created_at: datetime
+
     class Config:
         from_attributes = True
 

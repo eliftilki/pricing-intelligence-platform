@@ -17,6 +17,14 @@ def run_pricing_intelligence(
     payload: PricingIntelligenceRunRequest,
     db: Session = Depends(get_db),
 ):
+    """
+    Tam fiyatlandirma pipeline'i: competitor_intelligence + event_agent
+    (paralel) -> feature_engineering -> candidate_price_generator ->
+    optimization -> slm_explanation. Henuz frontend'e baglanmadi - "Fiyat
+    Onerisi Olustur" gibi gercek bir aksiyon eklendiginde bu endpoint
+    kullanilmali. Sadece rakip taramasi icin /competitor-intelligence/run'a
+    bakin (o endpoint bilerek hafif tutuldu).
+    """
     graph = build_pricing_pipeline_graph(db)
 
     return graph.invoke(

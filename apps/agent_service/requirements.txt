@@ -8,3 +8,6 @@ python-dotenv
 httpx
 langgraph
 typing-extensions
+pytrends
+hijridate
+pytest
