@@ -36,6 +36,13 @@ class Product(Base):
     brand: Mapped[str | None] = mapped_column(String(200))
     model: Mapped[str | None] = mapped_column(String(200))
     category: Mapped[str | None] = mapped_column(String(200))
+    color: Mapped[str | None] = mapped_column(String(100))
+    connection_type: Mapped[str | None] = mapped_column(String(100))
+    storage_capacity: Mapped[str | None] = mapped_column(String(100))
+    ram_capacity: Mapped[str | None] = mapped_column(String(100))
+    sim_type: Mapped[str | None] = mapped_column(String(100))
+    switch_type: Mapped[str | None] = mapped_column(String(100))
+    keyboard_layout: Mapped[str | None] = mapped_column(String(100))
     category_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("product_categories.id", ondelete="SET NULL"),

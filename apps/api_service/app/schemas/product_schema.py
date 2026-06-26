@@ -6,7 +6,7 @@ from datetime import datetime
 
 
 class ProductCreate(BaseModel):
-    name: str
+    name: Optional[str] = None
     normalized_key: Optional[str] = None
     brand: Optional[str] = None
     model: Optional[str] = None
@@ -14,6 +14,11 @@ class ProductCreate(BaseModel):
     category_id: Optional[UUID] = None
     color: Optional[str] = None
     connection_type: Optional[str] = None
+    storage_capacity: Optional[str] = None
+    ram_capacity: Optional[str] = None
+    sim_type: Optional[str] = None
+    switch_type: Optional[str] = None
+    keyboard_layout: Optional[str] = None
     barcode: Optional[str] = None
     description: Optional[str] = None
 
@@ -26,6 +31,11 @@ class ProductUpdate(BaseModel):
     category_id: Optional[UUID] = None
     color: Optional[str] = None
     connection_type: Optional[str] = None
+    storage_capacity: Optional[str] = None
+    ram_capacity: Optional[str] = None
+    sim_type: Optional[str] = None
+    switch_type: Optional[str] = None
+    keyboard_layout: Optional[str] = None
     barcode: Optional[str] = None
     description: Optional[str] = None
 

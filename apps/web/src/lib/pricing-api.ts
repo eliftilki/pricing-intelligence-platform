@@ -15,11 +15,17 @@ export type Company = {
 
 export type Product = {
   id: UUID;
-  name: string;
+  name?: string | null;
   brand?: string | null;
   model?: string | null;
   category?: string | null;
   color?: string | null;
+  connection_type?: string | null;
+  storage_capacity?: string | null;
+  ram_capacity?: string | null;
+  sim_type?: string | null;
+  switch_type?: string | null;
+  keyboard_layout?: string | null;
   barcode?: string | null;
   description?: string | null;
   created_at: string;
@@ -217,11 +223,17 @@ export const pricingApi = {
   }) => request<Company>("/companies", { method: "POST", body }),
   listProducts: () => request<Product[]>("/products"),
   createProduct: (body: {
-    name: string;
+    name?: string;
     brand?: string;
     model?: string;
     category?: string;
     color?: string;
+    connection_type?: string | null;
+    storage_capacity?: string | null;
+    ram_capacity?: string | null;
+    sim_type?: string | null;
+    switch_type?: string | null;
+    keyboard_layout?: string | null;
     barcode?: string;
     description?: string;
   }) => request<Product>("/products", { method: "POST", body }),
@@ -247,7 +259,12 @@ export const pricingApi = {
       model?: string;
       category?: string;
       color?: string;
-      connection_type?: string;
+      connection_type?: string | null;
+      storage_capacity?: string | null;
+      ram_capacity?: string | null;
+      sim_type?: string | null;
+      switch_type?: string | null;
+      keyboard_layout?: string | null;
       display_name?: string;
       our_price?: number;
       cost_price?: number;
