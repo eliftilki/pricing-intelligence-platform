@@ -52,6 +52,12 @@ const categoryOptions = [
   "Ev Elektroniği",
 ];
 const brandOptions = ["Apple", "Samsung", "Xiaomi", "Huawei", "Lenovo", "Asus", "HP", "Dell"];
+const connectionTypeOptions = ["Kablosuz", "Kablolu"];
+const storageOptions = ["64 GB", "128 GB", "256 GB", "512 GB", "1 TB"];
+const ramOptions = ["4 GB", "6 GB", "8 GB", "12 GB", "16 GB"];
+const simTypeOptions = ["Tek SIM", "Cift SIM", "eSIM", "Nano SIM", "Nano SIM + eSIM"];
+const switchTypeOptions = ["Mekanik", "Membran", "Optik", "Sessiz", "Scissor"];
+const keyboardLayoutOptions = ["TR Q", "TR F", "US Q", "UK Q"];
 const colorOptions = ["Siyah", "Beyaz", "Gri", "Gümüş", "Mavi", "Yeşil", "Kırmızı", "Altın"];
 
 type Toast = {
@@ -68,13 +74,19 @@ type ProductInsight = {
 };
 
 type ProductFormState = {
-  name: string;
   brand: string;
   category: string;
   color: string;
   model: string;
+  connectionType: string;
+  storageCapacity: string;
+  ramCapacity: string;
+  simType: string;
+  switchType: string;
+  keyboardLayout: string;
   ourPrice: string;
   costPrice: string;
+  stockQuantity: string;
 };
 
 const cardClass =
@@ -86,20 +98,62 @@ function primarySellerProduct(row: ProductInsight) {
   return row.sellerProducts[0];
 }
 
+function buildProductNameFromParts(brand?: string | null, model?: string | null) {
+  return [brand, model].filter(Boolean).join(" ").trim();
+}
+
 function productDisplayName(row: ProductInsight) {
-  return primarySellerProduct(row)?.display_name || row.product.name;
+  return (
+    buildProductNameFromParts(row.product.brand, row.product.model) ||
+    primarySellerProduct(row)?.display_name ||
+    row.product.name ||
+    "-"
+  );
 }
 
 function buildQuery(row: ProductInsight) {
   return [
     row.product.brand,
-    productDisplayName(row),
     row.product.model,
     row.product.color,
     row.product.category,
+    row.product.connection_type,
+    row.product.storage_capacity,
+    row.product.ram_capacity,
+    row.product.sim_type,
+    row.product.switch_type,
+    row.product.keyboard_layout,
   ]
     .filter(Boolean)
     .join(" ");
+}
+
+function isHeadphoneCategory(category: string | null | undefined) {
+  return Boolean(category?.toLocaleLowerCase("tr-TR").includes("kulak"));
+}
+
+function isPhoneCategory(category: string | null | undefined) {
+  return Boolean(category?.toLocaleLowerCase("tr-TR").includes("telefon"));
+}
+
+function isMouseCategory(category: string | null | undefined) {
+  return Boolean(category?.toLocaleLowerCase("tr-TR").includes("mouse"));
+}
+
+function isKeyboardCategory(category: string | null | undefined) {
+  return Boolean(category?.toLocaleLowerCase("tr-TR").includes("klavye"));
+}
+
+function hasConnectionTypeFeature(category: string | null | undefined) {
+  return (
+    isHeadphoneCategory(category) ||
+    isMouseCategory(category) ||
+    isKeyboardCategory(category)
+  );
+}
+
+function hasProductFeatures(category: string | null | undefined) {
+  return hasConnectionTypeFeature(category) || isPhoneCategory(category);
 }
 
 function toMoney(value: string | number | null | undefined) {
@@ -257,13 +311,19 @@ export default function CompanyProductsPage() {
   const [editingProductId, setEditingProductId] = useState("");
   const [editForm, setEditForm] = useState<ProductFormState | null>(null);
   const [form, setForm] = useState<ProductFormState>({
-    name: "",
     brand: "",
     category: "",
     color: "",
     model: "",
+    connectionType: "",
+    storageCapacity: "",
+    ramCapacity: "",
+    simType: "",
+    switchType: "",
+    keyboardLayout: "",
     ourPrice: "",
     costPrice: "",
+    stockQuantity: "",
   });
 
   const selectedRow = useMemo(
@@ -353,15 +413,29 @@ export default function CompanyProductsPage() {
   }
 
   function productFormPayload(currentForm: ProductFormState) {
+    const productName = buildProductNameFromParts(currentForm.brand, currentForm.model);
+    const isPhone = isPhoneCategory(currentForm.category);
+    const isKeyboard = isKeyboardCategory(currentForm.category);
+    const hasConnectionType = hasConnectionTypeFeature(currentForm.category);
+
     return {
-      name: currentForm.name,
+      name: productName,
       brand: currentForm.brand || undefined,
       category: currentForm.category || undefined,
       color: currentForm.color || undefined,
       model: currentForm.model || undefined,
-      display_name: currentForm.name,
+      connection_type: hasConnectionType
+        ? currentForm.connectionType || undefined
+        : null,
+      storage_capacity: isPhone ? currentForm.storageCapacity || undefined : null,
+      ram_capacity: isPhone ? currentForm.ramCapacity || undefined : null,
+      sim_type: isPhone ? currentForm.simType || undefined : null,
+      switch_type: isKeyboard ? currentForm.switchType || undefined : null,
+      keyboard_layout: isKeyboard ? currentForm.keyboardLayout || undefined : null,
+      display_name: productName,
       our_price: optionalNumber(currentForm.ourPrice),
       cost_price: optionalNumber(currentForm.costPrice),
+      stock_quantity: optionalNumber(currentForm.stockQuantity),
     };
   }
 
@@ -386,22 +460,28 @@ export default function CompanyProductsPage() {
             company_id: session.company_id,
             product_id: product.id,
             marketplace,
-            display_name: form.name,
+            display_name: buildProductNameFromParts(form.brand, form.model),
             our_price: optionalNumber(form.ourPrice),
             cost_price: optionalNumber(form.costPrice),
-            stock_quantity: 0,
+            stock_quantity: optionalNumber(form.stockQuantity) ?? 0,
           }),
         ),
       );
 
       setForm({
-        name: "",
         brand: "",
         category: "",
         color: "",
         model: "",
+        connectionType: "",
+        storageCapacity: "",
+        ramCapacity: "",
+        simType: "",
+        switchType: "",
+        keyboardLayout: "",
         ourPrice: "",
         costPrice: "",
+        stockQuantity: "",
       });
       setToast({
         type: "success",
@@ -419,13 +499,19 @@ export default function CompanyProductsPage() {
     const sellerProduct = primarySellerProduct(row);
     setEditingProductId(row.product.id);
     setEditForm({
-      name: productDisplayName(row),
       brand: row.product.brand || "",
       category: row.product.category || "",
       color: row.product.color || "",
       model: row.product.model || "",
+      connectionType: row.product.connection_type || "",
+      storageCapacity: row.product.storage_capacity || "",
+      ramCapacity: row.product.ram_capacity || "",
+      simType: row.product.sim_type || "",
+      switchType: row.product.switch_type || "",
+      keyboardLayout: row.product.keyboard_layout || "",
       ourPrice: toInputValue(sellerProduct?.our_price),
       costPrice: toInputValue(sellerProduct?.cost_price),
+      stockQuantity: toInputValue(sellerProduct?.stock_quantity),
     });
   }
 
@@ -564,18 +650,16 @@ export default function CompanyProductsPage() {
           className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_0.8fr_auto]"
           onSubmit={(event) => void createCompanyProduct(event)}
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:col-span-1 xl:grid-cols-4">
-            <div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:col-span-1 xl:grid-cols-2">
+            <div className="hidden">
               <Label>Ürün adı</Label>
               <Input
                 placeholder="Orn. Samsung S24 FE"
-                value={form.name}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, name: event.target.value }))
-                }
+                value={buildProductNameFromParts(form.brand, form.model)}
+                disabled
               />
             </div>
-            <div>
+            <div className="order-1">
               <Label>Marka</Label>
               <Input
                 list="product-brand-options"
@@ -591,14 +675,32 @@ export default function CompanyProductsPage() {
                 ))}
               </datalist>
             </div>
-            <div>
+            <div className="order-3">
               <Label>Kategori</Label>
               <select
                 className={selectClass}
                 value={form.category}
-                onChange={(event) =>
-                  setForm((current) => ({ ...current, category: event.target.value }))
-                }
+                onChange={(event) => {
+                  const category = event.target.value;
+                  setForm((current) => ({
+                    ...current,
+                    category,
+                    connectionType: hasConnectionTypeFeature(category)
+                      ? current.connectionType
+                      : "",
+                    storageCapacity: isPhoneCategory(category)
+                      ? current.storageCapacity
+                      : "",
+                    ramCapacity: isPhoneCategory(category) ? current.ramCapacity : "",
+                    simType: isPhoneCategory(category) ? current.simType : "",
+                    switchType: isKeyboardCategory(category)
+                      ? current.switchType
+                      : "",
+                    keyboardLayout: isKeyboardCategory(category)
+                      ? current.keyboardLayout
+                      : "",
+                  }));
+                }}
               >
                 <option value="">Kategori seçin</option>
                 {categoryOptions.map((category) => (
@@ -608,7 +710,7 @@ export default function CompanyProductsPage() {
                 ))}
               </select>
             </div>
-            <div>
+            <div className="order-4">
               <Label>Renk</Label>
               <select
                 className={selectClass}
@@ -625,7 +727,7 @@ export default function CompanyProductsPage() {
                 ))}
               </select>
             </div>
-            <div>
+            <div className="order-2">
               <Label>Model</Label>
               <Input
                 placeholder="Orn. SM-S711B"
@@ -635,7 +737,144 @@ export default function CompanyProductsPage() {
                 }
               />
             </div>
-            <div>
+            {hasProductFeatures(form.category) && (
+              <div className="order-5 rounded-lg border border-gray-100 p-4 md:col-span-2 dark:border-gray-800">
+                <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
+                  Ürün özellikleri
+                </h3>
+                {hasConnectionTypeFeature(form.category) && (
+                  <div>
+                    <Label>Bağlantı tipi</Label>
+                    <select
+                      className={selectClass}
+                      value={form.connectionType}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          connectionType: event.target.value,
+                        }))
+                      }
+                    >
+                      <option value="">Bağlantı tipi seçin</option>
+                      {connectionTypeOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {isPhoneCategory(form.category) && (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div>
+                      <Label>Hafıza</Label>
+                      <select
+                        className={selectClass}
+                        value={form.storageCapacity}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            storageCapacity: event.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Hafıza seçin</option>
+                        {storageOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>RAM</Label>
+                      <select
+                        className={selectClass}
+                        value={form.ramCapacity}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            ramCapacity: event.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">RAM seçin</option>
+                        {ramOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>SIM kart</Label>
+                      <select
+                        className={selectClass}
+                        value={form.simType}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            simType: event.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">SIM tipi seçin</option>
+                        {simTypeOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+                {isKeyboardCategory(form.category) && (
+                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <Label>Switch tipi</Label>
+                      <select
+                        className={selectClass}
+                        value={form.switchType}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            switchType: event.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Switch tipi seçin</option>
+                        {switchTypeOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Dil dizilimi</Label>
+                      <select
+                        className={selectClass}
+                        value={form.keyboardLayout}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            keyboardLayout: event.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Dil dizilimi seçin</option>
+                        {keyboardLayoutOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="order-7">
               <Label>Satış fiyatı</Label>
               <Input
                 type="number"
@@ -648,7 +887,7 @@ export default function CompanyProductsPage() {
                 }
               />
             </div>
-            <div>
+            <div className="order-7">
               <Label>Maliyet</Label>
               <Input
                 type="number"
@@ -658,6 +897,22 @@ export default function CompanyProductsPage() {
                 value={form.costPrice}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, costPrice: event.target.value }))
+                }
+              />
+            </div>
+            <div className="order-8">
+              <Label>Stok</Label>
+              <Input
+                type="number"
+                min="0"
+                step={1}
+                placeholder="Orn. 25"
+                value={form.stockQuantity}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    stockQuantity: event.target.value,
+                  }))
                 }
               />
             </div>
@@ -683,9 +938,14 @@ export default function CompanyProductsPage() {
             </div>
           </div>
 
-          <div className="flex items-end">
+          <div className="order-7 flex items-end">
             <Button
-              disabled={isLoading || !form.name || !selectedMarketplaces.length}
+              disabled={
+                isLoading ||
+                !form.brand.trim() ||
+                !form.model.trim() ||
+                !selectedMarketplaces.length
+              }
               startIcon={<PlusIcon />}
             >
               Ürün Ekle
@@ -719,21 +979,17 @@ export default function CompanyProductsPage() {
           </div>
 
           <form
-            className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4"
+            className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-2"
             onSubmit={(event) => void updateCompanyProduct(event)}
           >
-            <div>
+            <div className="hidden">
               <Label>Ürün adı</Label>
               <Input
-                value={editForm.name}
-                onChange={(event) =>
-                  setEditForm((current) =>
-                    current ? { ...current, name: event.target.value } : current,
-                  )
-                }
+                value={buildProductNameFromParts(editForm.brand, editForm.model)}
+                disabled
               />
             </div>
-            <div>
+            <div className="order-1">
               <Label>Marka</Label>
               <Input
                 list="product-brand-options"
@@ -745,16 +1001,38 @@ export default function CompanyProductsPage() {
                 }
               />
             </div>
-            <div>
+            <div className="order-3">
               <Label>Kategori</Label>
               <select
                 className={selectClass}
                 value={editForm.category}
-                onChange={(event) =>
+                onChange={(event) => {
+                  const category = event.target.value;
                   setEditForm((current) =>
-                    current ? { ...current, category: event.target.value } : current,
-                  )
-                }
+                    current
+                      ? {
+                          ...current,
+                          category,
+                          connectionType: hasConnectionTypeFeature(category)
+                            ? current.connectionType
+                            : "",
+                          storageCapacity: isPhoneCategory(category)
+                            ? current.storageCapacity
+                            : "",
+                          ramCapacity: isPhoneCategory(category)
+                            ? current.ramCapacity
+                            : "",
+                          simType: isPhoneCategory(category) ? current.simType : "",
+                          switchType: isKeyboardCategory(category)
+                            ? current.switchType
+                            : "",
+                          keyboardLayout: isKeyboardCategory(category)
+                            ? current.keyboardLayout
+                            : "",
+                        }
+                      : current,
+                  );
+                }}
               >
                 <option value="">Kategori seçin</option>
                 {categoryOptions.map((category) => (
@@ -764,7 +1042,7 @@ export default function CompanyProductsPage() {
                 ))}
               </select>
             </div>
-            <div>
+            <div className="order-4">
               <Label>Renk</Label>
               <select
                 className={selectClass}
@@ -783,7 +1061,7 @@ export default function CompanyProductsPage() {
                 ))}
               </select>
             </div>
-            <div>
+            <div className="order-2">
               <Label>Model</Label>
               <Input
                 value={editForm.model}
@@ -794,7 +1072,150 @@ export default function CompanyProductsPage() {
                 }
               />
             </div>
-            <div>
+            {hasProductFeatures(editForm.category) && (
+              <div className="order-5 rounded-lg border border-gray-100 p-4 md:col-span-2 dark:border-gray-800">
+                <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-white">
+                  Ürün özellikleri
+                </h3>
+                {hasConnectionTypeFeature(editForm.category) && (
+                  <div>
+                    <Label>Bağlantı tipi</Label>
+                    <select
+                      className={selectClass}
+                      value={editForm.connectionType}
+                      onChange={(event) =>
+                        setEditForm((current) =>
+                          current
+                            ? { ...current, connectionType: event.target.value }
+                            : current,
+                        )
+                      }
+                    >
+                      <option value="">Bağlantı tipi seçin</option>
+                      {connectionTypeOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {isPhoneCategory(editForm.category) && (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div>
+                      <Label>Hafıza</Label>
+                      <select
+                        className={selectClass}
+                        value={editForm.storageCapacity}
+                        onChange={(event) =>
+                          setEditForm((current) =>
+                            current
+                              ? { ...current, storageCapacity: event.target.value }
+                              : current,
+                          )
+                        }
+                      >
+                        <option value="">Hafıza seçin</option>
+                        {storageOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>RAM</Label>
+                      <select
+                        className={selectClass}
+                        value={editForm.ramCapacity}
+                        onChange={(event) =>
+                          setEditForm((current) =>
+                            current
+                              ? { ...current, ramCapacity: event.target.value }
+                              : current,
+                          )
+                        }
+                      >
+                        <option value="">RAM seçin</option>
+                        {ramOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>SIM kart</Label>
+                      <select
+                        className={selectClass}
+                        value={editForm.simType}
+                        onChange={(event) =>
+                          setEditForm((current) =>
+                            current
+                              ? { ...current, simType: event.target.value }
+                              : current,
+                          )
+                        }
+                      >
+                        <option value="">SIM tipi seçin</option>
+                        {simTypeOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+                {isKeyboardCategory(editForm.category) && (
+                  <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <Label>Switch tipi</Label>
+                      <select
+                        className={selectClass}
+                        value={editForm.switchType}
+                        onChange={(event) =>
+                          setEditForm((current) =>
+                            current
+                              ? { ...current, switchType: event.target.value }
+                              : current,
+                          )
+                        }
+                      >
+                        <option value="">Switch tipi seçin</option>
+                        {switchTypeOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Dil dizilimi</Label>
+                      <select
+                        className={selectClass}
+                        value={editForm.keyboardLayout}
+                        onChange={(event) =>
+                          setEditForm((current) =>
+                            current
+                              ? { ...current, keyboardLayout: event.target.value }
+                              : current,
+                          )
+                        }
+                      >
+                        <option value="">Dil dizilimi seçin</option>
+                        {keyboardLayoutOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="order-6">
               <Label>Satış fiyatı</Label>
               <Input
                 type="number"
@@ -808,7 +1229,7 @@ export default function CompanyProductsPage() {
                 }
               />
             </div>
-            <div>
+            <div className="order-6">
               <Label>Maliyet</Label>
               <Input
                 type="number"
@@ -822,9 +1243,30 @@ export default function CompanyProductsPage() {
                 }
               />
             </div>
-            <div className="flex items-end">
+            <div className="order-7">
+              <Label>Stok</Label>
+              <Input
+                type="number"
+                min="0"
+                step={1}
+                value={editForm.stockQuantity}
+                onChange={(event) =>
+                  setEditForm((current) =>
+                    current
+                      ? { ...current, stockQuantity: event.target.value }
+                      : current,
+                  )
+                }
+              />
+            </div>
+            <div className="order-8 flex items-end">
               <Button
-                disabled={isLoading || !editForm.name || !editingProductId}
+                disabled={
+                  isLoading ||
+                  !editForm.brand.trim() ||
+                  !editForm.model.trim() ||
+                  !editingProductId
+                }
                 startIcon={<PlusIcon />}
               >
                 Değişiklikleri Kaydet
