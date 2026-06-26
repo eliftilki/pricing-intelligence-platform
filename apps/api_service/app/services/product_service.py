@@ -12,11 +12,19 @@ from app.schemas.product_schema import (
 from app.services.product_resolver import build_normalized_key
 
 
+def build_product_name(brand: str | None, model: str | None, fallback: str | None = None) -> str:
+    name = " ".join(part.strip() for part in (brand, model) if part and part.strip())
+    return name or fallback or "Adsiz Urun"
+
+
 class ProductService:
     def __init__(self, db: Session):
         self.repo = ProductRepository(db)
 
     def create_product(self, payload: ProductCreate):
+        payload = payload.model_copy(
+            update={"name": build_product_name(payload.brand, payload.model, payload.name)}
+        )
         normalized_key = build_normalized_key(payload)
         if normalized_key:
             existing_product = self.repo.get_product_by_normalized_key(normalized_key)
@@ -106,22 +114,37 @@ class ProductService:
                 "category_id",
                 "color",
                 "connection_type",
+                "storage_capacity",
+                "ram_capacity",
+                "sim_type",
+                "switch_type",
+                "keyboard_layout",
                 "barcode",
                 "description",
             },
         )
 
         merged_product = ProductCreate(
-            name=product_values.get("name", product.name),
+            name=build_product_name(
+                product_values.get("brand", product.brand),
+                product_values.get("model", product.model),
+                product_values.get("name", product.name),
+            ),
             brand=product_values.get("brand", product.brand),
             model=product_values.get("model", product.model),
             category=product_values.get("category", product.category),
             category_id=product_values.get("category_id", product.category_id),
             color=product_values.get("color", product.color),
             connection_type=product_values.get("connection_type", product.connection_type),
+            storage_capacity=product_values.get("storage_capacity", product.storage_capacity),
+            ram_capacity=product_values.get("ram_capacity", product.ram_capacity),
+            sim_type=product_values.get("sim_type", product.sim_type),
+            switch_type=product_values.get("switch_type", product.switch_type),
+            keyboard_layout=product_values.get("keyboard_layout", product.keyboard_layout),
             barcode=product_values.get("barcode", product.barcode),
             description=product_values.get("description", product.description),
         )
+        product_values["name"] = merged_product.name
         normalized_key = build_normalized_key(merged_product)
         if normalized_key:
             existing_product = self.repo.get_product_by_normalized_key(normalized_key)
