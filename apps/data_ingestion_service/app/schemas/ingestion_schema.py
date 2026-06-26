@@ -18,6 +18,12 @@ class SearchRequest(BaseModel):
     query: str
     marketplaces: List[str] = Field(default_factory=lambda: ["trendyol", "hepsiburada", "amazon"])
     max_results: int = Field(default=10, ge=1, le=50)
+    # Kategoriye gore fiyati buyuk olcude degistiren varyant secimleri.
+    # Kulaklik: connection_type. Telefon: ram_gb / storage_gb / sim_type.
+    connection_type: Optional[Literal["kablolu", "kablosuz"]] = None
+    ram_gb: Optional[int] = None
+    storage_gb: Optional[int] = None
+    sim_type: Optional[Literal["tek_hat", "cift_hat"]] = None
 
 
 class SearchResultItem(BaseModel):
