@@ -99,3 +99,16 @@ class SellerStockHistory(Base):
     change_source = Column(String, nullable=False)
     changed_at = Column(DateTime(timezone=True), server_default=func.now())
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class SellerSalesHistory(Base):
+    __tablename__ = "seller_sales_history"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id", ondelete="CASCADE"))
+    product_id = Column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"))
+    seller_product_id = Column(UUID(as_uuid=True), ForeignKey("seller_products.id", ondelete="CASCADE"))
+    marketplace = Column(String, nullable=False)
+    sales_quantity = Column(Integer, nullable=False)
+    sales_date = Column(DateTime(timezone=True), nullable=False)
+    note = Column(String)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
