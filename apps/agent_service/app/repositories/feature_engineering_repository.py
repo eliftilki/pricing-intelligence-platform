@@ -1,8 +1,11 @@
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from app.models.agent_run import AgentRun
 from app.models.competitor import CompetitorListing, CompetitorTier
+from app.models.market_event import MarketEventFeatures
 from app.models.product import SellerProduct
 
 
@@ -89,3 +92,58 @@ class FeatureEngineeringRepository:
             )
 
         return features
+
+    def get_fresh_market_event_features(
+        self,
+        product_id: UUID,
+        max_age_hours: int = 48,
+    ) -> MarketEventFeatures | None:
+        """
+        event_agent_node ayni graph calismasinda state'e market_event_features
+        yazmamissa (calismadiysa/hata verdiyse) bu DB fallback'i kullanilir.
+        market_intelligence_repository.get_fresh_market_event_features ile
+        ayni TTL mantigi (varsayilan 48 saat) - iki tablo da MarketEventFeatures'a
+        bakiyor, sadece cagiran node farkli.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
+
+        return (
+            self.db.query(MarketEventFeatures)
+            .filter(
+                MarketEventFeatures.product_id == product_id,
+                MarketEventFeatures.generated_at >= cutoff,
+            )
+            .order_by(MarketEventFeatures.generated_at.desc())
+            .first()
+        )
+
+    def create_agent_run(self, product_id: UUID, input_payload: dict) -> AgentRun:
+        run = AgentRun(
+            product_id=product_id,
+            run_type="FEATURE_ENGINEERING",
+            status="STARTED",
+            input_payload=input_payload,
+            started_at=datetime.now(timezone.utc),
+        )
+        self.db.add(run)
+        self.db.flush()
+        return run
+
+    def finish_agent_run(
+        self,
+        run: AgentRun,
+        status: str,
+        output_payload: dict | None = None,
+        error_message: str | None = None,
+    ) -> None:
+        run.status = status
+        run.output_payload = output_payload
+        run.error_message = error_message
+        run.finished_at = datetime.now(timezone.utc)
+        self.db.flush()
+
+    def commit(self) -> None:
+        self.db.commit()
+
+    def rollback(self) -> None:
+        self.db.rollback()
