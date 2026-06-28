@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     admin_api_key: str | None = None
     slm_service_url: str = "http://localhost:8003"
     slm_explanation_timeout_seconds: int = 60
+    ml_service_url: str = "http://localhost:8010"
+    ml_prediction_timeout_seconds: int = 30
 
     class Config:
         env_file = ".env"

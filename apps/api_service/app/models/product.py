@@ -19,7 +19,7 @@ class ProductCategory(Base):
 class Product(Base):
     __tablename__ = "products"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String, nullable=False)
+    name = Column(String)
     normalized_key = Column(String)
     brand = Column(String)
     model = Column(String)
@@ -27,6 +27,11 @@ class Product(Base):
     category_id = Column(UUID(as_uuid=True), ForeignKey("product_categories.id", ondelete="SET NULL"))
     color = Column(String)
     connection_type = Column(String)
+    storage_capacity = Column(String)
+    ram_capacity = Column(String)
+    sim_type = Column(String)
+    switch_type = Column(String)
+    keyboard_layout = Column(String)
     barcode = Column(String, unique=True)
     description = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
