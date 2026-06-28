@@ -13,12 +13,24 @@ _RAM_STORAGE_PATTERN = re.compile(r"(\d+)\s*/\s*(\d+)\s*gb", re.IGNORECASE)
 _RAM_PATTERN = re.compile(r"(\d+)\s*gb\s*ram", re.IGNORECASE)
 _GB_PATTERN = re.compile(r"(\d+)\s*gb", re.IGNORECASE)
 
+# Klavye duzeni: kod (TR/US/UK) + harf (Q/F) ikilisi basliklarda genelde
+# birlikte geciyor. "Turkce Q/F" Turkce dil adiyla da yazilabiliyor; US/UK
+# icin dil adi tespiti daha belirsiz oldugundan sadece kod+harf kalibina
+# guveniyoruz.
+_LAYOUT_PATTERNS = {
+    "TR Q": [r"\btr\s*-?\s*q\b", r"türkçe\s*q\b", r"q\s*türkçe\b"],
+    "TR F": [r"\btr\s*-?\s*f\b", r"türkçe\s*f\b", r"f\s*türkçe\b"],
+    "US Q": [r"\bus\s*-?\s*q\b", r"ngilizce\s*q\b"],
+    "UK Q": [r"\buk\s*-?\s*q\b"],
+}
+
 
 def build_query_suffix(
     connection_type: Optional[str] = None,
     ram_gb: Optional[int] = None,
     storage_gb: Optional[int] = None,
     sim_type: Optional[str] = None,
+    keyboard_layout: Optional[str] = None,
 ) -> str:
     parts = []
     if connection_type:
@@ -31,6 +43,8 @@ def build_query_suffix(
         parts.append("çift hat")
     elif sim_type == "tek_hat":
         parts.append("tek hat")
+    if keyboard_layout:
+        parts.append(keyboard_layout)
     return " ".join(parts)
 
 
@@ -73,13 +87,29 @@ def _matches_ram_storage(name: str, ram_gb: Optional[int], storage_gb: Optional[
     return True
 
 
+def _detect_keyboard_layout(name_l: str) -> Optional[str]:
+    for layout, patterns in _LAYOUT_PATTERNS.items():
+        for pattern in patterns:
+            if re.search(pattern, name_l):
+                return layout
+    return None
+
+
+def _matches_keyboard_layout(name: str, wanted: str) -> bool:
+    detected = _detect_keyboard_layout(name.lower())
+    if detected is None:
+        return True
+    return detected == wanted
+
+
 def filter_results(
     results: List[Dict[str, Any]],
     connection_type: Optional[str] = None,
     ram_gb: Optional[int] = None,
     storage_gb: Optional[int] = None,
+    keyboard_layout: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
-    if not (connection_type or ram_gb or storage_gb):
+    if not (connection_type or ram_gb or storage_gb or keyboard_layout):
         return results
 
     filtered = []
@@ -91,6 +121,8 @@ def filter_results(
         if connection_type and not _matches_connection_type(name, connection_type):
             continue
         if (ram_gb or storage_gb) and not _matches_ram_storage(name, ram_gb, storage_gb):
+            continue
+        if keyboard_layout and not _matches_keyboard_layout(name, keyboard_layout):
             continue
         filtered.append(item)
 

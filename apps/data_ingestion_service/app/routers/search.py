@@ -17,6 +17,7 @@ async def search_products(payload: SearchRequest):
             ram_gb=payload.ram_gb,
             storage_gb=payload.storage_gb,
             sim_type=payload.sim_type,
+            keyboard_layout=payload.keyboard_layout,
         )
         return result
     except ValueError as e:

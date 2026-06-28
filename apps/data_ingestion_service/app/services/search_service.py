@@ -24,14 +24,15 @@ async def run_search(
     ram_gb: Optional[int] = None,
     storage_gb: Optional[int] = None,
     sim_type: Optional[str] = None,
+    keyboard_layout: Optional[str] = None,
 ) -> Dict[str, Any]:
     requested = [m.lower() for m in marketplaces]
     unknown = [m for m in requested if m not in _COLLECTORS]
     if unknown:
         raise ValueError(f"Bilinmeyen marketplace(ler): {unknown}. Geçerliler: {list(_COLLECTORS)}")
 
-    has_filter = bool(connection_type or ram_gb or storage_gb or sim_type)
-    suffix = build_query_suffix(connection_type, ram_gb, storage_gb, sim_type)
+    has_filter = bool(connection_type or ram_gb or storage_gb or sim_type or keyboard_layout)
+    suffix = build_query_suffix(connection_type, ram_gb, storage_gb, sim_type, keyboard_layout)
     search_query = f"{query} {suffix}".strip() if suffix else query
     # Filtreleme sonuc sayisini azaltacagi icin, filtre varsa scrape'i biraz
     # daha buyuk bir havuzdan yapip sonra max_results'a kirpiyoruz.
@@ -43,7 +44,7 @@ async def run_search(
             result = await collector.search(search_query, max_results=fetch_count)
             if has_filter:
                 result["results"] = filter_results(
-                    result["results"], connection_type, ram_gb, storage_gb
+                    result["results"], connection_type, ram_gb, storage_gb, keyboard_layout
                 )[:max_results]
                 result["total_found"] = len(result["results"])
             result["query"] = query

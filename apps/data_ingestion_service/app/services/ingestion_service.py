@@ -12,16 +12,8 @@ from app.collectors.trendyol_collector import TrendyolCollector
 from app.core.circuit_breaker import MarketplaceCircuitBreaker
 from app.normalizers.competitor_normalizer import CompetitorNormalizer
 from app.repositories.competitor_repository import CompetitorRepository
-from app.collectors.trendyol_search_collector import TrendyolSearchCollector
-from app.collectors.hepsiburada_search_collector import HepsiburadaSearchCollector
-from app.collectors.amazon_search_collector import AmazonSearchCollector
 from app.schemas.ingestion_schema import IngestionRunRequest, IngestionRunResponse, IngestionRunWithUrlsRequest, SearchAndRunRequest
-
-SEARCH_COLLECTOR_MAP = {
-    "TRENDYOL": TrendyolSearchCollector,
-    "HEPSIBURADA": HepsiburadaSearchCollector,
-    "AMAZON": AmazonSearchCollector,
-}
+from app.services.search_service import run_search
 
 logger = logging.getLogger(__name__)
 
@@ -107,22 +99,35 @@ class IngestionService:
                 requested_marketplaces=marketplaces,
             )
 
-        # Her marketplace için paralel arama
-        async def _search_one(marketplace: str) -> tuple[str, str | None]:
-            collector_cls = SEARCH_COLLECTOR_MAP.get(marketplace)
-            if not collector_cls:
-                return marketplace, None
+        # connection_type/keyboard_layout secilmisse, ayni filtre /search
+        # onizlemesindeki gibi burada da uygulanir (search_service.run_search) -
+        # aksi halde kayit aninda yanlis varyant takip edilmeye baslanir.
+        found_urls: dict[str, str] = {}
+        if marketplaces_to_search:
             try:
-                result = await collector_cls().search(payload.query, max_results=1)
-                results = result.get("results", [])
-                if results:
-                    return marketplace, results[0]["url"]
-            except Exception as e:
-                logger.error(f"{marketplace} arama hatası: {e}")
-            return marketplace, None
+                search_result = await run_search(
+                    query=payload.query,
+                    marketplaces=marketplaces_to_search,
+                    max_results=1,
+                    connection_type=payload.connection_type,
+                    keyboard_layout=payload.keyboard_layout,
+                )
+            except ValueError as exc:
+                return IngestionRunResponse(
+                    job_id=payload.product_id,
+                    status="FAILED",
+                    message=str(exc),
+                    scrape_counts={},
+                )
 
-        pairs = await asyncio.gather(*[_search_one(m) for m in marketplaces_to_search])
-        found_urls = {m: url for m, url in pairs if url}
+            for marketplace_lower, data in search_result.get("results", {}).items():
+                results = data.get("results") or []
+                if results:
+                    found_urls[marketplace_lower.upper()] = results[0]["url"]
+                else:
+                    error = data.get("error")
+                    if error:
+                        logger.error(f"{marketplace_lower} arama hatası: {error}")
 
         if not found_urls and not cached_scrapes:
             return IngestionRunResponse(
