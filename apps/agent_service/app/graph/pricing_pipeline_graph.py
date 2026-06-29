@@ -148,6 +148,8 @@ def _route_after_candidate_price_generator(state: CompetitorGraphState) -> str:
 
 def _pick_graph_update(result: dict, allowed_keys: tuple[str, ...]) -> dict:
     return {key: result[key] for key in allowed_keys if key in result}
+
+
 def _route_after_demand_prediction(state: CompetitorGraphState) -> str:
     # ML veya builder hata verdiyse pipeline'i burada durdur.
     if state.get("status") == "FAILED":
