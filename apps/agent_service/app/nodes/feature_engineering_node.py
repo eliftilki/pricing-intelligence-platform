@@ -28,6 +28,7 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
 
     if not product_id:
         state["status"] = "FAILED"
+        state["failed_stage"] = "feature_engineering"
         state["message"] = "product_id is missing. Feature engineering cannot run."
         return state
 
@@ -40,6 +41,7 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
         )
     except ValueError as exc:
         state["status"] = "FAILED"
+        state["failed_stage"] = "feature_engineering"
         state["message"] = str(exc)
         return state
 

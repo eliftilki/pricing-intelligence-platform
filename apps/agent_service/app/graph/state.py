@@ -8,7 +8,6 @@ class CompetitorGraphState(TypedDict, total=False):
     company_id: UUID | None
 
     lookback_hours: int
-    refresh_market_data: bool
     ingestion_marketplaces: list[str]
     ingestion_query: str | None
     ingestion_company_id: UUID | None
@@ -20,6 +19,7 @@ class CompetitorGraphState(TypedDict, total=False):
 
     status: str
     error_code: str
+    failed_stage: str | None
     analyzed_count: int
     inserted_count: int
     message: str
@@ -42,6 +42,8 @@ class CompetitorGraphState(TypedDict, total=False):
     marketplace_recommendations: list[dict]
 
     recommendation: dict
+    recommendation_persistence: dict
     slm_explanation: dict | None
+    pipeline_summary: dict
     errors: list[str]
     warnings: list[str]

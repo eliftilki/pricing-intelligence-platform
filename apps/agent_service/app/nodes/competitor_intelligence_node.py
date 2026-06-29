@@ -12,6 +12,9 @@ def competitor_intelligence_node(state: CompetitorGraphState, db: Session) -> Co
         lookback_hours=state.get("lookback_hours", 24),
     )
 
+    if result.get("status") == "FAILED":
+        result["failed_stage"] = "competitor_intelligence"
+
     # NOT: state'in tamami spread edilmiyor - event_agent_node ile ayni
     # superstep'te paralel calisiyor, ikisi de **state dondururse ortak
     # key'lere (product_id vb.) iki kere "yazilmis" sayilip LangGraph

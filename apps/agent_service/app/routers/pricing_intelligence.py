@@ -35,7 +35,6 @@ def run_pricing_intelligence(
             "product_id": payload.product_id,
             "seller_product_id": payload.seller_product_id,
             "lookback_hours": payload.lookback_hours,
-            "refresh_market_data": payload.refresh_market_data,
             "ingestion_marketplaces": payload.ingestion_marketplaces,
             "ingestion_query": payload.ingestion_query,
             "ingestion_company_id": payload.ingestion_company_id,

@@ -13,6 +13,7 @@ def candidate_price_generator_node(state: dict, db: Session) -> dict:
 
     if not product_id:
         state["status"] = "FAILED"
+        state["failed_stage"] = "candidate_price_generator"
         state["message"] = "product_id is missing. Candidate price generation cannot run."
         return state
 
@@ -31,6 +32,7 @@ def candidate_price_generator_node(state: dict, db: Session) -> dict:
         context = repository.build_context_from_product(request)
     except ValueError as exc:
         state["status"] = "FAILED"
+        state["failed_stage"] = "candidate_price_generator"
         state["message"] = str(exc)
         return state
 
