@@ -103,3 +103,21 @@ class UpdatePriceRequest(BaseModel):
 class UpdateStockRequest(BaseModel):
     new_stock: int
     change_source: str = "MANUAL"
+
+
+class SalesQuantityCreate(BaseModel):
+    sales_quantity: int
+    sales_date: Optional[datetime] = None
+    note: Optional[str] = None
+
+
+class SalesQuantityOut(SalesQuantityCreate):
+    id: UUID
+    company_id: UUID
+    product_id: UUID
+    seller_product_id: UUID
+    marketplace: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

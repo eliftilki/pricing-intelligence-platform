@@ -6,6 +6,7 @@ from app.repositories.product_repository import ProductRepository
 from app.schemas.product_schema import (
     CompanyProductUpdate,
     ProductCreate,
+    SalesQuantityCreate,
     SellerProductCreate,
     SellerProductUpdate,
 )
@@ -227,3 +228,17 @@ class ProductService:
         return self._serialize_seller_product(
             self.repo.update_stock(sp, payload.new_stock, payload.change_source)
         )
+
+    def create_sales_quantity(self, seller_product_id: UUID, payload: SalesQuantityCreate):
+        sp = self.repo.get_seller_product(seller_product_id)
+        if not sp:
+            raise HTTPException(status_code=404, detail="Seller product not found")
+        if payload.sales_quantity < 0:
+            raise HTTPException(status_code=422, detail="Sales quantity cannot be negative")
+        current_stock = sp.stock_quantity or 0
+        if payload.sales_quantity > current_stock:
+            raise HTTPException(
+                status_code=422,
+                detail="Satış miktarı mevcut stoktan fazla olamaz.",
+            )
+        return self.repo.create_sales_quantity(sp, payload)
