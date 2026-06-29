@@ -20,7 +20,6 @@ def candidate_price_generator_node(state: dict, db: Session) -> dict:
         product_id=product_id,
         seller_product_id=state.get("seller_product_id"),
         strategy=CandidateStrategy.AUTO,
-        persist=False,
         price_step=state.get("price_step", 250),
         base_price_step=state.get("base_price_step", 250),
         dense_price_step=state.get("dense_price_step", 50),

@@ -35,9 +35,12 @@ def run_pricing_intelligence(
             "product_id": payload.product_id,
             "seller_product_id": payload.seller_product_id,
             "lookback_hours": payload.lookback_hours,
+            "refresh_market_data": payload.refresh_market_data,
+            "ingestion_marketplaces": payload.ingestion_marketplaces,
+            "ingestion_query": payload.ingestion_query,
+            "ingestion_company_id": payload.ingestion_company_id,
             "run_candidate_prices": payload.run_candidate_prices,
             "run_optimization": payload.run_optimization,
-            "persist_candidate_prices": payload.persist_candidate_prices,
             "persist_optimization": payload.persist_optimization,
             "price_step": payload.price_step,
             "base_price_step": payload.base_price_step,
@@ -46,6 +49,8 @@ def run_pricing_intelligence(
                 item.model_dump(mode="json")
                 for item in payload.demand_predictions
             ],
+            "errors": [],
+            "warnings": [],
         }
     )
 
