@@ -2,6 +2,10 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||
   "http://localhost:8000";
 
+const AGENT_SERVICE_BASE_URL =
+  process.env.NEXT_PUBLIC_AGENT_SERVICE_URL?.replace(/\/$/, "") ||
+  "http://localhost:8002";
+
 export type UUID = string;
 
 export type Company = {
@@ -50,6 +54,18 @@ export type SellerProduct = {
   created_at: string;
 };
 
+export type SalesQuantityRecord = {
+  id: UUID;
+  company_id: UUID;
+  product_id: UUID;
+  seller_product_id: UUID;
+  marketplace: string;
+  sales_quantity: number;
+  sales_date?: string | null;
+  note?: string | null;
+  created_at: string;
+};
+
 export type DataCollectionResponse = {
   job_id?: UUID;
   product_id?: UUID;
@@ -86,6 +102,64 @@ export type AnalysisResponse = {
     rationale: string;
   };
   competitors: unknown[];
+};
+
+export type PricingRecommendationResult = {
+  product_name?: string | null;
+  marketplace?: string | null;
+  current_price?: string | number | null;
+  recommended_price?: string | number | null;
+  action?: string | null;
+  expected_sales?: string | number | null;
+  unit_profit?: string | number | null;
+  expected_profit?: string | number | null;
+  profit_uplift?: string | number | null;
+  commission_rate?: string | number | null;
+  selected_reason?: string | null;
+  reason_codes?: string[] | null;
+  risk_level?: string | null;
+  competitor_min_price?: string | number | null;
+  competitor_avg_price?: string | number | null;
+  tier1_min_price?: string | number | null;
+};
+
+export type PricingIntelligenceResponse = {
+  product_id: UUID;
+  status: "SUCCESS" | "PARTIAL_SUCCESS" | "FAILED" | string;
+  error_code?: string | null;
+  failed_stage?: string | null;
+  analyzed_count: number;
+  inserted_count: number;
+  message: string;
+  ingestion_result?: {
+    job_id?: UUID;
+    status?: string;
+    message?: string;
+    scrape_counts?: Record<string, number>;
+  } | null;
+  warnings: string[];
+  candidate_prices?: number[] | null;
+  selected_candidate_strategy?: string | null;
+  optimization_result?: Record<string, unknown> | null;
+  marketplace_recommendations?: Array<Record<string, unknown>> | null;
+  recommendation?: PricingRecommendationResult | null;
+  recommendation_persistence?: {
+    status?: string;
+    recommendation_id?: UUID;
+    message?: string;
+  } | null;
+  slm_explanation?: {
+    explanation?: string;
+    model_name?: string;
+  } | null;
+  pipeline_summary?: {
+    outcome?: string;
+    completed_stages?: string[];
+    failed_stage?: string | null;
+    warning_count?: number;
+    error_count?: number;
+  } | null;
+  errors: string[];
 };
 
 export type CompetitorListing = {
@@ -163,7 +237,11 @@ function formatApiError(status: number, detail: string) {
   return trimmedDetail || `İşlem tamamlanamadı. Lütfen tekrar deneyin.`;
 }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function requestFrom<T>(
+  baseUrl: string,
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
 
@@ -175,7 +253,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     headers.set("Authorization", `Bearer ${options.token}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${baseUrl}${path}`, {
     ...options,
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
@@ -202,8 +280,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   return (await response.json()) as T;
 }
 
+async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  return requestFrom<T>(API_BASE_URL, path, options);
+}
+
 export const pricingApi = {
   baseUrl: API_BASE_URL,
+  agentServiceBaseUrl: AGENT_SERVICE_BASE_URL,
   health: () => request<{ status: string; service: string }>("/health"),
   login: (body: { email: string; password: string }) =>
     request<AuthResponse>("/auth/login", { method: "POST", body }),
@@ -302,6 +385,22 @@ export const pricingApi = {
     marketplaces: string[];
   }) =>
     request<AnalysisResponse>("/analysis/run", { method: "POST", body }),
+  runPricingIntelligence: (body: {
+    product_id: UUID;
+    seller_product_id: UUID;
+    ingestion_marketplaces: string[];
+    ingestion_query?: string;
+    ingestion_company_id?: UUID;
+    run_candidate_prices?: boolean;
+    run_optimization?: boolean;
+    persist_optimization?: boolean;
+    sales_7d_avg?: number;
+  }) =>
+    requestFrom<PricingIntelligenceResponse>(
+      AGENT_SERVICE_BASE_URL,
+      "/pricing-intelligence/run",
+      { method: "POST", body },
+    ),
   runProductAnalysis: (body: {
     product_id: UUID;
     company_id: UUID;
@@ -326,6 +425,14 @@ export const pricingApi = {
       body,
       token,
     }),
+  recordSalesQuantity: (
+    sellerProductId: UUID,
+    body: { sales_quantity: number; sales_date?: string; note?: string },
+  ) =>
+    request<SalesQuantityRecord>(
+      `/products/seller-products/${sellerProductId}/sales`,
+      { method: "POST", body },
+    ),
   decideRecommendation: (
     recommendationId: UUID,
     action: "approve" | "reject" | "apply",

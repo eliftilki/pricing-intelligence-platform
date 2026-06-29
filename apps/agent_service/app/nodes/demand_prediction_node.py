@@ -17,17 +17,20 @@ def demand_prediction_node(state: dict, db: Session) -> dict:
     """
     if not state.get("candidate_prices"):
         state["status"] = "FAILED"
+        state["failed_stage"] = "demand_prediction"
         state["message"] = "candidate_prices are missing. Demand prediction cannot run."
         return state
 
     if not state.get("pricing_features"):
         state["status"] = "FAILED"
+        state["failed_stage"] = "demand_prediction"
         state["message"] = "pricing_features are missing. Demand prediction cannot run."
         return state
 
     product_id = state.get("product_id")
     if not product_id:
         state["status"] = "FAILED"
+        state["failed_stage"] = "demand_prediction"
         state["message"] = "product_id is missing. Demand prediction cannot run."
         return state
 
@@ -57,10 +60,12 @@ def demand_prediction_node(state: dict, db: Session) -> dict:
         result = demand_prediction_service.predict(context)
     except ValueError as exc:
         state["status"] = "FAILED"
+        state["failed_stage"] = "demand_prediction"
         state["message"] = str(exc)
         return state
     except DemandPredictionServiceError as exc:
         state["status"] = "FAILED"
+        state["failed_stage"] = "demand_prediction"
         state["message"] = str(exc)
         return state
 

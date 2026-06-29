@@ -1,15 +1,15 @@
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.models.candidate_price import CandidatePrice, CandidatePriceBatch
+from app.core.pricing_policy import COMPETITOR_DATA_MAX_AGE_HOURS
 from app.models.competitor import CompetitorListing, CompetitorTier
 from app.models.product import SellerProduct
 from app.schemas.candidate_price_schema import (
     CandidateCompetitor,
     CandidatePriceContext,
     CandidatePriceGenerateRequest,
-    CandidatePriceGenerateResponse,
 )
 
 
@@ -90,6 +90,10 @@ class CandidatePriceRepository:
         product_id: UUID,
         limit: int = 100,
     ) -> list[CandidateCompetitor]:
+        cutoff = datetime.now(timezone.utc) - timedelta(
+            hours=COMPETITOR_DATA_MAX_AGE_HOURS
+        )
+
         rows = (
             self.db.query(CompetitorTier, CompetitorListing)
             .join(
@@ -98,6 +102,8 @@ class CandidatePriceRepository:
             )
             .filter(CompetitorTier.product_id == product_id)
             .filter(CompetitorListing.price.isnot(None))
+            .filter(CompetitorListing.scraped_at >= cutoff)
+            .filter(CompetitorTier.analyzed_at >= cutoff)
             .order_by(CompetitorTier.analyzed_at.desc())
             .limit(limit)
             .all()
@@ -130,40 +136,3 @@ class CandidatePriceRepository:
 
         return competitors
 
-    def save_result(
-        self,
-        result: CandidatePriceGenerateResponse,
-    ) -> CandidatePriceBatch:
-        batch = CandidatePriceBatch(
-            product_id=result.product_id,
-            seller_product_id=result.seller_product_id,
-            selected_strategy=result.selected_strategy.value,
-            reason=result.reason,
-            constraints_applied=result.constraints_applied,
-            ignored_competitors=[
-                item.model_dump()
-                for item in result.ignored_competitors
-            ],
-            dense_regions=[
-                item.model_dump()
-                for item in result.dense_regions
-            ],
-        )
-
-        self.db.add(batch)
-        self.db.flush()
-
-        for price in result.candidate_prices:
-            candidate = CandidatePrice(
-                batch_id=batch.id,
-                product_id=result.product_id,
-                price=price,
-                source_strategy=result.selected_strategy.value,
-                reason_codes=result.constraints_applied,
-            )
-            self.db.add(candidate)
-
-        self.db.commit()
-        self.db.refresh(batch)
-
-        return batch

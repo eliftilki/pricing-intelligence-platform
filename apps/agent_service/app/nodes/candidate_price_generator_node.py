@@ -13,6 +13,7 @@ def candidate_price_generator_node(state: dict, db: Session) -> dict:
 
     if not product_id:
         state["status"] = "FAILED"
+        state["failed_stage"] = "candidate_price_generator"
         state["message"] = "product_id is missing. Candidate price generation cannot run."
         return state
 
@@ -20,7 +21,6 @@ def candidate_price_generator_node(state: dict, db: Session) -> dict:
         product_id=product_id,
         seller_product_id=state.get("seller_product_id"),
         strategy=CandidateStrategy.AUTO,
-        persist=bool(state.get("persist_candidate_prices", True)),
         price_step=state.get("price_step", 250),
         base_price_step=state.get("base_price_step", 250),
         dense_price_step=state.get("dense_price_step", 50),
@@ -32,6 +32,7 @@ def candidate_price_generator_node(state: dict, db: Session) -> dict:
         context = repository.build_context_from_product(request)
     except ValueError as exc:
         state["status"] = "FAILED"
+        state["failed_stage"] = "candidate_price_generator"
         state["message"] = str(exc)
         return state
 
@@ -41,8 +42,6 @@ def candidate_price_generator_node(state: dict, db: Session) -> dict:
         context=context,
         strategy=request.strategy,
     )
-
-    repository.save_result(result)
 
     state["candidate_price_result"] = result.model_dump()
     state["candidate_prices"] = result.candidate_prices

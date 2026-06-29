@@ -51,7 +51,6 @@ class CandidatePriceGenerateRequest(BaseModel):
     product_id: UUID
     seller_product_id: UUID | None = None
     strategy: CandidateStrategy = CandidateStrategy.AUTO
-    persist: bool = True
 
     price_step: int = 250
     base_price_step: int = 250

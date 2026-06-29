@@ -31,9 +31,11 @@ class CommissionService:
         category_id: UUID | None,
         effective_date: date | None = None,
     ) -> Decimal:
-        if not category_id:
-            raise CommissionRateNotFoundError(marketplace=marketplace, category_id=category_id)
-
+        # category_id None olabilir (urune kategori atanmamis) - bu durumda
+        # category_id IS NULL icin tanimli genel/default kurala (varsa)
+        # dusulur, repository katmaninda ayrica ele alinir. Erken raise
+        # ETMIYORUZ; aksi halde DB'deki genel kurallar hic denenmeden
+        # COMMISSION_RATE_NOT_FOUND donerdi.
         normalized_marketplace = marketplace.upper()
 
         override_rate = self.repository.get_company_override(

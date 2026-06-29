@@ -5,15 +5,21 @@ from uuid import UUID
 class CompetitorGraphState(TypedDict, total=False):
     product_id: UUID
     seller_product_id: UUID | None
+    company_id: UUID | None
 
     lookback_hours: int
+    ingestion_marketplaces: list[str]
+    ingestion_query: str | None
+    ingestion_company_id: UUID | None
+    ingestion_job_id: UUID
+    ingestion_result: dict
     run_candidate_prices: bool
     run_optimization: bool
-    persist_candidate_prices: bool
     persist_optimization: bool
 
     status: str
     error_code: str
+    failed_stage: str | None
     analyzed_count: int
     inserted_count: int
     message: str
@@ -29,6 +35,7 @@ class CompetitorGraphState(TypedDict, total=False):
 
     pricing_features: dict
     market_event_features: dict
+    product_name: str | None
 
     demand_predictions: list[dict]
     demand_prediction_meta: dict #model kimliği, risk agent model güvenilirliği içn kullanacak
@@ -37,5 +44,8 @@ class CompetitorGraphState(TypedDict, total=False):
 
     risk_control_result: dict
     recommendation: dict
+    recommendation_persistence: dict
     slm_explanation: dict | None
+    pipeline_summary: dict
     errors: list[str]
+    warnings: list[str]
