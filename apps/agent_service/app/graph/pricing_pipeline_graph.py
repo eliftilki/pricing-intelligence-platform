@@ -7,6 +7,7 @@ from app.core.database import SessionLocal
 from app.graph.state import CompetitorGraphState
 from app.nodes.candidate_price_generator_node import candidate_price_generator_node
 from app.nodes.competitor_intelligence_node import competitor_intelligence_node
+from app.nodes.data_ingestion_node import data_ingestion_node
 from app.nodes.event_agent_node import event_agent_node
 from app.nodes.feature_engineering_node import feature_engineering_node
 from app.nodes.demand_prediction_node import demand_prediction_node
@@ -43,6 +44,9 @@ def build_pricing_pipeline_graph(db: Session):
         finally:
             event_db.close()
 
+    def run_data_ingestion(state: CompetitorGraphState):
+        return asyncio.run(data_ingestion_node(state))
+
     def run_feature_engineering(state: CompetitorGraphState):
         return feature_engineering_node(state, db)
 
@@ -62,6 +66,7 @@ def build_pricing_pipeline_graph(db: Session):
     def run_slm_explanation(state: CompetitorGraphState):
         return asyncio.run(slm_explanation_node(state))
 
+    graph.add_node("data_ingestion", run_data_ingestion)
     def run_persist_recommendation(state: CompetitorGraphState):
         return persist_recommendation_node(state, db)
 
@@ -76,8 +81,16 @@ def build_pricing_pipeline_graph(db: Session):
     graph.add_node("slm_explanation", run_slm_explanation)
     graph.add_node("persist_recommendation", run_persist_recommendation)
 
-    graph.add_edge(START, "competitor_intelligence")
-    graph.add_edge(START, "event_agent")
+    graph.add_edge(START, "data_ingestion")
+    graph.add_conditional_edges(
+        "data_ingestion",
+        _route_after_data_ingestion,
+        {
+            "competitor_intelligence": "competitor_intelligence",
+            "event_agent": "event_agent",
+            "end": END,
+        },
+    )
     graph.add_edge("competitor_intelligence", "feature_engineering")
     graph.add_edge("event_agent", "feature_engineering")
 
@@ -120,6 +133,13 @@ def build_pricing_pipeline_graph(db: Session):
     graph.add_edge("persist_recommendation", END)
 
     return graph.compile()
+
+
+def _route_after_data_ingestion(state: CompetitorGraphState) -> list[str]:
+    if state.get("status") == "FAILED":
+        return ["end"]
+
+    return ["competitor_intelligence", "event_agent"]
 
 
 def _route_after_feature_engineering(state: CompetitorGraphState) -> str:

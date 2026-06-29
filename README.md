@@ -25,12 +25,13 @@ Platform tek bir "sihirli fiyat" uretmek yerine fiyat kararini izlenebilir asama
 ## Ana Akis
 
 ```text
-Data Ingestion
-    |
-    v
 Pricing Pipeline Graph
     |
-    +-- Competitor Intelligence Node
+    +-- Data Ingestion Node (opsiyonel HTTP cagrisi)
+    |
+    +-- Competitor Intelligence Node + Event Agent (paralel)
+    |
+    +-- Feature Engineering Node
     |
     +-- Candidate Price Generator Node
     |
@@ -45,7 +46,7 @@ Pricing Pipeline Graph
     +-- SLM Explanation Node
 ```
 
-`/pricing-intelligence/run` ana agent pipeline girisidir. Graph her zaman `competitor_intelligence` node ile baslar. `run_candidate_prices` ve `run_optimization` bayraklariyla sonraki adimlar acilip kapatilabilir.
+`/pricing-intelligence/run` ana agent pipeline girisidir. Graph her zaman `data_ingestion` node ile baslar. `refresh_market_data=false` ise node HTTP cagrisi yapmadan mevcut verilerle devam eder. `run_candidate_prices` ve `run_optimization` bayraklariyla sonraki adimlar acilip kapatilabilir.
 
 `/competitor-intelligence/run` endpoint'i korunur, ancak graph orkestrasyonu calistirmaz; sadece rakip analizini dogrudan calistirir.
 
@@ -63,12 +64,16 @@ apps/agent_service/app/
 |   +-- pricing_pipeline_graph.py
 |
 +-- nodes/
+|   +-- data_ingestion_node.py
 |   +-- competitor_intelligence_node.py
+|   +-- event_agent_node.py
+|   +-- feature_engineering_node.py
 |   +-- candidate_price_generator_node.py
 |   +-- optimization_node.py
 |   +-- slm_explanation_node.py
 |
 +-- services/
+|   +-- data_ingestion_client.py
 |   +-- competitor_intelligence_service.py
 |   +-- competitor_scoring_service.py
 |   +-- candidate_price_generator_service.py
@@ -91,6 +96,7 @@ apps/agent_service/app/
 |   +-- pricing_intelligence.py
 |
 +-- schemas/
+|   +-- data_ingestion_schema.py
 |   +-- competitor_schema.py
 |   +-- candidate_price_schema.py
 |   +-- optimization_schema.py
@@ -121,7 +127,9 @@ Mevcut graph sirasi:
 
 ```text
 START
-  -> competitor_intelligence
+  -> data_ingestion              refresh_market_data=true ise HTTP ile veri hazirlar
+  -> competitor_intelligence + event_agent (paralel)
+  -> feature_engineering
   -> candidate_price_generator   run_candidate_prices=true ise
   -> optimization                run_optimization=true ise
   -> slm_explanation             optimization calisirsa
@@ -129,6 +137,8 @@ START
 ```
 
 `run_optimization=false` ise pipeline rakip analizi veya aday fiyat adimindan sonra biter; bu durumda SLM explanation node calismaz.
+
+Data ingestion `COMPLETED` durumunda normal devam eder. `PARTIAL` durumunda sonucu `warnings` alanina ekleyerek devam eder; `FAILED` veya servis erisim hatasinda competitor intelligence calismadan pipeline sonlanir. Ingestion service'in 12 saatlik cache politikasi korunur.
 
 Not: `slm_explanation_node` su anda `state["recommendation"]` bekler. Recommendation node henuz eklenmedigi icin SLM node calissa bile recommendation yoksa `RECOMMENDATION_NOT_FOUND_FOR_SLM` hatasini `state["errors"]` icine yazar.
 
@@ -216,9 +226,10 @@ Ornek pricing pipeline istegi:
   "product_id": "PRODUCT_UUID",
   "seller_product_id": "SELLER_PRODUCT_UUID",
   "lookback_hours": 24,
+  "refresh_market_data": true,
+  "ingestion_marketplaces": ["TRENDYOL", "HEPSIBURADA", "AMAZON"],
   "run_candidate_prices": true,
   "run_optimization": true,
-  "persist_candidate_prices": true,
   "persist_optimization": true,
   "demand_predictions": [
     { "price": 1000, "expected_sales": 12 },
@@ -238,6 +249,8 @@ POST /search
 
 Scrape cache su anda 12 saattir. Tum marketplace'ler cache'ten gelirse yeni scraping calismaz. Kismi cache durumunda sadece eksik marketplace'ler scrape edilir.
 
+Pipeline mevcut seller product URL'leriyle `/ingestion/run` endpoint'ini kullanir. URL bulunmasi da isteniyorsa pricing request'e `ingestion_query` ve `ingestion_company_id` birlikte verilerek `/ingestion/search-and-run` akisi secilir.
+
 ### SLM Service
 
 ```text
@@ -254,8 +267,6 @@ Kodun guncel hali su tablolarin varligini bekler:
 - `marketplace_commission_rules.category_id`
 - `company_marketplace_commission_overrides`
 - `pricing_optimization_results`
-- `candidate_price_batches`
-- `candidate_prices`
 - `competitor_tiers`
 - `agent_runs`
 
@@ -315,6 +326,9 @@ Agent service icin ek SLM ayarlari opsiyoneldir; verilmezse kod varsayilan olara
 ```text
 SLM_SERVICE_URL=http://localhost:8003
 SLM_EXPLANATION_TIMEOUT_SECONDS=60
+DATA_INGESTION_SERVICE_URL=http://localhost:8004
+DATA_INGESTION_REQUEST_TIMEOUT_SECONDS=180
+DATA_INGESTION_MAX_RETRIES=2
 ```
 
 SLM service icin:

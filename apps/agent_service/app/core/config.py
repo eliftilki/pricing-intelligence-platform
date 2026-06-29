@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
@@ -9,6 +10,9 @@ class Settings(BaseSettings):
     admin_api_key: str | None = None
     slm_service_url: str = "http://localhost:8003"
     slm_explanation_timeout_seconds: int = 60
+    data_ingestion_service_url: str = "http://localhost:8004"
+    data_ingestion_request_timeout_seconds: float = Field(default=180.0, gt=0)
+    data_ingestion_max_retries: int = Field(default=2, ge=0, le=5)
     ml_service_url: str = "http://localhost:8010"
     ml_prediction_timeout_seconds: int = 30
 
