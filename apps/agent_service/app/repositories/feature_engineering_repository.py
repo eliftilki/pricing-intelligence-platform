@@ -3,6 +3,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.pricing_policy import COMPETITOR_DATA_MAX_AGE_HOURS
 from app.models.agent_run import AgentRun
 from app.models.competitor import CompetitorListing, CompetitorTier
 from app.models.market_event import MarketEventFeatures
@@ -47,10 +48,16 @@ class FeatureEngineeringRepository:
         tablolarini competitor_listing_id uzerinden join eder. Ayni listing icin
         birden fazla tier kaydi varsa en son analiz edilen (analyzed_at DESC) alinir.
         """
+        cutoff = datetime.now(timezone.utc) - timedelta(
+            hours=COMPETITOR_DATA_MAX_AGE_HOURS
+        )
+
         query = (
             self.db.query(CompetitorTier, CompetitorListing)
             .join(CompetitorListing, CompetitorListing.id == CompetitorTier.competitor_listing_id)
             .filter(CompetitorTier.product_id == product_id)
+            .filter(CompetitorListing.scraped_at >= cutoff)
+            .filter(CompetitorTier.analyzed_at >= cutoff)
         )
 
         if marketplace:

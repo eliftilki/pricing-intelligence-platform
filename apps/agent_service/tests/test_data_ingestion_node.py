@@ -31,18 +31,23 @@ class DataIngestionNodeTests(unittest.TestCase):
     def tearDown(self):
         node_module.data_ingestion_client = self.original_client
 
-    def test_skips_remote_call_when_refresh_is_disabled(self):
-        fake_client = FakeDataIngestionClient()
+    def test_ingestion_runs_automatically_without_refresh_flag(self):
+        fake_client = FakeDataIngestionClient(
+            response=DataIngestionRunResponse(
+                job_id=uuid4(),
+                status="COMPLETED",
+                message="Cached data is ready.",
+                scrape_counts={"TRENDYOL": 4},
+            )
+        )
         node_module.data_ingestion_client = fake_client
 
         result = asyncio.run(
-            node_module.data_ingestion_node(
-                {"product_id": uuid4(), "refresh_market_data": False}
-            )
+            node_module.data_ingestion_node({"product_id": uuid4()})
         )
 
-        self.assertEqual(result["ingestion_result"]["status"], "SKIPPED")
-        self.assertEqual(fake_client.requests, [])
+        self.assertEqual(result["ingestion_result"]["status"], "COMPLETED")
+        self.assertEqual(len(fake_client.requests), 1)
         self.assertNotIn("status", result)
 
     def test_completed_ingestion_continues_without_failure_status(self):
@@ -61,7 +66,6 @@ class DataIngestionNodeTests(unittest.TestCase):
             node_module.data_ingestion_node(
                 {
                     "product_id": uuid4(),
-                    "refresh_market_data": True,
                     "ingestion_marketplaces": ["TRENDYOL"],
                 }
             )
@@ -84,7 +88,7 @@ class DataIngestionNodeTests(unittest.TestCase):
 
         result = asyncio.run(
             node_module.data_ingestion_node(
-                {"product_id": uuid4(), "refresh_market_data": True}
+                {"product_id": uuid4()}
             )
         )
 
@@ -104,7 +108,7 @@ class DataIngestionNodeTests(unittest.TestCase):
 
         result = asyncio.run(
             node_module.data_ingestion_node(
-                {"product_id": uuid4(), "refresh_market_data": True}
+                {"product_id": uuid4()}
             )
         )
 
@@ -122,7 +126,7 @@ class DataIngestionNodeTests(unittest.TestCase):
 
         result = asyncio.run(
             node_module.data_ingestion_node(
-                {"product_id": uuid4(), "refresh_market_data": True}
+                {"product_id": uuid4()}
             )
         )
 
@@ -144,7 +148,6 @@ class DataIngestionNodeTests(unittest.TestCase):
             node_module.data_ingestion_node(
                 {
                     "product_id": uuid4(),
-                    "refresh_market_data": True,
                     "ingestion_marketplaces": ["HEPSIBURADA"],
                     "ingestion_query": "Logitech G305",
                     "ingestion_company_id": uuid4(),

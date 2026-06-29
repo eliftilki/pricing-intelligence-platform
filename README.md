@@ -46,7 +46,7 @@ Pricing Pipeline Graph
     +-- SLM Explanation Node
 ```
 
-`/pricing-intelligence/run` ana agent pipeline girisidir. Graph her zaman `data_ingestion` node ile baslar. `refresh_market_data=false` ise node HTTP cagrisi yapmadan mevcut verilerle devam eder. `run_candidate_prices` ve `run_optimization` bayraklariyla sonraki adimlar acilip kapatilabilir.
+`/pricing-intelligence/run` ana agent pipeline girisidir. Graph her zaman `data_ingestion` node ile baslar. Ingestion service son 12 saat icinde basarili veri varsa DB/cache sonucunu kullanir; eski veya eksik marketplace verisini otomatik scrape eder. `run_candidate_prices` ve `run_optimization` bayraklariyla sonraki adimlar acilip kapatilabilir.
 
 `/competitor-intelligence/run` endpoint'i korunur, ancak graph orkestrasyonu calistirmaz; sadece rakip analizini dogrudan calistirir.
 
@@ -71,6 +71,7 @@ apps/agent_service/app/
 |   +-- candidate_price_generator_node.py
 |   +-- optimization_node.py
 |   +-- slm_explanation_node.py
+|   +-- pipeline_finalizer_node.py
 |
 +-- services/
 |   +-- data_ingestion_client.py
@@ -127,7 +128,7 @@ Mevcut graph sirasi:
 
 ```text
 START
-  -> data_ingestion              refresh_market_data=true ise HTTP ile veri hazirlar
+  -> data_ingestion              12 saatlik cache kontrolu + gerekirse scrape
   -> competitor_intelligence + event_agent (paralel)
   -> feature_engineering
   -> candidate_price_generator   run_candidate_prices=true ise
@@ -139,6 +140,8 @@ START
 `run_optimization=false` ise pipeline rakip analizi veya aday fiyat adimindan sonra biter; bu durumda SLM explanation node calismaz.
 
 Data ingestion `COMPLETED` durumunda normal devam eder. `PARTIAL` durumunda sonucu `warnings` alanina ekleyerek devam eder; `FAILED` veya servis erisim hatasinda competitor intelligence calismadan pipeline sonlanir. Ingestion service'in 12 saatlik cache politikasi korunur.
+
+Pipeline'in tum cikis yollari `pipeline_finalizer` node'unda birlesir. Genel `status` ve `message` son calisan node'a gore degil tum istenen asamalara gore uretilir: kritik hata `FAILED`, SLM/persistence/partial ingestion gibi ikincil sorunlar `PARTIAL_SUCCESS`, eksiksiz akis `SUCCESS` doner. `pipeline_summary` tamamlanan ve basarisiz olan asamalari listeler.
 
 Not: `slm_explanation_node` su anda `state["recommendation"]` bekler. Recommendation node henuz eklenmedigi icin SLM node calissa bile recommendation yoksa `RECOMMENDATION_NOT_FOUND_FOR_SLM` hatasini `state["errors"]` icine yazar.
 
@@ -225,8 +228,7 @@ Ornek pricing pipeline istegi:
 {
   "product_id": "PRODUCT_UUID",
   "seller_product_id": "SELLER_PRODUCT_UUID",
-  "lookback_hours": 24,
-  "refresh_market_data": true,
+  "lookback_hours": 12,
   "ingestion_marketplaces": ["TRENDYOL", "HEPSIBURADA", "AMAZON"],
   "run_candidate_prices": true,
   "run_optimization": true,

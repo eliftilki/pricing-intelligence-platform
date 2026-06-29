@@ -1,7 +1,9 @@
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from app.core.pricing_policy import COMPETITOR_DATA_MAX_AGE_HOURS
 from app.models.competitor import CompetitorListing, CompetitorTier
 from app.models.product import SellerProduct
 from app.schemas.candidate_price_schema import (
@@ -88,6 +90,10 @@ class CandidatePriceRepository:
         product_id: UUID,
         limit: int = 100,
     ) -> list[CandidateCompetitor]:
+        cutoff = datetime.now(timezone.utc) - timedelta(
+            hours=COMPETITOR_DATA_MAX_AGE_HOURS
+        )
+
         rows = (
             self.db.query(CompetitorTier, CompetitorListing)
             .join(
@@ -96,6 +102,8 @@ class CandidatePriceRepository:
             )
             .filter(CompetitorTier.product_id == product_id)
             .filter(CompetitorListing.price.isnot(None))
+            .filter(CompetitorListing.scraped_at >= cutoff)
+            .filter(CompetitorTier.analyzed_at >= cutoff)
             .order_by(CompetitorTier.analyzed_at.desc())
             .limit(limit)
             .all()

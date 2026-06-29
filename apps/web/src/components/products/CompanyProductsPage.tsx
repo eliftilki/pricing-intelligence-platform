@@ -15,10 +15,10 @@ import {
 } from "@/components/ui/table";
 import { AuthSession, getAuthSession } from "@/lib/auth-session";
 import {
-  AnalysisResponse,
   Company,
   CompetitorListing,
   CompetitorTier,
+  PricingIntelligenceResponse,
   PriceRecommendation,
   Product,
   SellerProduct,
@@ -73,6 +73,8 @@ type ProductInsight = {
   tiers: CompetitorTier[];
 };
 
+type AnalysisResultsByProduct = Record<string, PricingIntelligenceResponse>;
+
 type ProductFormState = {
   brand: string;
   category: string;
@@ -96,6 +98,18 @@ const selectClass =
 
 function primarySellerProduct(row: ProductInsight) {
   return row.sellerProducts[0];
+}
+
+function analysisSellerProduct(row: ProductInsight) {
+  return (
+    row.sellerProducts.find(
+      (item) =>
+        item.our_price !== null &&
+        item.our_price !== undefined &&
+        item.cost_price !== null &&
+        item.cost_price !== undefined,
+    ) || primarySellerProduct(row)
+  );
 }
 
 function buildProductNameFromParts(brand?: string | null, model?: string | null) {
@@ -259,41 +273,109 @@ function humanReason(code: string) {
     MEDIUM_IMPACT_COMPETITOR: "Orta seviyede etkili rakip.",
     RANK_1_PRICE_LEADER: "Pazar lideri fiyata yakın konumda.",
     CRITICAL_PRICE_DUMPING_BYPASS: "Kritik fiyat baskısı oluşturuyor.",
+    PRICE_COMPETITIVE: "Piyasa ile rekabetçi bir fiyat sunuyor.",
+    PRICE_BELOW_MARKET_AVG: "Piyasa ortalamasının altında fiyat veriyor.",
+    PRICE_NEAR_MARKET_MIN: "Piyasanın en düşük fiyatına yakın.",
+    FAR_FROM_MARKET_MIN: "En düşük piyasa fiyatından uzak konumda.",
+    SIGNIFICANTLY_BELOW_MARKET_AVG: "Piyasa ortalamasının belirgin biçimde altında.",
+    PRICE_MODERATELY_COMPETITIVE: "Orta düzeyde rekabetçi fiyat sunuyor.",
   };
 
   return labels[code] || code.replaceAll("_", " ").toLocaleLowerCase("tr-TR");
 }
 
-function analysisMessage(result: AnalysisResponse) {
-  const total = result.total_competitors || 0;
-  const marketplacesWithData = Object.entries(result.scrape_counts || {})
-    .filter(([, count]) => count > 0)
-    .map(([marketplace]) => marketplace);
-  const ingestionMessage = result.ingestion_message?.toLocaleLowerCase("tr-TR") || "";
-  const usedOnlyCachedData =
-    ingestionMessage.includes("yeni scraping calistirilmadi") ||
-    ingestionMessage.includes("yeniden scraping yapılmadı") ||
-    ingestionMessage.includes("basarili scrape kullanildi");
-  const cachedCountMatch = ingestionMessage.match(/used cached data for (\d+)/);
-  const cachedCount = cachedCountMatch ? Number(cachedCountMatch[1]) : 0;
+function pipelineStageLabel(stage: string | null | undefined) {
+  const labels: Record<string, string> = {
+    data_ingestion: "veri toplama",
+    competitor_intelligence: "rakip analizi",
+    feature_engineering: "özellik çıkarımı",
+    candidate_price_generator: "aday fiyat üretimi",
+    demand_prediction: "talep tahmini",
+    optimization: "fiyat optimizasyonu",
+    recommendation: "öneri oluşturma",
+  };
+  return stage ? labels[stage] || stage : "bilinmeyen";
+}
 
-  if (result.ingestion_status === "FAILED") {
-    return "Analiz başlatıldı ancak pazaryerlerinden rakip verisi alınamadı. Ürün adını ve pazaryeri seçimini kontrol edip tekrar deneyin.";
+function pricingIntelligenceMessage(result: PricingIntelligenceResponse) {
+  if (result.status === "FAILED") {
+    const detail = result.message.replace(/^Pricing pipeline failed at [^:]+:\s*/i, "");
+    return `Analiz ${pipelineStageLabel(result.failed_stage)} aşamasında durdu. ${detail}`;
   }
 
-  if (usedOnlyCachedData && marketplacesWithData.length) {
-    return `Son 12 saat i\u00e7inde toplanan g\u00fcncel veriler kullan\u0131ld\u0131; yeniden scraping yap\u0131lmad\u0131. ${marketplacesWithData.join(", ")} \u00fczerinden ${total} rakip analiz edildi.`;
-  }
-
-  if (marketplacesWithData.length) {
-    if (cachedCount > 0) {
-      return `Analiz tamamland\u0131. ${marketplacesWithData.join(", ")} \u00fczerinden ${total} rakip bulundu; baz\u0131 pazaryerlerinde son 12 saat i\u00e7indeki veriler kullan\u0131ld\u0131.`;
+  if (result.status === "PARTIAL_SUCCESS") {
+    if (!result.recommendation) {
+      return "Analiz tamamlandı ancak iş kurallarını karşılayan geçerli bir fiyat önerisi oluşmadı. Detayları ürün analizinden inceleyin.";
     }
-
-    return `Analiz tamamlandı. ${marketplacesWithData.join(", ")} üzerinden ${total} rakip bulundu.`;
+    if (!result.slm_explanation) {
+      return `Fiyat önerisi oluşturuldu (${toMoney(result.recommendation.recommended_price)}), ancak açıklama servisi tamamlanamadı.`;
+    }
+    return `Analiz kısmi uyarılarla tamamlandı. Önerilen fiyat: ${toMoney(result.recommendation.recommended_price)}.`;
   }
 
-  return "Analiz tamamlandı. Sonuçları ürün detayından inceleyebilirsiniz.";
+  if (result.recommendation?.recommended_price !== null && result.recommendation?.recommended_price !== undefined) {
+    return `Analiz tamamlandı. Önerilen fiyat: ${toMoney(result.recommendation.recommended_price)}.`;
+  }
+
+  return "Analiz tamamlandı. Candidate fiyatları ve rakip sonuçlarını ürün detayından inceleyebilirsiniz.";
+}
+
+function actionLabel(action: string | null | undefined) {
+  const labels: Record<string, string> = {
+    PRICE_INCREASE: "Fiyatı artır",
+    PRICE_DECREASE: "Fiyatı düşür",
+    KEEP_PRICE: "Mevcut fiyatı koru",
+    PROMOTION: "Promosyon uygula",
+    MANUAL_REVIEW: "Manuel incele",
+  };
+  return action ? labels[action] || action.replaceAll("_", " ") : null;
+}
+
+function pipelineStageDisplayName(stage: string) {
+  const labels: Record<string, string> = {
+    data_ingestion: "Pazar verisi",
+    competitor_intelligence: "Rakip analizi",
+    event_agent: "Pazar olayları",
+    feature_engineering: "Pazar özellikleri",
+    candidate_price_generator: "Aday fiyatlar",
+    demand_prediction: "Talep tahmini",
+    optimization: "Optimizasyon",
+    recommendation: "Fiyat önerisi",
+    slm_explanation: "Karar açıklaması",
+    recommendation_persistence: "Sonuç kaydı",
+  };
+  return labels[stage] || stage.replaceAll("_", " ");
+}
+
+function optimizationRejectionReasons(result: PricingIntelligenceResponse | undefined) {
+  const labels: Record<string, string> = {
+    MIN_MARGIN_NOT_MET: "Minimum kâr marjı karşılanmadı",
+    INVALID_UNIT_PROFIT: "Birim kâr sıfırın altında kaldı",
+    PRICE_INCREASE_TOO_HIGH: "Fiyat artışı izin verilen sınırı aştı",
+    PRICE_DECREASE_TOO_HIGH: "Fiyat düşüşü izin verilen sınırı aştı",
+    MISSING_COMMISSION_RULE: "Pazaryeri komisyon kuralı bulunamadı",
+    NEGATIVE_EXPECTED_SALES: "Talep tahmini geçersiz sonuç verdi",
+    NEGATIVE_OR_ZERO_PRICE: "Aday fiyat geçersizdi",
+  };
+  const reasons = new Set<string>();
+
+  for (const marketplace of result?.marketplace_recommendations || []) {
+    const rejected = Array.isArray(marketplace.rejected_candidates)
+      ? marketplace.rejected_candidates
+      : [];
+    for (const candidate of rejected) {
+      if (!candidate || typeof candidate !== "object") continue;
+      const codes = (candidate as { rejection_reasons?: unknown }).rejection_reasons;
+      if (!Array.isArray(codes)) continue;
+      codes.forEach((code) => reasons.add(labels[String(code)] || String(code)));
+    }
+  }
+
+  return Array.from(reasons);
+}
+
+function cleanSlmExplanation(explanation: string | null | undefined) {
+  return explanation?.replaceAll("**", "").trim() || "";
 }
 
 export default function CompanyProductsPage() {
@@ -309,6 +391,8 @@ export default function CompanyProductsPage() {
   const [expandedProductId, setExpandedProductId] = useState("");
   const [advancedProductId, setAdvancedProductId] = useState("");
   const [editingProductId, setEditingProductId] = useState("");
+  const [analysisResults, setAnalysisResults] =
+    useState<AnalysisResultsByProduct>({});
   const [editForm, setEditForm] = useState<ProductFormState | null>(null);
   const [form, setForm] = useState<ProductFormState>({
     brand: "",
@@ -565,9 +649,33 @@ export default function CompanyProductsPage() {
   async function analyzeProduct(row: ProductInsight) {
     if (!session) return;
 
-    const productMarketplaces = row.sellerProducts.map(
-      (sellerProduct) => sellerProduct.marketplace,
+    const sellerProduct = analysisSellerProduct(row);
+    if (!sellerProduct) {
+      setToast({
+        type: "error",
+        message: "Analiz için ürüne bağlı aktif bir pazaryeri kaydı bulunamadı.",
+      });
+      return;
+    }
+    if (sellerProduct.our_price === null || sellerProduct.our_price === undefined) {
+      setToast({
+        type: "error",
+        message: "Analiz için önce ürünün mevcut satış fiyatını girin.",
+      });
+      return;
+    }
+    if (sellerProduct.cost_price === null || sellerProduct.cost_price === undefined) {
+      setToast({
+        type: "error",
+        message: "Fiyat optimizasyonu için önce ürünün maliyet fiyatını girin.",
+      });
+      return;
+    }
+
+    const productMarketplaces = Array.from(
+      new Set(row.sellerProducts.map((item) => item.marketplace.toUpperCase())),
     );
+    const query = buildQuery(row).trim();
     setActiveProductId(row.product.id);
     setToast({
       type: "info",
@@ -575,13 +683,35 @@ export default function CompanyProductsPage() {
     });
 
     try {
-      const result = await pricingApi.runAnalysis({
+      const result = await pricingApi.runPricingIntelligence({
         product_id: row.product.id,
-        company_id: session.company_id,
-        query: buildQuery(row),
-        marketplaces: productMarketplaces.length ? productMarketplaces : marketplaces,
+        seller_product_id: sellerProduct.id,
+        ingestion_marketplaces: productMarketplaces.length
+          ? productMarketplaces
+          : marketplaces,
+        ...(query.length >= 2
+          ? {
+              ingestion_query: query,
+              ingestion_company_id: session.company_id,
+            }
+          : {}),
+        run_candidate_prices: true,
+        run_optimization: true,
+        persist_optimization: false,
       });
-      setToast({ type: "success", message: analysisMessage(result) });
+      setAnalysisResults((current) => ({
+        ...current,
+        [row.product.id]: result,
+      }));
+      setToast({
+        type:
+          result.status === "FAILED"
+            ? "error"
+            : result.status === "PARTIAL_SUCCESS"
+              ? "info"
+              : "success",
+        message: pricingIntelligenceMessage(result),
+      });
       await loadData(session);
       setExpandedProductId(row.product.id);
     } catch (error) {
@@ -1413,6 +1543,7 @@ export default function CompanyProductsPage() {
       {selectedRow && (
         <ProductDetail
           row={selectedRow}
+          pipelineResult={analysisResults[selectedRow.product.id]}
           advancedOpen={advancedProductId === selectedRow.product.id}
           onToggleAdvanced={() =>
             setAdvancedProductId((current) =>
@@ -1429,7 +1560,9 @@ function RiskBadge({ row }: { row: ProductInsight }) {
   const risk = riskLevel(row);
   const normalizedRisk = risk.toLocaleLowerCase("tr-TR");
   const color =
-    normalizedRisk.includes("high") || normalizedRisk.includes("yuksek")
+    normalizedRisk.includes("high") ||
+    normalizedRisk.includes("yuksek") ||
+    normalizedRisk.includes("yüksek")
       ? "error"
       : normalizedRisk.includes("medium") || normalizedRisk.includes("orta")
         ? "warning"
@@ -1446,14 +1579,35 @@ function RiskBadge({ row }: { row: ProductInsight }) {
 
 function ProductDetail({
   row,
+  pipelineResult,
   advancedOpen,
   onToggleAdvanced,
 }: {
   row: ProductInsight;
+  pipelineResult?: PricingIntelligenceResponse;
   advancedOpen: boolean;
   onToggleAdvanced: () => void;
 }) {
-  const recommendation = latestRecommendation(row);
+  const persistedRecommendation = latestRecommendation(row);
+  const liveRecommendation = pipelineResult?.recommendation;
+  const recommendation = liveRecommendation || persistedRecommendation;
+  const recommendedPrice = recommendation?.recommended_price;
+  const currentPrice =
+    liveRecommendation?.current_price ?? persistedRecommendation?.current_price;
+  const expectedProfit =
+    liveRecommendation?.expected_profit ?? persistedRecommendation?.expected_profit;
+  const expectedSales =
+    liveRecommendation?.expected_sales ??
+    persistedRecommendation?.expected_sales_quantity;
+  const profitUplift = recommendation?.profit_uplift;
+  const recommendationAction = actionLabel(recommendation?.action);
+  const slmExplanation = cleanSlmExplanation(
+    pipelineResult?.slm_explanation?.explanation ||
+      persistedRecommendation?.explanation,
+  );
+  const rejectionReasons = optimizationRejectionReasons(pipelineResult);
+  const hasRecommendation =
+    recommendedPrice !== null && recommendedPrice !== undefined;
   const strongestTiers = [...row.tiers]
     .sort((a, b) => Number(b.buybox_threat_score || 0) - Number(a.buybox_threat_score || 0))
     .slice(0, 5);
@@ -1463,15 +1617,14 @@ function ProductDetail({
 
   const summaryReasons = [
     topTier?.seller_name
-      ? `${topTier.seller_name} en onemli rakip olarak takip ediliyor.`
+      ? `${topTier.seller_name} en önemli rakip olarak takip ediliyor.`
       : "Rakip verisi geldikçe en önemli satıcılar burada özetlenir.",
     maxBuyboxScore(row) >= 70
-      ? "Buybox kaybetme riski yuksek seviyede."
+      ? "Buybox kaybetme riski yüksek seviyede."
       : maxBuyboxScore(row) >= 40
         ? "Buybox riski orta seviyede takip edilmeli."
-        : "Buybox riski dusuk seviyede gorunuyor.",
-    recommendation?.explanation ||
-      recommendation?.action ||
+        : "Buybox riski düşük seviyede görünüyor.",
+    recommendationAction ||
       "Mevcut marj ve rakip fiyatlari birlikte degerlendiriliyor.",
   ];
 
@@ -1483,33 +1636,136 @@ function ProductDetail({
             {productDisplayName(row)} Analiz Özeti
           </h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Varsayılan görünüm fiyat önerisi, risk ve kısa gerekçeyi gösterir.
+            Fiyat kararı, beklenen finansal etki ve pazar riskleri tek görünümde.
           </p>
         </div>
         <RiskBadge row={row} />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {pipelineResult && (
+        <div
+          className={`mb-5 rounded-lg border px-4 py-3 text-sm ${
+            pipelineResult.status === "FAILED"
+              ? "border-error-200 bg-error-50 text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300"
+              : pipelineResult.status === "PARTIAL_SUCCESS"
+                ? "border-warning-200 bg-warning-50 text-warning-700 dark:border-warning-500/30 dark:bg-warning-500/10 dark:text-warning-300"
+                : "border-success-200 bg-success-50 text-success-700 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-300"
+          }`}
+        >
+          <p className="font-medium">
+            {pipelineResult.status === "FAILED"
+              ? "Analiz tamamlanamadı"
+              : pipelineResult.status === "PARTIAL_SUCCESS"
+                ? "Analiz uyarılarla tamamlandı"
+                : "Analiz başarıyla tamamlandı"}
+          </p>
+          <p className="mt-1 opacity-90">{pricingIntelligenceMessage(pipelineResult)}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          label="Önerilen Fiyat"
-          value={toMoney(recommendation?.recommended_price)}
+          label="Mevcut Fiyat"
+          value={toMoney(currentPrice)}
+          description="Analizde kullanılan satış fiyatı"
           icon={<DollarLineIcon className="size-5" />}
         />
         <MetricCard
-          label="Beklenen Kar Etkisi"
-          value={toPercent(recommendation?.profit_uplift)}
+          label="Önerilen Fiyat"
+          value={hasRecommendation ? toMoney(recommendedPrice) : "Öneri oluşmadı"}
+          description={recommendationAction || "İş kuralları henüz karşılanmadı"}
+          icon={<DollarLineIcon className="size-5" />}
+        />
+        <MetricCard
+          label="Beklenen Toplam Kâr"
+          value={toMoney(expectedProfit)}
+          description={
+            profitUplift !== null && profitUplift !== undefined
+              ? `Mevcut fiyata göre ${toPercent(profitUplift)} değişim`
+              : "Talep modelinin tahmini"
+          }
           icon={<BoltIcon className="size-5" />}
         />
         <MetricCard
           label="Risk Seviyesi"
           value={riskLevel(row)}
+          description="Rakip ve buybox baskısına göre"
           icon={<BoxIconLine className="size-5" />}
         />
       </div>
 
+      {hasRecommendation ? (
+        <div className="mt-5 rounded-lg border border-brand-100 bg-brand-50/60 p-4 dark:border-brand-500/20 dark:bg-brand-500/10">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-theme-xs font-medium uppercase tracking-wide text-brand-600 dark:text-brand-300">
+                Önerilen aksiyon
+              </p>
+              <p className="mt-1 text-base font-semibold text-gray-900 dark:text-white">
+                {recommendationAction || "Fiyatı gözden geçir"}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <InfoPill label="Tahmini satış" value={expectedSales ?? "-"} />
+              <InfoPill label="Önerilen fiyat" value={toMoney(recommendedPrice)} />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-5 rounded-lg border border-warning-200 bg-warning-50 p-4 dark:border-warning-500/30 dark:bg-warning-500/10">
+          <h3 className="text-sm font-semibold text-warning-800 dark:text-warning-200">
+            Neden fiyat önerisi oluşmadı?
+          </h3>
+          <p className="mt-1 text-sm text-warning-700 dark:text-warning-300">
+            Sistem, kârlılık ve fiyat değişim sınırlarını karşılamayan bir fiyatı önermek yerine güvenli biçimde sonuç üretmedi.
+          </p>
+          {rejectionReasons.length > 0 && (
+            <ul className="mt-3 space-y-1 text-sm text-warning-700 dark:text-warning-300">
+              {rejectionReasons.map((reason) => (
+                <li key={reason}>• {reason}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {(slmExplanation || pipelineResult) && (
+        <div className="mt-5 rounded-lg border border-gray-200 p-5 dark:border-gray-800">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                Yapay Zekâ Karar Açıklaması
+              </h3>
+              <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
+                Optimizasyon sonucunun sadeleştirilmiş iş açıklaması
+              </p>
+            </div>
+            {pipelineResult?.slm_explanation?.model_name && (
+              <Badge color="light" size="sm">
+                {pipelineResult.slm_explanation.model_name}
+              </Badge>
+            )}
+          </div>
+          {slmExplanation ? (
+            <div className="mt-4 whitespace-pre-line text-sm leading-7 text-gray-700 dark:text-gray-300">
+              {slmExplanation}
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+              {hasRecommendation
+                ? "Fiyat önerisi hazır; ancak yapay zekâ açıklaması bu çalışmada üretilemedi."
+                : "Geçerli bir fiyat önerisi oluşmadığı için karar açıklaması üretilmedi."}
+            </p>
+          )}
+          <p className="mt-4 border-t border-gray-100 pt-3 text-theme-xs text-gray-400 dark:border-gray-800">
+            Bu metin karar desteği sağlar; nihai fiyat kararını vermeden önce stok ve kampanya koşullarını kontrol edin.
+          </p>
+        </div>
+      )}
+
       <div className="mt-5 rounded-lg bg-gray-50 p-4 dark:bg-gray-900/60">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-          Gerekçe
+          Pazar Özeti
         </h3>
         <ul className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-300">
           {summaryReasons.map((reason) => (
@@ -1520,6 +1776,24 @@ function ProductDetail({
           ))}
         </ul>
       </div>
+
+      {pipelineResult?.pipeline_summary?.completed_stages?.length ? (
+        <div className="mt-5">
+          <p className="text-theme-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            Tamamlanan analiz adımları
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {pipelineResult.pipeline_summary.completed_stages.map((stage) => (
+              <span
+                key={stage}
+                className="rounded-full bg-success-50 px-3 py-1 text-theme-xs font-medium text-success-700 dark:bg-success-500/10 dark:text-success-300"
+              >
+                ✓ {pipelineStageDisplayName(stage)}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-6 border-t border-gray-100 pt-5 dark:border-gray-800">
         <h3 className="text-base font-semibold text-gray-900 dark:text-white">
@@ -1620,10 +1894,12 @@ function MetricCard({
   label,
   value,
   icon,
+  description,
 }: {
   label: string;
   value: string;
   icon: React.ReactNode;
+  description?: string;
 }) {
   return (
     <div className="rounded-lg border border-gray-100 p-4 dark:border-gray-800">
@@ -1634,6 +1910,11 @@ function MetricCard({
         <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
       </div>
       <p className="mt-3 text-xl font-semibold text-gray-900 dark:text-white">{value}</p>
+      {description && (
+        <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
+          {description}
+        </p>
+      )}
     </div>
   );
 }

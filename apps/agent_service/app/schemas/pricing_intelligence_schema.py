@@ -9,8 +9,7 @@ from app.schemas.optimization_schema import DemandPredictionItem
 class PricingIntelligenceRunRequest(BaseModel):
     product_id: UUID
     seller_product_id: UUID | None = None
-    lookback_hours: int = Field(default=24, ge=1, le=168)
-    refresh_market_data: bool = False
+    lookback_hours: int = Field(default=12, ge=1, le=168)
     ingestion_marketplaces: list[str] = Field(
         default_factory=lambda: ["TRENDYOL", "HEPSIBURADA", "AMAZON"],
         min_length=1,
@@ -55,6 +54,7 @@ class PricingIntelligenceRunResponse(BaseModel):
     product_id: UUID
     status: str
     error_code: str | None = None
+    failed_stage: str | None = None
     analyzed_count: int = 0
     inserted_count: int = 0
     message: str
@@ -67,5 +67,8 @@ class PricingIntelligenceRunResponse(BaseModel):
     selected_candidate_strategy: str | None = None
     optimization_result: dict | None = None
     marketplace_recommendations: list[dict] | None = None
+    recommendation: dict | None = None
+    recommendation_persistence: dict | None = None
     slm_explanation: dict | None = None
+    pipeline_summary: dict | None = None
     errors: list[str] = Field(default_factory=list)

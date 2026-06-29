@@ -12,19 +12,11 @@ SUCCESS_STATUSES = {"COMPLETED", "PARTIAL"}
 
 
 async def data_ingestion_node(state: dict) -> dict:
-    if not state.get("refresh_market_data", False):
-        return {
-            "ingestion_result": {
-                "status": "SKIPPED",
-                "message": "Data ingestion was skipped; existing marketplace data will be used.",
-                "scrape_counts": {},
-            }
-        }
-
     product_id = state.get("product_id")
     if not product_id:
         return {
             "status": "FAILED",
+            "failed_stage": "data_ingestion",
             "error_code": "PRODUCT_ID_REQUIRED_FOR_INGESTION",
             "message": "product_id is missing. Data ingestion cannot run.",
         }
@@ -40,6 +32,7 @@ async def data_ingestion_node(state: dict) -> dict:
     if bool(query) != bool(company_id):
         return {
             "status": "FAILED",
+            "failed_stage": "data_ingestion",
             "error_code": "INVALID_DATA_INGESTION_OPTIONS",
             "message": (
                 "ingestion_query and ingestion_company_id must be provided together."
@@ -64,6 +57,7 @@ async def data_ingestion_node(state: dict) -> dict:
     except DataIngestionClientError as exc:
         return {
             "status": "FAILED",
+            "failed_stage": "data_ingestion",
             "error_code": exc.code,
             "message": str(exc),
             "ingestion_result": {
@@ -84,6 +78,7 @@ async def data_ingestion_node(state: dict) -> dict:
         updates.update(
             {
                 "status": "FAILED",
+                "failed_stage": "data_ingestion",
                 "error_code": "DATA_INGESTION_FAILED",
                 "message": response.message,
             }

@@ -22,11 +22,13 @@ from app.services.optimization_service import OptimizationService
 def optimization_node(state: dict, db: Session) -> dict:
     if not state.get("seller_product_id"):
         state["status"] = "FAILED"
+        state["failed_stage"] = "optimization"
         state["message"] = "seller_product_id is missing. Optimization cannot run."
         return state
 
     if not state.get("demand_predictions"):
         state["status"] = "FAILED"
+        state["failed_stage"] = "optimization"
         state["message"] = "demand_predictions are missing. Optimization cannot run."
         return state
 
@@ -45,16 +47,19 @@ def optimization_node(state: dict, db: Session) -> dict:
         cost_price = state.get("cost_price") or seller_context.get("cost_price")
     except CommissionRateNotFoundError as exc:
         state["status"] = "FAILED"
+        state["failed_stage"] = "optimization"
         state["message"] = str(exc)
         state["error_code"] = exc.code
         return state
     except (ValueError, KeyError) as exc:
         state["status"] = "FAILED"
+        state["failed_stage"] = "optimization"
         state["message"] = str(exc)
         return state
 
     if cost_price is None:
         state["status"] = "FAILED"
+        state["failed_stage"] = "optimization"
         state["message"] = "cost_price is missing. Optimization cannot run."
         return state
 

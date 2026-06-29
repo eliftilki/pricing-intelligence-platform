@@ -20,12 +20,16 @@ def persist_recommendation_node(state: dict, db: Session) -> dict:
     recommendation = state.get("recommendation")
 
     if recommendation is None:
+        state["recommendation_persistence"] = {
+            "status": "SKIPPED",
+            "message": "No recommendation was available to persist.",
+        }
         return state
 
     repository = RecommendationRepository(db)
 
     try:
-        repository.create(
+        record = repository.create(
             recommendation=recommendation,
             ids={
                 "company_id": state.get("company_id"),
@@ -34,12 +38,23 @@ def persist_recommendation_node(state: dict, db: Session) -> dict:
             },
             explanation=(state.get("slm_explanation") or {}).get("explanation"),
         )
+        state["recommendation_persistence"] = {
+            "status": "PERSISTED",
+            "recommendation_id": str(record.id),
+        }
     except Exception as exc:
         repository.rollback()
         logger.error(
             "persist_recommendation_node: price_recommendations kaydi olusturulamadi (product_id=%s): %s",
             state.get("product_id"),
             exc,
+        )
+        state["recommendation_persistence"] = {
+            "status": "FAILED",
+            "message": "Recommendation could not be persisted.",
+        }
+        state.setdefault("warnings", []).append(
+            "RECOMMENDATION_PERSISTENCE_FAILED"
         )
 
     return state
