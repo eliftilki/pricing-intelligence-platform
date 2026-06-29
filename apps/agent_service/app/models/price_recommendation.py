@@ -32,9 +32,10 @@ class PriceRecommendation(Base):
     seller_product_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("seller_products.id", ondelete="CASCADE")
     )
-    pricing_feature_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("pricing_features.id", ondelete="SET NULL")
-    )
+    # pricing_feature_id kasitli olarak ORM'e mapsiz birakildi: agent_service'te
+    # pricing_features tablosuna isaret eden bir model yok (FK string'i
+    # SQLAlchemy mapper configure asamasinda cozulemiyor). DB'de kolon var ve
+    # nullable, bu surum onu hic doldurmuyor zaten (plan kapsami disi).
 
     current_price: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     recommended_price: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)

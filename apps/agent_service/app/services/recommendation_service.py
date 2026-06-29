@@ -54,15 +54,18 @@ class RecommendationService:
 
     @staticmethod
     def _resolve_action(current_price: Optional[float], recommended_price: float) -> str:
-        # price_recommendations.action NOT NULL - current_price yoksa (ilk
-        # analiz, henuz satis fiyati girilmemis) "yeni fiyat belirle" anlaminda.
+        # price_recommendations.action kolonunda DB CHECK constraint var:
+        # sadece PRICE_INCREASE/PRICE_DECREASE/KEEP_PRICE/PROMOTION/MANUAL_REVIEW
+        # kabul ediliyor (pg_constraint: price_recommendations_action_check).
+        # current_price yoksa (ilk analiz, henuz satis fiyati girilmemis) net
+        # bir artis/azalis yonu belirlenemiyor - MANUAL_REVIEW'a dusuruyoruz.
         if current_price is None:
-            return "SET_PRICE"
+            return "MANUAL_REVIEW"
         if recommended_price > current_price:
-            return "INCREASE_PRICE"
+            return "PRICE_INCREASE"
         if recommended_price < current_price:
-            return "DECREASE_PRICE"
-        return "HOLD_PRICE"
+            return "PRICE_DECREASE"
+        return "KEEP_PRICE"
 
     @staticmethod
     def _select_best_marketplace_result(
