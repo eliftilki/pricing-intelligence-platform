@@ -12,6 +12,8 @@ from app.nodes.event_agent_node import event_agent_node
 from app.nodes.feature_engineering_node import feature_engineering_node
 from app.nodes.demand_prediction_node import demand_prediction_node
 from app.nodes.optimization_node import optimization_node
+from app.nodes.persist_recommendation_node import persist_recommendation_node
+from app.nodes.recommendation_node import recommendation_node
 from app.nodes.slm_explanation_node import slm_explanation_node
 
 
@@ -58,10 +60,16 @@ def build_pricing_pipeline_graph(db: Session):
     def run_optimization(state: CompetitorGraphState):
         return optimization_node(state, db)
 
+    def run_recommendation(state: CompetitorGraphState):
+        return recommendation_node(state, db)
+
     def run_slm_explanation(state: CompetitorGraphState):
         return asyncio.run(slm_explanation_node(state))
 
     graph.add_node("data_ingestion", run_data_ingestion)
+    def run_persist_recommendation(state: CompetitorGraphState):
+        return persist_recommendation_node(state, db)
+
     graph.add_node("competitor_intelligence", run_competitor_intelligence)
     graph.add_node("event_agent", run_event_agent)
     graph.add_node("feature_engineering", run_feature_engineering)
@@ -69,7 +77,9 @@ def build_pricing_pipeline_graph(db: Session):
     # candidate_price_generator -> demand_prediction -> optimization (run_optimization=true iken)
     graph.add_node("demand_prediction", run_demand_prediction)
     graph.add_node("optimization", run_optimization)
+    graph.add_node("recommendation", run_recommendation)
     graph.add_node("slm_explanation", run_slm_explanation)
+    graph.add_node("persist_recommendation", run_persist_recommendation)
 
     graph.add_edge(START, "data_ingestion")
     graph.add_conditional_edges(
@@ -110,8 +120,17 @@ def build_pricing_pipeline_graph(db: Session):
             "end": END,
         },
     )
-    graph.add_edge("optimization", "slm_explanation")
-    graph.add_edge("slm_explanation", END)
+    graph.add_conditional_edges(
+        "optimization",
+        _route_after_optimization,
+        {
+            "recommendation": "recommendation",
+            "end": END,
+        },
+    )
+    graph.add_edge("recommendation", "slm_explanation")
+    graph.add_edge("slm_explanation", "persist_recommendation")
+    graph.add_edge("persist_recommendation", END)
 
     return graph.compile()
 
@@ -149,9 +168,21 @@ def _route_after_candidate_price_generator(state: CompetitorGraphState) -> str:
 
 def _pick_graph_update(result: dict, allowed_keys: tuple[str, ...]) -> dict:
     return {key: result[key] for key in allowed_keys if key in result}
+
+
 def _route_after_demand_prediction(state: CompetitorGraphState) -> str:
     # ML veya builder hata verdiyse pipeline'i burada durdur.
     if state.get("status") == "FAILED":
         return "end"
 
     return "optimization"
+
+
+def _route_after_optimization(state: CompetitorGraphState) -> str:
+    # Optimization hata verdiyse (cost_price/commission eksik vb.) pipeline'i
+    # burada durdur - aksi halde slm_explanation bos recommendation icin
+    # kafa karistirici bir ikinci hata ekler.
+    if state.get("status") == "FAILED":
+        return "end"
+
+    return "recommendation"

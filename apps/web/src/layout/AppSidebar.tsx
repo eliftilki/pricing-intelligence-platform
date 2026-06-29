@@ -46,7 +46,7 @@ const navItems: NavItem[] = [
   {
     name: "Oneriler",
     icon: <DollarLineIcon />,
-    path: "/dashboard",
+    path: "/oneriler",
   },
 ];
 
@@ -282,7 +282,7 @@ const AppSidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link href="/">
+        <Link href="/dashboard">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <Image

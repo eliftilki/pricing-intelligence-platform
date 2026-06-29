@@ -5,6 +5,7 @@ from uuid import UUID
 class CompetitorGraphState(TypedDict, total=False):
     product_id: UUID
     seller_product_id: UUID | None
+    company_id: UUID | None
 
     lookback_hours: int
     refresh_market_data: bool
@@ -34,6 +35,7 @@ class CompetitorGraphState(TypedDict, total=False):
 
     pricing_features: dict
     market_event_features: dict
+    product_name: str | None
 
     demand_predictions: list[dict]
     optimization_result: dict

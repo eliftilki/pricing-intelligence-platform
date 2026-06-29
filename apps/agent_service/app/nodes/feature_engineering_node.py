@@ -54,11 +54,36 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
         marketplace=marketplace,
     )
 
+    market_event_features = state.get("market_event_features")
+    if not market_event_features:
+        # event_agent_node ayni graph calismasinda hic calismamis/hata
+        # vermis olabilir - elimizdeki en taze DB kaydina (varsa) fallback
+        # yapiyoruz, yoksa _extract_event_features notr varsayilanlara duser.
+        cached_event_row = repository.get_fresh_market_event_features(product_id)
+        if cached_event_row is not None:
+            market_event_features = _market_event_row_to_dict(cached_event_row)
+            logger.info(
+                "market_event_features state'te yoktu, DB fallback kullanildi (product_id=%s, generated_at=%s)",
+                product_id,
+                cached_event_row.generated_at,
+            )
+
     logger.info(
         "feature_engineering_node basliyor: product_id=%s marketplace=%s rakip_sayisi=%d",
         product_id,
         marketplace,
         len(competitor_features),
+    )
+
+    agent_run = repository.create_agent_run(
+        product_id=product_id,
+        input_payload={
+            "seller_product_id": str(seller_product.id),
+            "marketplace": marketplace,
+            "current_price": current_price,
+            "stock_quantity": stock_quantity,
+            "competitor_count": len(competitor_features),
+        },
     )
 
     features = _service.build_features(
@@ -67,7 +92,7 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
         current_price=current_price,
         stock_quantity=stock_quantity,
         competitor_features=competitor_features,
-        market_event_features=state.get("market_event_features"),
+        market_event_features=market_event_features,
     )
 
     if features.is_monopoly:
@@ -85,12 +110,59 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
             features.weighted_avg_competitor_price,
         )
 
+    pricing_features = pricing_features_to_dict(features)
+
+    try:
+        repository.finish_agent_run(agent_run, "SUCCESS", output_payload=pricing_features)
+        repository.commit()
+    except Exception as exc:
+        repository.rollback()
+        logger.error(
+            "pricing_features agent_runs'a kaydedilemedi (product_id=%s): %s",
+            product_id,
+            exc,
+        )
+        try:
+            repository.finish_agent_run(agent_run, "FAILED", error_message=str(exc))
+            repository.commit()
+        except Exception as exc2:
+            repository.rollback()
+            logger.error(
+                "agent_run FAILED durumu da kaydedilemedi (product_id=%s, agent_run_id=%s): %s",
+                product_id,
+                agent_run.id,
+                exc2,
+            )
+
     # candidate_price_generator_node'un ayni seller_product uzerinden devam
     # etmesini garantilemek icin cozumlenen id state'e yaziliyor.
     state["seller_product_id"] = seller_product.id
     state["marketplace"] = marketplace
     state["current_price"] = current_price
     state["stock_quantity"] = stock_quantity
-    state["pricing_features"] = pricing_features_to_dict(features)
+    state["pricing_features"] = pricing_features
+    state["product_name"] = seller_product.product.name if seller_product.product else None
+    state["company_id"] = seller_product.company_id
 
     return state
+
+
+def _market_event_row_to_dict(row) -> dict:
+    return {
+        "category": row.category,
+        "trend_score": float(row.trend_score) if row.trend_score is not None else None,
+        "interest_change_7d": float(row.interest_change_7d) if row.interest_change_7d is not None else None,
+        "interest_change_30d": float(row.interest_change_30d) if row.interest_change_30d is not None else None,
+        "event_detected": row.event_detected,
+        "event_type": row.event_type,
+        "days_until_event": row.days_until_event,
+        "event_confidence": float(row.event_confidence) if row.event_confidence is not None else None,
+        "category_trend_score": float(row.category_trend_score) if row.category_trend_score is not None else None,
+        "category_demand_change": float(row.category_demand_change) if row.category_demand_change is not None else None,
+        "market_demand_signal": row.market_demand_signal,
+        "recommended_demand_multiplier": (
+            float(row.recommended_demand_multiplier) if row.recommended_demand_multiplier is not None else None
+        ),
+        "reason_codes": row.reason_codes or [],
+        "generated_at": row.generated_at.isoformat(),
+    }
