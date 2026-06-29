@@ -1,0 +1,88 @@
+{
+  "model": "CatBoostRegressor",
+  "run_mode": "tuned",
+  "random_seed": 42,
+  "n_folds": 5,
+  "target_column": "expected_sales",
+  "feature_columns": [
+    "category",
+    "month",
+    "is_weekend",
+    "is_salary_week",
+    "candidate_price",
+    "min_competitor_price",
+    "avg_competitor_price",
+    "market_avg_price",
+    "market_price_trend_7d",
+    "market_volatility_7d",
+    "competitor_count",
+    "tier1_competitor_count",
+    "price_gap_to_min",
+    "price_gap_to_avg",
+    "price_gap_to_market_avg",
+    "price_rank",
+    "market_pressure_score",
+    "competitor_aggression_score",
+    "trend_score",
+    "interest_change_7d",
+    "interest_change_30d",
+    "event_detected",
+    "event_type_id",
+    "days_until_event",
+    "event_confidence",
+    "category_demand_change",
+    "recommended_demand_multiplier",
+    "sales_7d_avg",
+    "stock_quantity",
+    "stock_bucket"
+  ],
+  "categorical_columns": [
+    "category",
+    "stock_bucket"
+  ],
+  "metrics_summary": {
+    "mae": {
+      "mean": 0.6032471450287475,
+      "std": 0.16134324800306193,
+      "min": 0.4216986088399114,
+      "max": 0.8557374446906558
+    },
+    "rmse": {
+      "mean": 0.9124824805915056,
+      "std": 0.29132850845912417,
+      "min": 0.5837752459472801,
+      "max": 1.365079962607119
+    },
+    "r2": {
+      "mean": 0.9488648968477621,
+      "std": 0.020886627869788326,
+      "min": 0.9071854184774949,
+      "max": 0.9612548633704375
+    },
+    "mape_percent": {
+      "mean": 8.852832093976428,
+      "std": 0.7699008923381236,
+      "min": 7.926514335935334,
+      "max": 10.22391178401134
+    },
+    "rows": {
+      "mean_train_rows": 12859.0,
+      "mean_validation_rows": 4172.0
+    }
+  },
+  "model_parameters": {
+    "loss_function": "RMSE",
+    "iterations": 574,
+    "depth": 3,
+    "learning_rate": 0.1429695862217654,
+    "l2_leaf_reg": 2.916653528172594,
+    "tuning_source": "random_search trial_id=79"
+  },
+  "output_files": {
+    "cv_results": "C:\\Users\\DELL\\Desktop\\teknocampus-proje\\pricing-intelligence-platform\\apps\\ml_service\\training\\reports\\catboost\\cv_results.csv",
+    "cv_summary": "C:\\Users\\DELL\\Desktop\\teknocampus-proje\\pricing-intelligence-platform\\apps\\ml_service\\training\\reports\\catboost\\cv_summary.json",
+    "feature_importance": "C:\\Users\\DELL\\Desktop\\teknocampus-proje\\pricing-intelligence-platform\\apps\\ml_service\\training\\reports\\catboost\\feature_importance.csv",
+    "product_metrics": "C:\\Users\\DELL\\Desktop\\teknocampus-proje\\pricing-intelligence-platform\\apps\\ml_service\\training\\reports\\catboost\\product_metrics.csv",
+    "predictions_dir": "C:\\Users\\DELL\\Desktop\\teknocampus-proje\\pricing-intelligence-platform\\apps\\ml_service\\training\\reports\\catboost\\predictions"
+  }
+}

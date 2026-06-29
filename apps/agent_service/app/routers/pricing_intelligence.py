@@ -42,6 +42,7 @@ def run_pricing_intelligence(
             "price_step": payload.price_step,
             "base_price_step": payload.base_price_step,
             "dense_price_step": payload.dense_price_step,
+            "sales_7d_avg": payload.sales_7d_avg,
             "demand_predictions": [
                 item.model_dump(mode="json")
                 for item in payload.demand_predictions
