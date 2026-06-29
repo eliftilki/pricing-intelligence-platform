@@ -12,4 +12,8 @@ def competitor_intelligence_node(state: CompetitorGraphState, db: Session) -> Co
         lookback_hours=state.get("lookback_hours", 24),
     )
 
-    return {**state, **result}
+    # NOT: state'in tamami spread edilmiyor - event_agent_node ile ayni
+    # superstep'te paralel calisiyor, ikisi de **state dondururse ortak
+    # key'lere (product_id vb.) iki kere "yazilmis" sayilip LangGraph
+    # InvalidUpdateError firlatir. Sadece bu node'un urettigi delta donulur.
+    return result

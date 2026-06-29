@@ -15,4 +15,8 @@ def event_agent_node(state: CompetitorGraphState, db: Session) -> CompetitorGrap
 
     result = service.analyze_market_signals(product_id=state["product_id"])
 
-    return {**state, "market_event_features": result}
+    # NOT: state'in tamami spread edilmiyor - competitor_intelligence_node ile
+    # ayni superstep'te paralel calisiyor; ikisi de **state dondururse ortak
+    # key'lere (product_id vb.) iki kere "yazilmis" sayilip LangGraph
+    # InvalidUpdateError firlatir. Sadece bu node'un urettigi delta donulur.
+    return {"market_event_features": result}

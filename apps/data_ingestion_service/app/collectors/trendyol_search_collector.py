@@ -54,7 +54,13 @@ async def _do_search(query: str, max_results: int) -> list:
                     href: card.getAttribute('href'),
                     brand: getText('.product-brand'),
                     name: getText('.product-name'),
-                    price_text: getText('[class*="price"], [class*="Price"]'),
+                    // Karttaki ayni anda gorunen indirimli/uzeri-cizili/TY+
+                    // fiyatlarini ayirt etmek icin Trendyol'un kendi
+                    // data-testid'lerini kullaniyoruz (class*="price" hepsini
+                    // birden yakalayip metinlerini birlestiriyordu).
+                    // Indirimli urunlerde "price-value", indirimsiz (tek
+                    // fiyatli) urunlerde ise "price-section" kullaniliyor.
+                    price_text: getText('[data-testid="price-value"]') || getText('[data-testid="price-section"]'),
                     rating_text: getText('.productRating, [class*="rating"]'),
                     image_url: img ? (img.getAttribute('src') || img.getAttribute('data-src')) : null,
                 };
@@ -96,8 +102,14 @@ class TrendyolSearchCollector:
     def _parse_price(self, text: Optional[str]) -> Optional[float]:
         if not text:
             return None
-        # "1.879 TL" → 1879.0  (Türkçe format: nokta=binlik, virgül=ondalık)
-        cleaned = re.sub(r"[^\d,]", "", text).replace(",", ".")
+        # Secici bazen birden fazla fiyat/taksit metnini ic ice yakalayip
+        # birlestiriyor (orn. indirimli + orijinal fiyat ayni textContent'te).
+        # Tum metni temizlemek yerine gecerli bir TL fiyat kalibini ariyoruz:
+        # nokta=binlik ayraci (opsiyonel), virgul=kurus.
+        m = re.search(r"(\d{1,3}(?:\.\d{3})*(?:,\d{2})?)", text)
+        if not m:
+            return None
+        cleaned = m.group(1).replace(".", "").replace(",", ".")
         try:
             return float(cleaned)
         except ValueError:

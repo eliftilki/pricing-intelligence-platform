@@ -62,27 +62,27 @@ class DemandPredictionService:
         self._builder = builder or DemandPredictionBuilder()
         self._client = client or demand_prediction_client
 
-        def predict(
-            self,
-            context: DemandPredictionBuildContext,
-        ) -> DemandPredictionServiceResult:
-            request = self._builder.build_request(context)
+    def predict(
+        self,
+        context: DemandPredictionBuildContext,
+    ) -> DemandPredictionServiceResult:
+        request = self._builder.build_request(context)
 
-            try:
-                response = self._client.predict_demand(request)
-            except httpx.HTTPError as exc:
-                raise DemandPredictionServiceError(
-                    f"ML demand prediction request failed: {exc}"
-                ) from exc
+        try:
+            response = self._client.predict_demand(request)
+        except httpx.HTTPError as exc:
+            raise DemandPredictionServiceError(
+                f"ML demand prediction request failed: {exc}"
+            ) from exc
 
-            predictions = self._map_to_optimization_items(request, response.predictions)
+        predictions = self._map_to_optimization_items(request, response.predictions)
 
-            return DemandPredictionServiceResult(
-                predictions=predictions,
-                model_name=response.model_name,
-                n_fold_models=response.n_fold_models,
-                ensemble_strategy=response.ensemble_strategy,
-            )
+        return DemandPredictionServiceResult(
+            predictions=predictions,
+            model_name=response.model_name,
+            n_fold_models=response.n_fold_models,
+            ensemble_strategy=response.ensemble_strategy,
+        )
 
     @staticmethod
     def _map_to_optimization_items(
