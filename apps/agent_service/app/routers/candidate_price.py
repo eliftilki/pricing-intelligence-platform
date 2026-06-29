@@ -35,7 +35,4 @@ def generate_candidate_prices(
         strategy=request.strategy,
     )
 
-    if request.persist:
-        repository.save_result(result)
-
     return result

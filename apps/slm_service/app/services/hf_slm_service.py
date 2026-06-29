@@ -30,13 +30,20 @@ class HFSLMService:
             **token_kwargs,
         )
 
-        dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+        use_cuda = torch.cuda.is_available()
+        dtype = torch.float16 if use_cuda else torch.float32
+
+        model_kwargs = {
+            "torch_dtype": dtype,
+            **token_kwargs,
+        }
+
+        if use_cuda:
+            model_kwargs["device_map"] = "auto"
 
         self.model = AutoModelForCausalLM.from_pretrained(
             self.model_name,
-            torch_dtype=dtype,
-            device_map="auto",
-            **token_kwargs,
+            **model_kwargs,
         )
 
         self.model.eval()

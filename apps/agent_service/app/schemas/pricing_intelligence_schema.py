@@ -12,7 +12,10 @@ class PricingIntelligenceRunRequest(BaseModel):
     lookback_hours: int = Field(default=24, ge=1, le=168)
     run_candidate_prices: bool = True
     run_optimization: bool = False
-    persist_candidate_prices: bool = True
+    persist_candidate_prices: bool = Field(
+        default=False,
+        description="Candidate prices are kept in graph state and are not persisted.",
+    )
     persist_optimization: bool = False
     price_step: int = 250
     base_price_step: int = 250
