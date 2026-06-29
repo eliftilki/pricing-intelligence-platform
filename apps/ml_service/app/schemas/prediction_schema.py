@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class DemandFeatureRow(BaseModel):
     product_id: int
     category: str
@@ -30,7 +31,6 @@ class DemandFeatureRow(BaseModel):
     category_demand_change: float
     recommended_demand_multiplier: float
     sales_7d_avg: float
-    sales_30d_avg: float
     stock_quantity: int
     stock_bucket: str
 

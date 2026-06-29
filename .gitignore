@@ -24,3 +24,7 @@ build/
 .vscode/
 
 CLAUDE.md
+
+# Demand model artifacts (team can run after git pull)
+!apps/ml_service/training/models/raw/catboost/
+!apps/ml_service/training/models/raw/catboost/*.joblib

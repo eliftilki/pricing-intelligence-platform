@@ -12,7 +12,6 @@ from app.schemas.demand_prediction_schema import (
 from app.services.demand_prediciton_builder import (
     DemandPredictionBuildContext,
     DemandPredictionBuilder,
-    resolve_sales_30d_avg_for_ml,
 )
 from app.services.demand_prediction_client import (
     DemandPredictionClient,
@@ -63,50 +62,27 @@ class DemandPredictionService:
         self._builder = builder or DemandPredictionBuilder()
         self._client = client or demand_prediction_client
 
-    def predict(
-        self,
-        context: DemandPredictionBuildContext,
-    ) -> DemandPredictionServiceResult:
-        request = self._builder.build_request(context)
-        # GECICI: ML modeli sales_30d_avg bekliyor; agent schema'da yok, payload'a ekliyoruz.
-        payload = self._attach_sales_30d_avg(request, context)
+        def predict(
+            self,
+            context: DemandPredictionBuildContext,
+        ) -> DemandPredictionServiceResult:
+            request = self._builder.build_request(context)
 
-        try:
-            # Client.model_dump() eksik alan gonderir; gecici olarak ham payload POST edilir.
-            response = self._predict_demand_payload(payload)
-        except httpx.HTTPError as exc:
-            raise DemandPredictionServiceError(
-                f"ML demand prediction request failed: {exc}"
-            ) from exc
+            try:
+                response = self._client.predict_demand(request)
+            except httpx.HTTPError as exc:
+                raise DemandPredictionServiceError(
+                    f"ML demand prediction request failed: {exc}"
+                ) from exc
 
-        predictions = self._map_to_optimization_items(request, response.predictions)
+            predictions = self._map_to_optimization_items(request, response.predictions)
 
-        return DemandPredictionServiceResult(
-            predictions=predictions,
-            model_name=response.model_name,
-            n_fold_models=response.n_fold_models,
-            ensemble_strategy=response.ensemble_strategy,
-        )
-
-    @staticmethod
-    def _attach_sales_30d_avg(
-        request: DemandPredictionRequest,
-        context: DemandPredictionBuildContext,
-    ) -> dict:
-        payload = request.model_dump()
-        sales_30d_avg = resolve_sales_30d_avg_for_ml(context)
-        for item in payload["items"]:
-            item["sales_30d_avg"] = sales_30d_avg
-        return payload
-
-    def _predict_demand_payload(self, payload: dict) -> DemandPredictionResponse:
-        url = f"{self._client.base_url}/predictions/demand"
-
-        with httpx.Client(timeout=self._client.timeout) as client:
-            response = client.post(url, json=payload)
-
-        response.raise_for_status()
-        return DemandPredictionResponse(**response.json())
+            return DemandPredictionServiceResult(
+                predictions=predictions,
+                model_name=response.model_name,
+                n_fold_models=response.n_fold_models,
+                ensemble_strategy=response.ensemble_strategy,
+            )
 
     @staticmethod
     def _map_to_optimization_items(

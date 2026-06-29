@@ -10,6 +10,7 @@ from .config import (
     CATEGORICAL_COLUMNS,
     DATE_COLUMN,
     DROP_FROM_FEATURES,
+    MODEL_FEATURE_COLUMNS,
     TARGET_COLUMN,
 )
 
@@ -72,9 +73,14 @@ def validate_dataset(df: pd.DataFrame) -> Dict[str, object]:
 
 
 def get_feature_target_columns(df: pd.DataFrame) -> Tuple[List[str], str, List[str], List[str]]:
-    """Sütunlar özellik, hedef ve özellik türü olarak ayrılır."""
-    drop_cols = [col for col in DROP_FROM_FEATURES if col in df.columns]
-    feature_cols = [col for col in df.columns if col not in drop_cols]
+    """Modele girecek kolonlar MODEL_FEATURE_COLUMNS allowlist ile secilir."""
+    missing = [col for col in MODEL_FEATURE_COLUMNS if col not in df.columns]
+    if missing:
+        raise ValueError(
+            f"Dataset is missing columns required for model training: {missing}"
+        )
+
+    feature_cols = list(MODEL_FEATURE_COLUMNS)
 
     categorical_cols = [col for col in CATEGORICAL_COLUMNS if col in feature_cols]
     numeric_cols = [col for col in feature_cols if col not in categorical_cols]
