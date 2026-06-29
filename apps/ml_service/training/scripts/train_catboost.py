@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import joblib
 import numpy as np
@@ -23,11 +23,16 @@ DEFAULT_DROP_COLUMNS = [DATE_COLUMN, TARGET_COLUMN]
 RANDOM_SEED = 42
 DEFAULT_N_FOLDS = 5
 
-# Random Search trial_id=3 (hyperparameter_search/round2/random_search_trials.csv)
-CATBOOST_ITERATIONS = 569
-CATBOOST_DEPTH = 4
-CATBOOST_LEARNING_RATE = 0.03349915829228814
-CATBOOST_L2_LEAF_REG = 6.519937782110658
+# Baseline — random search karşılaştırma referansı
+BASELINE_ITERATIONS = 100
+BASELINE_DEPTH = 4
+BASELINE_LEARNING_RATE = 0.08
+BASELINE_L2_LEAF_REG = 3.0
+
+SELECTED_HYPERPARAMETERS_REL_PATH = (
+    Path("reports") / "catboost" / "hyperparameter_search" / "selected_hyperparameters.json"
+)
+REQUIRED_HYPERPARAMETER_KEYS = ("iterations", "depth", "learning_rate", "l2_leaf_reg")
 
 
 def get_project_root() -> Path:
@@ -53,6 +58,81 @@ def save_json(data: Dict, path: Path) -> None:
 
     with path.open("w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=2)
+
+
+def get_default_selected_hyperparameters_path(training_root: Path) -> Path:
+    return training_root / SELECTED_HYPERPARAMETERS_REL_PATH
+
+
+def baseline_hyperparameters() -> Dict[str, Any]:
+    return {
+        "iterations": BASELINE_ITERATIONS,
+        "depth": BASELINE_DEPTH,
+        "learning_rate": BASELINE_LEARNING_RATE,
+        "l2_leaf_reg": BASELINE_L2_LEAF_REG,
+    }
+
+
+def load_selected_hyperparameters(path: Path) -> Tuple[Dict[str, Any], str]:
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Seçili hiperparametre dosyası bulunamadı: {path}\n"
+            "Random search sonrası selected_hyperparameters.json oluşturulmalı."
+        )
+
+    payload = load_json(path)
+    if not payload:
+        raise ValueError(f"Geçersiz hiperparametre dosyası: {path}")
+
+    missing_keys = [key for key in REQUIRED_HYPERPARAMETER_KEYS if key not in payload]
+    if missing_keys:
+        raise ValueError(
+            f"selected_hyperparameters.json içinde eksik alanlar: {missing_keys}"
+        )
+
+    hyperparameters = {
+        "iterations": int(payload["iterations"]),
+        "depth": int(payload["depth"]),
+        "learning_rate": float(payload["learning_rate"]),
+        "l2_leaf_reg": float(payload["l2_leaf_reg"]),
+    }
+
+    trial_id = payload.get("trial_id")
+    if trial_id is not None:
+        tuning_source = f"random_search trial_id={int(trial_id)}"
+    else:
+        tuning_source = str(payload.get("source", path.name))
+
+    return hyperparameters, tuning_source
+
+
+def resolve_run_configuration(
+    run_mode: str,
+    training_root: Path,
+    selected_hyperparameters_path: Optional[Path],
+) -> Tuple[Dict[str, Any], str, str, str]:
+    if run_mode == "baseline":
+        return (
+            baseline_hyperparameters(),
+            "baseline_fixed_parameters",
+            "cv_summary_baseline.json",
+            "cv_results_baseline.csv",
+        )
+
+    if run_mode == "tuned":
+        hyperparameters_path = (
+            selected_hyperparameters_path
+            or get_default_selected_hyperparameters_path(training_root)
+        )
+        hyperparameters, tuning_source = load_selected_hyperparameters(hyperparameters_path)
+        return (
+            hyperparameters,
+            tuning_source,
+            "cv_summary.json",
+            "cv_results.csv",
+        )
+
+    raise ValueError(f"Desteklenmeyen run_mode: {run_mode}")
 
 
 def make_one_hot_encoder() -> OneHotEncoder:
@@ -128,6 +208,7 @@ def prepare_xy(
 def build_catboost_components(
     feature_columns: List[str],
     categorical_columns: List[str],
+    hyperparameters: Dict[str, Any],
 ) -> Tuple[ColumnTransformer, CatBoostRegressor]:
     numeric_columns = [
         column for column in feature_columns
@@ -145,10 +226,10 @@ def build_catboost_components(
 
     model = CatBoostRegressor(
         loss_function="RMSE",
-        iterations=CATBOOST_ITERATIONS,
-        depth=CATBOOST_DEPTH,
-        learning_rate=CATBOOST_LEARNING_RATE,
-        l2_leaf_reg=CATBOOST_L2_LEAF_REG,
+        iterations=int(hyperparameters["iterations"]),
+        depth=int(hyperparameters["depth"]),
+        learning_rate=float(hyperparameters["learning_rate"]),
+        l2_leaf_reg=float(hyperparameters["l2_leaf_reg"]),
         random_seed=RANDOM_SEED,
         verbose=False,
         allow_writing_files=False,
@@ -303,8 +384,18 @@ def train_and_validate_folds(
     metadata_path: Path,
     n_folds: int,
     save_fold_models: bool,
+    run_mode: str,
+    selected_hyperparameters_path: Optional[Path],
 ) -> pd.DataFrame:
     metadata = load_json(metadata_path)
+    training_root = get_project_root() / "training"
+    hyperparameters, tuning_source, cv_summary_filename, cv_results_filename = (
+        resolve_run_configuration(
+            run_mode=run_mode,
+            training_root=training_root,
+            selected_hyperparameters_path=selected_hyperparameters_path,
+        )
+    )
 
     reports_dir.mkdir(parents=True, exist_ok=True)
     models_dir.mkdir(parents=True, exist_ok=True)
@@ -327,9 +418,17 @@ def train_and_validate_folds(
     all_product_metrics: List[pd.DataFrame] = []
 
     print(f"\nModel: CatBoostRegressor")
+    print(f"Run mode: {run_mode}")
     print(f"Fold klasörü: {folds_dir}")
     print(f"Kullanılan feature sayısı: {len(feature_columns)}")
-    print(f"Kategorik kolonlar: {categorical_columns}\n")
+    print(f"Kategorik kolonlar: {categorical_columns}")
+    print(
+        "Hiperparametreler: "
+        f"depth={hyperparameters['depth']} | "
+        f"lr={hyperparameters['learning_rate']} | "
+        f"iter={hyperparameters['iterations']} | "
+        f"l2={hyperparameters['l2_leaf_reg']}\n"
+    )
 
     for fold_number in range(1, n_folds + 1):
         train_path = folds_dir / f"fold_{fold_number:02d}_train.csv"
@@ -350,6 +449,7 @@ def train_and_validate_folds(
         preprocessor, model = build_catboost_components(
             feature_columns=feature_columns,
             categorical_columns=categorical_columns,
+            hyperparameters=hyperparameters,
         )
 
         X_train_transformed = preprocessor.fit_transform(X_train)
@@ -430,13 +530,14 @@ def train_and_validate_folds(
         ignore_index=True,
     )
 
-    cv_results_path = model_report_dir / "cv_results.csv"
+    cv_results_path = model_report_dir / cv_results_filename
     cv_results_with_average.to_csv(cv_results_path, index=False)
 
-    cv_summary_path = model_report_dir / "cv_summary.json"
+    cv_summary_path = model_report_dir / cv_summary_filename
     save_json(
         {
             "model": "CatBoostRegressor",
+            "run_mode": run_mode,
             "random_seed": RANDOM_SEED,
             "n_folds": n_folds,
             "target_column": TARGET_COLUMN,
@@ -445,11 +546,11 @@ def train_and_validate_folds(
             "metrics_summary": cv_summary,
             "model_parameters": {
                 "loss_function": "RMSE",
-                "iterations": CATBOOST_ITERATIONS,
-                "depth": CATBOOST_DEPTH,
-                "learning_rate": CATBOOST_LEARNING_RATE,
-                "l2_leaf_reg": CATBOOST_L2_LEAF_REG,
-                "tuning_source": "random_search trial_id=3",
+                "iterations": hyperparameters["iterations"],
+                "depth": hyperparameters["depth"],
+                "learning_rate": hyperparameters["learning_rate"],
+                "l2_leaf_reg": hyperparameters["l2_leaf_reg"],
+                "tuning_source": tuning_source,
             },
             "output_files": {
                 "cv_results": str(cv_results_path),
@@ -553,6 +654,26 @@ def parse_args() -> argparse.Namespace:
         help="Her fold için eğitilen modeli models/raw/catboost klasörüne kaydeder.",
     )
 
+    parser.add_argument(
+        "--run-mode",
+        choices=["baseline", "tuned"],
+        default="baseline",
+        help=(
+            "baseline: sabit baseline parametreleriyle eğitir ve cv_summary_baseline.json yazar. "
+            "tuned: selected_hyperparameters.json dosyasından parametre okur ve cv_summary.json yazar."
+        ),
+    )
+
+    parser.add_argument(
+        "--selected-hyperparameters",
+        type=Path,
+        default=None,
+        help=(
+            "run-mode=tuned iken kullanılacak JSON dosyası. "
+            "Varsayılan: training/reports/catboost/hyperparameter_search/selected_hyperparameters.json"
+        ),
+    )
+
     return parser.parse_args()
 
 
@@ -566,6 +687,8 @@ def main() -> None:
         metadata_path=args.metadata,
         n_folds=args.n_folds,
         save_fold_models=args.save_fold_models,
+        run_mode=args.run_mode,
+        selected_hyperparameters_path=args.selected_hyperparameters,
     )
 
 

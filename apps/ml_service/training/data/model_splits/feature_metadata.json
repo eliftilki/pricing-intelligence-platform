@@ -1,7 +1,6 @@
 {
   "target_col": "expected_sales",
   "feature_cols": [
-    "product_id",
     "category",
     "month",
     "is_weekend",
@@ -30,7 +29,6 @@
     "category_demand_change",
     "recommended_demand_multiplier",
     "sales_7d_avg",
-    "sales_30d_avg",
     "stock_quantity",
     "stock_bucket"
   ],
@@ -39,7 +37,6 @@
     "stock_bucket"
   ],
   "numeric_cols": [
-    "product_id",
     "month",
     "is_weekend",
     "is_salary_week",
@@ -67,26 +64,37 @@
     "category_demand_change",
     "recommended_demand_multiplier",
     "sales_7d_avg",
-    "sales_30d_avg",
     "stock_quantity"
   ],
   "dropped_from_features": [
     "date",
-    "expected_sales"
+    "expected_sales",
+    "product_id",
+    "product_name"
   ],
   "validation_summary": {
     "shape": [
-      7672,
-      34
+      31724,
+      41
     ],
     "null_count": 0,
     "product_date_counts": {
       "1": 365,
       "2": 365,
-      "3": 366
+      "3": 365,
+      "4": 365,
+      "5": 323,
+      "6": 365,
+      "7": 365,
+      "8": 194,
+      "9": 365,
+      "10": 365,
+      "11": 365,
+      "12": 365,
+      "13": 365
     },
     "candidate_rows_per_product_day_summary": {
-      "count": 1096.0,
+      "count": 4532.0,
       "mean": 7.0,
       "std": 0.0,
       "min": 7.0,

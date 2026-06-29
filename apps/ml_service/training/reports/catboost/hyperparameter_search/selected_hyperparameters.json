@@ -1,0 +1,14 @@
+{
+  "source": "random_search_round2",
+  "trials_csv": "C:\\Users\\DELL\\Desktop\\teknocampus-proje\\pricing-intelligence-platform\\apps\\ml_service\\training\\reports\\catboost\\hyperparameter_search\\round2\\random_search_trials.csv",
+  "trial_id": 79,
+  "depth": 3,
+  "learning_rate": 0.1429695862217654,
+  "iterations": 574,
+  "l2_leaf_reg": 2.916653528172594,
+  "mae_mean": 0.5933041512402755,
+  "mae_std": 0.1586599658308687,
+  "rmse_mean": 0.8942952935148888,
+  "r2_mean": 0.9508816643518848,
+  "mae_improvement_vs_baseline": 0.1229900590873103
+}

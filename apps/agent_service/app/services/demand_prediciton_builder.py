@@ -47,8 +47,6 @@ class DemandPredictionBuildContext:
     market_event_features: dict[str, Any] | None = None
     # Frontend / satıcıdan gelen son 7 gunluk ortalama satis (API -> state -> node).
     sales_7d_avg: float | None = None
-    # GECICI: Mevcut ML modeli sales_30d_avg bekliyor. Model yeniden egitilince kaldir.
-    sales_30d_avg: float | None = None
     stock_quantity: int | None = None
     product_id: str | None = None
     category: str | None = None
@@ -247,18 +245,6 @@ def _resolve_sales_7d_avg(context: DemandPredictionBuildContext) -> float:
         return float(context.sales_7d_avg)
     # GECICI: API/frontend henuz yoksa sabit deger; production'da kaldirilmali.
     return _TEMP_SALES_7D_AVG_DEFAULT
-
-
-def resolve_sales_30d_avg_for_ml(context: DemandPredictionBuildContext) -> float:
-    """
-    GECICI: ML servisi / mevcut model hâlâ sales_30d_avg bekliyor.
-    Agent schema'da yok; service HTTP payload'ina bu fonksiyonun ciktisini ekler.
-    Model yeniden egitilince kaldirilacak.
-    """
-    if context.sales_30d_avg is not None:
-        return float(context.sales_30d_avg)
-    # Deneme ortami: ayri 30d girdisi yoksa 7d ortalamayi proxy olarak kullan.
-    return _resolve_sales_7d_avg(context)
 
 
 def _resolve_reference_date(pricing_features: dict[str, Any]) -> datetime:
