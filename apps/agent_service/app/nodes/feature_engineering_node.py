@@ -142,6 +142,7 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
     state["stock_quantity"] = stock_quantity
     state["pricing_features"] = pricing_features
     state["product_name"] = seller_product.product.name if seller_product.product else None
+    state["company_id"] = seller_product.company_id
 
     return state
 

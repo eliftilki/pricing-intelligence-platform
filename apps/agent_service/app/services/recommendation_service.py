@@ -36,11 +36,14 @@ class RecommendationService:
             "marketplace": best.get("marketplace"),
             "current_price": best.get("current_price"),
             "recommended_price": best.get("recommended_price"),
+            "action": self._resolve_action(best.get("current_price"), best.get("recommended_price")),
             "expected_sales": best.get("expected_sales"),
             "unit_profit": best.get("unit_profit"),
             "expected_profit": best.get("expected_profit"),
+            "profit_uplift": best.get("profit_uplift_vs_current"),
             "commission_rate": best.get("commission_rate"),
             "selected_reason": best.get("selected_reason"),
+            "reason_codes": best.get("constraints_applied"),
             "competitor_min_price": pricing_features.get("min_competitor_price"),
             "competitor_avg_price": pricing_features.get("avg_competitor_price"),
             "tier1_min_price": self._tier1_min_price(competitor_features),
@@ -48,6 +51,18 @@ class RecommendationService:
             # state["risk_assessment"] doldurulacak, bu alan otomatik dolacak.
             "risk_level": risk_assessment.get("risk_level"),
         }
+
+    @staticmethod
+    def _resolve_action(current_price: Optional[float], recommended_price: float) -> str:
+        # price_recommendations.action NOT NULL - current_price yoksa (ilk
+        # analiz, henuz satis fiyati girilmemis) "yeni fiyat belirle" anlaminda.
+        if current_price is None:
+            return "SET_PRICE"
+        if recommended_price > current_price:
+            return "INCREASE_PRICE"
+        if recommended_price < current_price:
+            return "DECREASE_PRICE"
+        return "HOLD_PRICE"
 
     @staticmethod
     def _select_best_marketplace_result(

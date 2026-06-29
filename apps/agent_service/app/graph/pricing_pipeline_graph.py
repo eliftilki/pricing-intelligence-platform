@@ -11,6 +11,7 @@ from app.nodes.event_agent_node import event_agent_node
 from app.nodes.feature_engineering_node import feature_engineering_node
 from app.nodes.demand_prediction_node import demand_prediction_node
 from app.nodes.optimization_node import optimization_node
+from app.nodes.persist_recommendation_node import persist_recommendation_node
 from app.nodes.recommendation_node import recommendation_node
 from app.nodes.slm_explanation_node import slm_explanation_node
 
@@ -49,6 +50,9 @@ def build_pricing_pipeline_graph(db: Session):
     def run_slm_explanation(state: CompetitorGraphState):
         return asyncio.run(slm_explanation_node(state))
 
+    def run_persist_recommendation(state: CompetitorGraphState):
+        return persist_recommendation_node(state, db)
+
     graph.add_node("competitor_intelligence", run_competitor_intelligence)
     graph.add_node("event_agent", run_event_agent)
     graph.add_node("feature_engineering", run_feature_engineering)
@@ -58,6 +62,7 @@ def build_pricing_pipeline_graph(db: Session):
     graph.add_node("optimization", run_optimization)
     graph.add_node("recommendation", run_recommendation)
     graph.add_node("slm_explanation", run_slm_explanation)
+    graph.add_node("persist_recommendation", run_persist_recommendation)
 
     graph.add_edge(START, "competitor_intelligence")
     graph.add_edge(START, "event_agent")
@@ -99,7 +104,8 @@ def build_pricing_pipeline_graph(db: Session):
         },
     )
     graph.add_edge("recommendation", "slm_explanation")
-    graph.add_edge("slm_explanation", END)
+    graph.add_edge("slm_explanation", "persist_recommendation")
+    graph.add_edge("persist_recommendation", END)
 
     return graph.compile()
 
