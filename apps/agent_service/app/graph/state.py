@@ -29,6 +29,7 @@ class CompetitorGraphState(TypedDict, total=False):
 
     pricing_features: dict
     market_event_features: dict
+    product_name: str | None
 
     demand_predictions: list[dict]
     optimization_result: dict

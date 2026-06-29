@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.agent_run import AgentRun
 from app.models.competitor import CompetitorListing, CompetitorTier
@@ -18,7 +18,7 @@ class FeatureEngineeringRepository:
         product_id: UUID,
         seller_product_id: UUID | None = None,
     ) -> SellerProduct:
-        query = self.db.query(SellerProduct)
+        query = self.db.query(SellerProduct).options(joinedload(SellerProduct.product))
 
         if seller_product_id:
             seller_product = query.filter(SellerProduct.id == seller_product_id).first()

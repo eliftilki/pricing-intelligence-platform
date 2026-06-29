@@ -122,6 +122,17 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
             product_id,
             exc,
         )
+        try:
+            repository.finish_agent_run(agent_run, "FAILED", error_message=str(exc))
+            repository.commit()
+        except Exception as exc2:
+            repository.rollback()
+            logger.error(
+                "agent_run FAILED durumu da kaydedilemedi (product_id=%s, agent_run_id=%s): %s",
+                product_id,
+                agent_run.id,
+                exc2,
+            )
 
     # candidate_price_generator_node'un ayni seller_product uzerinden devam
     # etmesini garantilemek icin cozumlenen id state'e yaziliyor.
@@ -130,6 +141,7 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
     state["current_price"] = current_price
     state["stock_quantity"] = stock_quantity
     state["pricing_features"] = pricing_features
+    state["product_name"] = seller_product.product.name if seller_product.product else None
 
     return state
 
