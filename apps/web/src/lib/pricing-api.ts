@@ -50,6 +50,18 @@ export type SellerProduct = {
   created_at: string;
 };
 
+export type SalesQuantityRecord = {
+  id: UUID;
+  company_id: UUID;
+  product_id: UUID;
+  seller_product_id: UUID;
+  marketplace: string;
+  sales_quantity: number;
+  sales_date?: string | null;
+  note?: string | null;
+  created_at: string;
+};
+
 export type DataCollectionResponse = {
   job_id?: UUID;
   product_id?: UUID;
@@ -326,6 +338,14 @@ export const pricingApi = {
       body,
       token,
     }),
+  recordSalesQuantity: (
+    sellerProductId: UUID,
+    body: { sales_quantity: number; sales_date?: string; note?: string },
+  ) =>
+    request<SalesQuantityRecord>(
+      `/products/seller-products/${sellerProductId}/sales`,
+      { method: "POST", body },
+    ),
   decideRecommendation: (
     recommendationId: UUID,
     action: "approve" | "reject" | "apply",

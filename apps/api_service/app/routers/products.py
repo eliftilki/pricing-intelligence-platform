@@ -7,6 +7,8 @@ from app.schemas.product_schema import (
     CompanyProductUpdate,
     ProductCreate,
     ProductOut,
+    SalesQuantityCreate,
+    SalesQuantityOut,
     SellerProductCreate,
     SellerProductOut,
     UpdatePriceRequest,
@@ -69,3 +71,11 @@ def update_price(seller_product_id: UUID, payload: UpdatePriceRequest, db: Sessi
 @router.patch("/seller-products/{seller_product_id}/stock", response_model=SellerProductOut)
 def update_stock(seller_product_id: UUID, payload: UpdateStockRequest, db: Session = Depends(get_db)):
     return ProductService(db).update_stock(seller_product_id, payload)
+
+@router.post("/seller-products/{seller_product_id}/sales", response_model=SalesQuantityOut)
+def create_sales_quantity(
+    seller_product_id: UUID,
+    payload: SalesQuantityCreate,
+    db: Session = Depends(get_db),
+):
+    return ProductService(db).create_sales_quantity(seller_product_id, payload)

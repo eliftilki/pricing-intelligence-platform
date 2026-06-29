@@ -1,4 +1,5 @@
 from uuid import UUID
+from datetime import datetime, timezone
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models.product import (
@@ -6,10 +7,16 @@ from app.models.product import (
     Product,
     SellerProduct,
     SellerPriceHistory,
+    SellerSalesHistory,
     SellerStockHistory,
 )
 from app.repositories.base_repository import BaseRepository
-from app.schemas.product_schema import ProductCreate, SellerProductCreate, SellerProductUpdate
+from app.schemas.product_schema import (
+    ProductCreate,
+    SalesQuantityCreate,
+    SellerProductCreate,
+    SellerProductUpdate,
+)
 from app.services.product_resolver import normalize_token
 
 
@@ -252,3 +259,30 @@ class ProductRepository(BaseRepository):
         self.db.commit()
         self.db.refresh(seller_product)
         return seller_product
+
+    def create_sales_quantity(self, seller_product: SellerProduct, payload: SalesQuantityCreate):
+        old_stock = seller_product.stock_quantity or 0
+        new_stock = old_stock - payload.sales_quantity
+        sales_record = SellerSalesHistory(
+            company_id=seller_product.company_id,
+            product_id=seller_product.product_id,
+            seller_product_id=seller_product.id,
+            marketplace=seller_product.marketplace,
+            sales_quantity=payload.sales_quantity,
+            sales_date=payload.sales_date or datetime.now(timezone.utc),
+            note=payload.note,
+        )
+        self.db.add(sales_record)
+        seller_product.stock_quantity = new_stock
+        self.db.add(SellerStockHistory(
+            company_id=seller_product.company_id,
+            product_id=seller_product.product_id,
+            seller_product_id=seller_product.id,
+            marketplace=seller_product.marketplace,
+            old_stock=old_stock,
+            new_stock=new_stock,
+            change_source="SALES",
+        ))
+        self.db.commit()
+        self.db.refresh(sales_record)
+        return sales_record

@@ -16,18 +16,30 @@ from app.nodes.recommendation_node import recommendation_node
 from app.nodes.slm_explanation_node import slm_explanation_node
 
 
+COMPETITOR_INTELLIGENCE_UPDATE_KEYS = (
+    "status",
+    "error_code",
+    "analyzed_count",
+    "inserted_count",
+    "message",
+    "results",
+)
+
+
 def build_pricing_pipeline_graph(db: Session):
     graph = StateGraph(CompetitorGraphState)
 
     def run_competitor_intelligence(state: CompetitorGraphState):
-        return competitor_intelligence_node(state, db)
+        result = competitor_intelligence_node(state, db)
+        return _pick_graph_update(result, COMPETITOR_INTELLIGENCE_UPDATE_KEYS)
 
     def run_event_agent(state: CompetitorGraphState):
         # competitor_intelligence ile paralel calistigi icin (ayni superstep)
         # ayri bir Session kullanir - SQLAlchemy Session thread-safe degildir.
         event_db = SessionLocal()
         try:
-            return event_agent_node(state, event_db)
+            result = event_agent_node(state, event_db)
+            return {"market_event_features": result.get("market_event_features")}
         finally:
             event_db.close()
 
@@ -134,6 +146,8 @@ def _route_after_candidate_price_generator(state: CompetitorGraphState) -> str:
     return "end"
 
 
+def _pick_graph_update(result: dict, allowed_keys: tuple[str, ...]) -> dict:
+    return {key: result[key] for key in allowed_keys if key in result}
 def _route_after_demand_prediction(state: CompetitorGraphState) -> str:
     # ML veya builder hata verdiyse pipeline'i burada durdur.
     if state.get("status") == "FAILED":
