@@ -11,6 +11,7 @@ from app.nodes.event_agent_node import event_agent_node
 from app.nodes.feature_engineering_node import feature_engineering_node
 from app.nodes.demand_prediction_node import demand_prediction_node
 from app.nodes.optimization_node import optimization_node
+from app.nodes.risk_control_node import risk_control_node
 from app.nodes.slm_explanation_node import slm_explanation_node
 
 
@@ -41,6 +42,9 @@ def build_pricing_pipeline_graph(db: Session):
 
     def run_optimization(state: CompetitorGraphState):
         return optimization_node(state, db)
+    
+    def run_risk_control(state: CompetitorGraphState):
+        return risk_control_node(state, db)
 
     def run_slm_explanation(state: CompetitorGraphState):
         return asyncio.run(slm_explanation_node(state))
@@ -52,6 +56,7 @@ def build_pricing_pipeline_graph(db: Session):
     # candidate_price_generator -> demand_prediction -> optimization (run_optimization=true iken)
     graph.add_node("demand_prediction", run_demand_prediction)
     graph.add_node("optimization", run_optimization)
+    graph.add_node("risk_control", run_risk_control)
     graph.add_node("slm_explanation", run_slm_explanation)
 
     graph.add_edge(START, "competitor_intelligence")
@@ -85,7 +90,9 @@ def build_pricing_pipeline_graph(db: Session):
             "end": END,
         },
     )
-    graph.add_edge("optimization", "slm_explanation")
+    graph.add_edge("optimization", "risk_control")
+    #riskle recommendation bağlanacak
+    graph.add_edge("risk_control", "slm_explanation")
     graph.add_edge("slm_explanation", END)
 
     return graph.compile()

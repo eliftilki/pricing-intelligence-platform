@@ -237,7 +237,7 @@ class DemandPredictionBuilder:
 
 
 # GECICI: Frontend baglaninca kaldirilacak varsayilan (model test icin).
-_TEMP_SALES_7D_AVG_DEFAULT = 2.0
+_TEMP_SALES_7D_AVG_DEFAULT = 5.33
 
 
 def _resolve_sales_7d_avg(context: DemandPredictionBuildContext) -> float:

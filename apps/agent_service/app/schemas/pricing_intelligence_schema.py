@@ -35,5 +35,6 @@ class PricingIntelligenceRunResponse(BaseModel):
     selected_candidate_strategy: str | None = None
     optimization_result: dict | None = None
     marketplace_recommendations: list[dict] | None = None
+    risk_control_result: dict | None = None
     slm_explanation: dict | None = None
     errors: list[str] = Field(default_factory=list)

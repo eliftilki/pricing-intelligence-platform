@@ -31,9 +31,11 @@ class CompetitorGraphState(TypedDict, total=False):
     market_event_features: dict
 
     demand_predictions: list[dict]
+    demand_prediction_meta: dict #model kimliği, risk agent model güvenilirliği içn kullanacak
     optimization_result: dict
     marketplace_recommendations: list[dict]
 
+    risk_control_result: dict
     recommendation: dict
     slm_explanation: dict | None
     errors: list[str]

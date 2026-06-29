@@ -20,7 +20,7 @@ def run_pricing_intelligence(
     """
     Tam fiyatlandirma pipeline'i: competitor_intelligence + event_agent
     (paralel) -> feature_engineering -> candidate_price_generator ->
-    optimization -> slm_explanation. Henuz frontend'e baglanmadi - "Fiyat
+    optimization -> risk_control -> slm_explanation. Henuz frontend'e baglanmadi - "Fiyat
     Onerisi Olustur" gibi gercek bir aksiyon eklendiginde bu endpoint
     kullanilmali. Sadece rakip taramasi icin /competitor-intelligence/run'a
     bakin (o endpoint bilerek hafif tutuldu).
