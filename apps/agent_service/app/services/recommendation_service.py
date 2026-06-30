@@ -21,15 +21,13 @@ class RecommendationService:
         optimization_result: dict[str, Any],
         pricing_features: dict[str, Any],
         product_name: Optional[str],
-        risk_assessment: Optional[dict[str, Any]],
+        risk_control_result: Optional[dict[str, Any]],
         competitor_features: list[dict[str, Any]],
     ) -> Optional[dict[str, Any]]:
         best = self._select_best_marketplace_result(optimization_result)
 
         if best is None or best.get("recommended_price") is None:
             return None
-
-        risk_assessment = risk_assessment or {}
 
         return {
             "product_name": product_name or "Unknown Product",
@@ -48,9 +46,7 @@ class RecommendationService:
             "competitor_min_price": pricing_features.get("min_competitor_price"),
             "competitor_avg_price": pricing_features.get("avg_competitor_price"),
             "tier1_min_price": self._tier1_min_price(competitor_features),
-            # risk_control node'u henuz yok (Sude calisiyor) - eklendiginde
-            # state["risk_assessment"] doldurulacak, bu alan otomatik dolacak.
-            "risk_level": risk_assessment.get("risk_level"),
+            "risk_level": self._resolve_risk_level(risk_control_result, best.get("marketplace")),
         }
 
     @staticmethod
@@ -85,6 +81,58 @@ class RecommendationService:
         for result in results:
             if result.get("recommended_price") is not None:
                 return result
+
+        return None
+
+    @classmethod
+    def _resolve_risk_level(
+        cls,
+        risk_control_result: Optional[dict[str, Any]],
+        marketplace: Optional[str],
+    ) -> Optional[str]:
+        if not risk_control_result:
+            return None
+
+        assessment = cls._marketplace_assessment(risk_control_result, marketplace)
+        if assessment is not None:
+            return assessment.get("risk_level")
+
+        return risk_control_result.get("overall_risk_level")
+
+    @classmethod
+    def extract_risk_warnings(
+        cls,
+        risk_control_result: Optional[dict[str, Any]],
+        marketplace: Optional[str],
+    ) -> list[str]:
+        """risk_control_node'un bulduğu ihlalleri (margin, agresif fiyat
+        değişimi vb.) slm_explanation_node'un okuyacağı state["warnings"]
+        listesine taşımak için kullanılır - aksi halde bu bulgular SLM'e
+        hiç ulaşmaz."""
+        if not risk_control_result:
+            return []
+
+        assessment = cls._marketplace_assessment(risk_control_result, marketplace)
+        if assessment is None:
+            return []
+
+        return [
+            check.get("message")
+            for check in assessment.get("checks", [])
+            if not check.get("passed") and check.get("message")
+        ]
+
+    @staticmethod
+    def _marketplace_assessment(
+        risk_control_result: dict[str, Any],
+        marketplace: Optional[str],
+    ) -> Optional[dict[str, Any]]:
+        if marketplace is None:
+            return None
+
+        for assessment in risk_control_result.get("assessments", []):
+            if assessment.get("marketplace") == marketplace:
+                return assessment
 
         return None
 
