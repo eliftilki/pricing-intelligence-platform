@@ -24,13 +24,29 @@ def recommendation_node(state: dict, db: Session) -> dict:
         marketplace=state.get("marketplace"),
     )
 
+    risk_control_result = state.get("risk_control_result")
+
+    logger.info(
+        "recommendation_node DEBUG: risk_control_result keys=%s marketplace_in_first_assessment=%s",
+        list(risk_control_result.keys()) if risk_control_result else "NONE",
+        (risk_control_result.get("assessments") or [{}])[0].get("marketplace") if risk_control_result else "NONE",
+    )
+
     recommendation = recommendation_service.build_recommendation(
         optimization_result=state.get("optimization_result") or {},
         pricing_features=state.get("pricing_features") or {},
         product_name=state.get("product_name"),
-        risk_assessment=state.get("risk_assessment"),
+        risk_control_result=risk_control_result,
         competitor_features=competitor_features,
     )
+
+    if recommendation is not None:
+        risk_warnings = recommendation_service.extract_risk_warnings(
+            risk_control_result,
+            recommendation.get("marketplace"),
+        )
+        if risk_warnings:
+            state.setdefault("warnings", []).extend(risk_warnings)
 
     if recommendation is None:
         logger.warning(

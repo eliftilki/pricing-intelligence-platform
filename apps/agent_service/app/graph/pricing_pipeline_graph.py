@@ -1,9 +1,60 @@
 import asyncio
+import json
+import os
+from datetime import date, datetime
+from decimal import Decimal
+from pathlib import Path
+from uuid import UUID
 
 from langgraph.graph import END, START, StateGraph
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
+
+# GECICI: SLM analizi icin pipeline trace araci. PIPELINE_TRACE=1 olmadan
+# hicbir etkisi yok, normal calismayi degistirmez. Analiz bitince kaldirilacak.
+_TRACE_ENABLED = bool(os.environ.get("PIPELINE_TRACE"))
+_TRACE_PATH = Path(os.environ.get("PIPELINE_TRACE_PATH", "pipeline_trace.json"))
+_trace_log: list[dict] = []
+
+
+def _json_default(value):
+    if isinstance(value, UUID):
+        return str(value)
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return float(value)
+    return str(value)
+
+
+def _safe_snapshot(data: dict) -> dict:
+    return json.loads(json.dumps(data, default=_json_default))
+
+
+def _trace(node_name: str, fn):
+    if not _TRACE_ENABLED:
+        return fn
+
+    def wrapped(state):
+        input_snapshot = _safe_snapshot(dict(state))
+        result = fn(state)
+        output_dict = result if isinstance(result, dict) else {}
+        output_snapshot = _safe_snapshot(output_dict)
+        _trace_log.append(
+            {
+                "node": node_name,
+                "input": input_snapshot,
+                "output": output_snapshot,
+            }
+        )
+        _TRACE_PATH.write_text(
+            json.dumps(_trace_log, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        return result
+
+    return wrapped
 from app.graph.state import CompetitorGraphState
 from app.nodes.candidate_price_generator_node import candidate_price_generator_node
 from app.nodes.competitor_intelligence_node import competitor_intelligence_node
@@ -75,22 +126,22 @@ def build_pricing_pipeline_graph(db: Session):
     def run_pipeline_finalizer(state: CompetitorGraphState):
         return pipeline_finalizer_node(state)
 
-    graph.add_node("data_ingestion", run_data_ingestion)
     def run_persist_recommendation(state: CompetitorGraphState):
         return persist_recommendation_node(state, db)
 
-    graph.add_node("competitor_intelligence", run_competitor_intelligence)
-    graph.add_node("event_agent", run_event_agent)
-    graph.add_node("feature_engineering", run_feature_engineering)
-    graph.add_node("candidate_price_generator", run_candidate_price_generator)
+    graph.add_node("data_ingestion", _trace("data_ingestion", run_data_ingestion))
+    graph.add_node("competitor_intelligence", _trace("competitor_intelligence", run_competitor_intelligence))
+    graph.add_node("event_agent", _trace("event_agent", run_event_agent))
+    graph.add_node("feature_engineering", _trace("feature_engineering", run_feature_engineering))
+    graph.add_node("candidate_price_generator", _trace("candidate_price_generator", run_candidate_price_generator))
     # candidate_price_generator -> demand_prediction -> optimization (run_optimization=true iken)
-    graph.add_node("demand_prediction", run_demand_prediction)
-    graph.add_node("optimization", run_optimization)
-    graph.add_node("risk_control", run_risk_control)
-    graph.add_node("recommendation", run_recommendation)
-    graph.add_node("slm_explanation", run_slm_explanation)
-    graph.add_node("persist_recommendation", run_persist_recommendation)
-    graph.add_node("pipeline_finalizer", run_pipeline_finalizer)
+    graph.add_node("demand_prediction", _trace("demand_prediction", run_demand_prediction))
+    graph.add_node("optimization", _trace("optimization", run_optimization))
+    graph.add_node("risk_control", _trace("risk_control", run_risk_control))
+    graph.add_node("recommendation", _trace("recommendation", run_recommendation))
+    graph.add_node("slm_explanation", _trace("slm_explanation", run_slm_explanation))
+    graph.add_node("persist_recommendation", _trace("persist_recommendation", run_persist_recommendation))
+    graph.add_node("pipeline_finalizer", _trace("pipeline_finalizer", run_pipeline_finalizer))
 
     graph.add_edge(START, "data_ingestion")
     graph.add_conditional_edges(
