@@ -242,3 +242,22 @@ class ProductService:
                 detail="Satış miktarı mevcut stoktan fazla olamaz.",
             )
         return self.repo.create_sales_quantity(sp, payload)
+
+    def get_sales_7d_average(self, seller_product_id: UUID):
+        sp = self.repo.get_seller_product(seller_product_id)
+        if not sp:
+            raise HTTPException(status_code=404, detail="Seller product not found")
+
+        period_days = 7
+        total_sales, period_start, period_end = self.repo.get_sales_total(
+            seller_product_id,
+            period_days=period_days,
+        )
+        return {
+            "seller_product_id": seller_product_id,
+            "period_days": period_days,
+            "total_sales": total_sales,
+            "sales_7d_avg": total_sales / period_days,
+            "period_start": period_start,
+            "period_end": period_end,
+        }

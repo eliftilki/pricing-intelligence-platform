@@ -9,6 +9,7 @@ from app.schemas.product_schema import (
     ProductOut,
     SalesQuantityCreate,
     SalesQuantityOut,
+    Sales7DayAverageOut,
     SellerProductCreate,
     SellerProductOut,
     UpdatePriceRequest,
@@ -79,3 +80,14 @@ def create_sales_quantity(
     db: Session = Depends(get_db),
 ):
     return ProductService(db).create_sales_quantity(seller_product_id, payload)
+
+
+@router.get(
+    "/seller-products/{seller_product_id}/sales/7d-average",
+    response_model=Sales7DayAverageOut,
+)
+def get_sales_7d_average(
+    seller_product_id: UUID,
+    db: Session = Depends(get_db),
+):
+    return ProductService(db).get_sales_7d_average(seller_product_id)

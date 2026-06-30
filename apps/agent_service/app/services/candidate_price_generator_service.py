@@ -26,6 +26,7 @@ class CandidatePriceGeneratorService:
 
         competitor_prices = [competitor.price for competitor in relevant_competitors]
         min_price = min(competitor_prices)
+        avg_price = sum(competitor_prices) / len(competitor_prices)
         max_price = max(competitor_prices)
         dynamic_step = choose_step(min_price, max_price)
         candidate_prices = generate_extended_market_range(
@@ -44,6 +45,7 @@ class CandidatePriceGeneratorService:
             selected_strategy=CandidateStrategy.ALL_MARKETPLACE_RANGE,
             candidate_prices=candidate_prices,
             min_competitor_price=min_price,
+            avg_competitor_price=avg_price,
             max_competitor_price=max_price,
             dynamic_step=dynamic_step,
             marketplaces_included=marketplaces,

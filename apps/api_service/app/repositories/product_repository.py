@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models.product import (
@@ -286,3 +286,21 @@ class ProductRepository(BaseRepository):
         self.db.commit()
         self.db.refresh(sales_record)
         return sales_record
+
+    def get_sales_total(
+        self,
+        seller_product_id: UUID,
+        *,
+        period_days: int = 7,
+        period_end: datetime | None = None,
+    ) -> tuple[int, datetime, datetime]:
+        period_end = period_end or datetime.now(timezone.utc)
+        period_start = period_end - timedelta(days=period_days)
+        total_sales = (
+            self.db.query(func.coalesce(func.sum(SellerSalesHistory.sales_quantity), 0))
+            .filter(SellerSalesHistory.seller_product_id == seller_product_id)
+            .filter(SellerSalesHistory.sales_date >= period_start)
+            .filter(SellerSalesHistory.sales_date <= period_end)
+            .scalar()
+        )
+        return int(total_sales or 0), period_start, period_end

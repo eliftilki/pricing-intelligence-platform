@@ -18,6 +18,7 @@ import {
   Company,
   CompetitorListing,
   CompetitorTier,
+  MarketplaceOptimizationResult,
   PricingIntelligenceResponse,
   PriceRecommendation,
   Product,
@@ -71,9 +72,49 @@ type ProductInsight = {
   recommendations: PriceRecommendation[];
   listings: CompetitorListing[];
   tiers: CompetitorTier[];
+  pipelineResult: PricingIntelligenceResponse | undefined;
 };
 
 type AnalysisResultsByProduct = Record<string, PricingIntelligenceResponse>;
+
+function listingsFromPipelineResult(
+  result: PricingIntelligenceResponse | undefined,
+): CompetitorListing[] {
+  return (result?.results || []).map((item) => ({
+    id: item.competitor_listing_id,
+    product_id: result?.product_id,
+    marketplace: item.marketplace,
+    rank: item.rank,
+    seller_name: item.seller_name,
+    price: item.price,
+    original_price: item.original_price,
+    currency: item.currency,
+    stock: item.stock,
+    is_in_stock: item.is_in_stock,
+    fast_shipping: item.fast_shipping,
+    free_shipping: item.free_shipping,
+    shipment_days: item.shipment_days,
+    scraped_at: item.scraped_at,
+  }));
+}
+
+function tiersFromPipelineResult(
+  result: PricingIntelligenceResponse | undefined,
+): CompetitorTier[] {
+  return (result?.results || []).map((item) => ({
+    id: item.competitor_listing_id,
+    competitor_listing_id: item.competitor_listing_id,
+    product_id: result?.product_id,
+    seller_name: item.seller_name,
+    marketplace: item.marketplace,
+    tier: item.tier,
+    competitor_strength_score: item.competitor_strength_score,
+    price_aggression_score: item.price_aggression_score,
+    buybox_threat_score: item.buybox_threat_score,
+    reason_codes: item.reason_codes,
+    analyzed_at: item.scraped_at,
+  }));
+}
 
 type ProductFormState = {
   brand: string;
@@ -389,6 +430,13 @@ function optimizationRejectionReasons(result: PricingIntelligenceResponse | unde
   return Array.from(reasons);
 }
 
+function marketplaceOptimizationResults(
+  result: PricingIntelligenceResponse | undefined,
+): MarketplaceOptimizationResult[] {
+  if (result?.marketplace_results?.length) return result.marketplace_results;
+  return result?.marketplace_recommendations || [];
+}
+
 function cleanSlmExplanation(explanation: string | null | undefined) {
   return explanation?.replaceAll("**", "").trim() || "";
 }
@@ -455,9 +503,10 @@ export default function CompanyProductsPage() {
           const product = productMap.get(productId);
           if (!product) return null;
 
-          const [listings, tiers, recommendationGroups] = await Promise.all([
-            pricingApi.listCompetitorListings(productId).catch(() => []),
-            pricingApi.listCompetitorTiers(productId).catch(() => []),
+          const [pipelineResult, recommendationGroups] = await Promise.all([
+            pricingApi
+              .getLatestPricingIntelligence(productId)
+              .catch(() => undefined),
             Promise.all(
               items.map((item) =>
                 pricingApi.listRecommendations(item.id).catch(() => []),
@@ -468,22 +517,29 @@ export default function CompanyProductsPage() {
           return {
             product,
             sellerProducts: items,
-            listings,
-            tiers,
+            listings: listingsFromPipelineResult(pipelineResult),
+            tiers: tiersFromPipelineResult(pipelineResult),
             recommendations: recommendationGroups.flat(),
+            pipelineResult,
           };
         }),
       );
 
       setCompany(companyData);
-      setRows(
-        insights
-          .filter((row): row is ProductInsight => row !== null)
+      const nextRows = insights
+        .filter((row): row is ProductInsight => row !== null)
           .sort((a, b) => {
             const bDate = latestAnalysisDate(b) || 0;
             const aDate = latestAnalysisDate(a) || 0;
             return bDate - aDate;
-          }),
+          });
+      setRows(nextRows);
+      setAnalysisResults(
+        Object.fromEntries(
+          nextRows
+            .filter((row) => row.pipelineResult)
+            .map((row) => [row.product.id, row.pipelineResult!]),
+        ),
       );
     } catch (error) {
       setToast({ type: "error", message: errorMessage(error) });
@@ -698,9 +754,17 @@ export default function CompanyProductsPage() {
     });
 
     try {
+      const salesSummaries = await Promise.all(
+        row.sellerProducts.map((item) => pricingApi.getSales7dAverage(item.id)),
+      );
+      const sales7dAvg =
+        salesSummaries.reduce((total, item) => total + item.total_sales, 0) / 7;
       const result = await pricingApi.runPricingIntelligence({
         product_id: row.product.id,
         seller_product_id: sellerProduct.id,
+        seller_product_ids: Object.fromEntries(
+          row.sellerProducts.map((item) => [item.marketplace.toUpperCase(), item.id]),
+        ),
         ingestion_marketplaces: productMarketplaces.length
           ? productMarketplaces
           : marketplaces,
@@ -713,6 +777,7 @@ export default function CompanyProductsPage() {
         run_candidate_prices: true,
         run_optimization: true,
         persist_optimization: false,
+        sales_7d_avg: sales7dAvg,
       });
       setAnalysisResults((current) => ({
         ...current,
@@ -1558,7 +1623,9 @@ export default function CompanyProductsPage() {
       {selectedRow && (
         <ProductDetail
           row={selectedRow}
-          pipelineResult={analysisResults[selectedRow.product.id]}
+          pipelineResult={
+            analysisResults[selectedRow.product.id] || selectedRow.pipelineResult
+          }
           advancedOpen={advancedProductId === selectedRow.product.id}
           onToggleAdvanced={() =>
             setAdvancedProductId((current) =>
@@ -1627,6 +1694,16 @@ function ProductDetail({
       persistedRecommendation?.explanation,
   );
   const rejectionReasons = optimizationRejectionReasons(pipelineResult);
+  const marketplaceResults = marketplaceOptimizationResults(pipelineResult);
+  const bestOptimizationMarketplace =
+    liveRecommendation?.marketplace ||
+    marketplaceResults.reduce<MarketplaceOptimizationResult | undefined>(
+      (best, current) =>
+        !best || Number(current.expected_profit || 0) > Number(best.expected_profit || 0)
+          ? current
+          : best,
+      undefined,
+    )?.marketplace;
   const hasRecommendation =
     recommendedPrice !== null && recommendedPrice !== undefined;
   const hasLiveCompetitorResults = Array.isArray(pipelineResult?.results);
@@ -1747,6 +1824,88 @@ function ProductDetail({
           icon={<BoxIconLine className="size-5" />}
         />
       </div>
+
+      {marketplaceResults.length > 0 && (
+        <div className="mt-5 rounded-lg border border-gray-200 p-5 dark:border-gray-800">
+          <div>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+              Pazaryeri Bazlı Fiyat Optimizasyonu
+            </h3>
+            <p className="mt-1 text-theme-xs text-gray-500 dark:text-gray-400">
+              Aynı talep tahmini, her pazaryerinin fiyat ve maliyet koşullarıyla ayrı değerlendirildi.
+            </p>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
+            {marketplaceResults.map((marketplaceResult) => {
+              const isBestMarketplace =
+                bestOptimizationMarketplace === marketplaceResult.marketplace;
+              const hasMarketplaceRecommendation =
+                marketplaceResult.recommended_price !== null &&
+                marketplaceResult.recommended_price !== undefined;
+
+              return (
+                <div
+                  key={`${marketplaceResult.marketplace}-${marketplaceResult.seller_product_id || "result"}`}
+                  className={`rounded-lg border p-4 ${
+                    isBestMarketplace
+                      ? "border-brand-300 bg-brand-50/60 dark:border-brand-500/40 dark:bg-brand-500/10"
+                      : "border-gray-200 dark:border-gray-800"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">
+                      {marketplaceResult.marketplace}
+                    </h4>
+                    {isBestMarketplace && (
+                      <Badge color="success" size="sm">
+                        En iyi sonuç
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <InfoPill
+                      label="Mevcut fiyat"
+                      value={toMoney(marketplaceResult.current_price)}
+                    />
+                    <InfoPill
+                      label="Önerilen fiyat"
+                      value={
+                        hasMarketplaceRecommendation
+                          ? toMoney(marketplaceResult.recommended_price)
+                          : "Öneri oluşmadı"
+                      }
+                    />
+                    <InfoPill
+                      label="Beklenen satış"
+                      value={marketplaceResult.expected_sales ?? "-"}
+                    />
+                    <InfoPill
+                      label="Beklenen kâr"
+                      value={toMoney(marketplaceResult.expected_profit)}
+                    />
+                    <InfoPill
+                      label="Birim kâr"
+                      value={toMoney(marketplaceResult.unit_profit)}
+                    />
+                    <InfoPill
+                      label="Komisyon"
+                      value={toPercent(marketplaceResult.commission_rate)}
+                    />
+                  </div>
+
+                  {!hasMarketplaceRecommendation && (
+                    <p className="mt-3 text-theme-xs text-warning-700 dark:text-warning-300">
+                      Bu pazaryerinde kısıtları karşılayan geçerli bir aday fiyat bulunamadı.
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {hasRecommendation ? (
         <div className="mt-5 rounded-lg border border-brand-100 bg-brand-50/60 p-4 dark:border-brand-500/20 dark:bg-brand-500/10">

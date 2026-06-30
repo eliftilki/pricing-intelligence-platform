@@ -31,6 +31,9 @@ class OptimizationConstraintCode(str, Enum):
     MAX_PRICE_DECREASE_APPLIED = "MAX_PRICE_DECREASE_APPLIED"
     MARKETPLACE_COMMISSION_APPLIED = "MARKETPLACE_COMMISSION_APPLIED"
     BEST_EXPECTED_PROFIT_SELECTED = "BEST_EXPECTED_PROFIT_SELECTED"
+    NEAR_OPTIMAL_PROFIT_REGION_APPLIED = "NEAR_OPTIMAL_PROFIT_REGION_APPLIED"
+    MARKET_AVERAGE_PROXIMITY_APPLIED = "MARKET_AVERAGE_PROXIMITY_APPLIED"
+    BOUNDARY_OPTIMUM = "BOUNDARY_OPTIMUM"
 
 
 class DemandPredictionItem(BaseModel):
@@ -42,12 +45,15 @@ class DemandPredictionItem(BaseModel):
 
 class MarketplaceOptimizationInput(BaseModel):
     marketplace: Marketplace
+    seller_product_id: UUID | None = None
     category_id: UUID | None = None
+    cost_price: Decimal | None = Field(default=None, gt=0)
     current_price: Decimal | None = Field(default=None, gt=0)
     commission_rate: Decimal | None = Field(default=None, ge=0, le=1)
     shipping_cost: Decimal = Field(default=Decimal("0"), ge=0)
     packaging_cost: Decimal = Field(default=Decimal("0"), ge=0)
     min_margin_rate: Decimal = Field(default=Decimal("0.10"), ge=0, le=1)
+    market_average_price: Decimal | None = Field(default=None, gt=0)
     max_price_increase_rate: Decimal | None = Field(default=Decimal("0.25"), ge=0, le=10)
     max_price_decrease_rate: Decimal | None = Field(default=Decimal("0.20"), ge=0, le=1)
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -98,6 +104,8 @@ class CandidateOptimizationEvaluation(BaseModel):
 
 class MarketplaceOptimizationResult(BaseModel):
     marketplace: Marketplace
+    seller_product_id: UUID | None = None
+    cost_price: Decimal | None = None
     recommended_price: Decimal | None = None
     current_price: Decimal | None = None
     commission_rate: Decimal | None = None

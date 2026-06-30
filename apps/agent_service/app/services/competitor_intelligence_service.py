@@ -106,6 +106,24 @@ class CompetitorIntelligenceService:
                         "buybox_threat_score": round(buybox_score, 2),
                         "price_aggression_score": round(aggression_score, 2),
                         "reason_codes": reason_codes,
+                        "price": (
+                            float(listing.price)
+                            if listing.price is not None
+                            else None
+                        ),
+                        "original_price": (
+                            float(listing.original_price)
+                            if listing.original_price is not None
+                            else None
+                        ),
+                        "currency": listing.currency,
+                        "rank": listing.rank,
+                        "stock": listing.stock,
+                        "is_in_stock": listing.is_in_stock,
+                        "free_shipping": listing.free_shipping,
+                        "fast_shipping": listing.fast_shipping,
+                        "shipment_days": listing.shipment_days,
+                        "scraped_at": listing.scraped_at,
                     }
                 )
 
@@ -142,6 +160,11 @@ class CompetitorIntelligenceService:
                 **item,
                 "competitor_listing_id": str(item["competitor_listing_id"]),
                 "competitor_seller_id": str(item["competitor_seller_id"]) if item.get("competitor_seller_id") else None,
+                "scraped_at": (
+                    item["scraped_at"].isoformat()
+                    if item.get("scraped_at") is not None
+                    else None
+                ),
             }
             for item in serialized.get("results", [])
         ]

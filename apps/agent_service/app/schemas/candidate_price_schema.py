@@ -47,6 +47,7 @@ class CandidatePriceGenerateResponse(BaseModel):
     candidate_prices: list[float] = Field(..., min_length=1)
 
     min_competitor_price: float
+    avg_competitor_price: float
     max_competitor_price: float
     dynamic_step: int
     marketplaces_included: list[str] = Field(..., min_length=1)

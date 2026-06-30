@@ -32,6 +32,32 @@ class PricingIntelligenceSchemaTests(unittest.TestCase):
                 ingestion_query="Logitech G305",
             )
 
+    def test_seller_product_marketplaces_are_normalized_and_primary_is_selected(self):
+        trendyol_id = uuid4()
+        amazon_id = uuid4()
+
+        request = PricingIntelligenceRunRequest(
+            product_id=uuid4(),
+            ingestion_marketplaces=["amazon", "trendyol"],
+            seller_product_ids={
+                "trendyol": trendyol_id,
+                " AMAZON ": amazon_id,
+            },
+        )
+
+        self.assertEqual(
+            request.seller_product_ids,
+            {"TRENDYOL": trendyol_id, "AMAZON": amazon_id},
+        )
+        self.assertEqual(request.seller_product_id, amazon_id)
+
+    def test_unsupported_seller_product_marketplace_is_rejected(self):
+        with self.assertRaises(ValidationError):
+            PricingIntelligenceRunRequest(
+                product_id=uuid4(),
+                seller_product_ids={"UNKNOWN": uuid4()},
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

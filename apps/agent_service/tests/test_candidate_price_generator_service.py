@@ -67,6 +67,7 @@ class CandidatePriceGeneratorServiceTests(unittest.TestCase):
 
         self.assertEqual(result.selected_strategy, CandidateStrategy.ALL_MARKETPLACE_RANGE)
         self.assertEqual(result.min_competitor_price, 4000.0)
+        self.assertEqual(result.avg_competitor_price, 5166.666666666667)
         self.assertEqual(result.max_competitor_price, 6000.0)
         self.assertEqual(result.dynamic_step, 250)
         self.assertEqual(

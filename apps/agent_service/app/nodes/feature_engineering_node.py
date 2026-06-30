@@ -1,4 +1,5 @@
 import logging
+from uuid import UUID
 
 from sqlalchemy.orm import Session
 
@@ -39,21 +40,36 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
             product_id=product_id,
             seller_product_id=state.get("seller_product_id"),
         )
+        feature_seller_products = _get_feature_seller_products(
+            state=state,
+            repository=repository,
+            product_id=product_id,
+            fallback=seller_product,
+        )
     except ValueError as exc:
         state["status"] = "FAILED"
         state["failed_stage"] = "feature_engineering"
         state["message"] = str(exc)
         return state
 
-    marketplace = seller_product.marketplace
-    current_price = (
-        float(seller_product.our_price) if seller_product.our_price is not None else None
+    marketplaces = sorted(
+        {str(item.marketplace).upper() for item in feature_seller_products}
     )
-    stock_quantity = seller_product.stock_quantity
+    current_prices = [
+        float(item.our_price)
+        for item in feature_seller_products
+        if item.our_price is not None
+    ]
+    current_price = (
+        sum(current_prices) / len(current_prices) if current_prices else None
+    )
+    stock_quantity = sum(
+        int(item.stock_quantity or 0) for item in feature_seller_products
+    )
 
     competitor_features = repository.get_competitor_features(
         product_id=product_id,
-        marketplace=marketplace,
+        marketplace=None,
     )
 
     market_event_features = state.get("market_event_features")
@@ -71,9 +87,9 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
             )
 
     logger.info(
-        "feature_engineering_node basliyor: product_id=%s marketplace=%s rakip_sayisi=%d",
+        "feature_engineering_node basliyor: product_id=%s marketplaces=%s rakip_sayisi=%d",
         product_id,
-        marketplace,
+        marketplaces,
         len(competitor_features),
     )
 
@@ -81,7 +97,7 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
         product_id=product_id,
         input_payload={
             "seller_product_id": str(seller_product.id),
-            "marketplace": marketplace,
+            "marketplaces": marketplaces,
             "current_price": current_price,
             "stock_quantity": stock_quantity,
             "competitor_count": len(competitor_features),
@@ -90,7 +106,7 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
 
     features = _service.build_features(
         product_id=str(product_id),
-        marketplace=marketplace,
+        marketplace=None,
         current_price=current_price,
         stock_quantity=stock_quantity,
         competitor_features=competitor_features,
@@ -99,10 +115,10 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
 
     if features.is_monopoly:
         logger.warning(
-            "Monopol durumu tespit edildi (product_id=%s, marketplace=%s): "
+            "Monopol durumu tespit edildi (product_id=%s, marketplaces=%s): "
             "gecerli (TIER_1/TIER_2) rakip bulunamadi.",
             product_id,
-            marketplace,
+            marketplaces,
         )
     else:
         logger.info(
@@ -139,7 +155,7 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
     # candidate_price_generator_node'un ayni seller_product uzerinden devam
     # etmesini garantilemek icin cozumlenen id state'e yaziliyor.
     state["seller_product_id"] = seller_product.id
-    state["marketplace"] = marketplace
+    state["marketplace"] = None
     state["current_price"] = current_price
     state["stock_quantity"] = stock_quantity
     state["pricing_features"] = pricing_features
@@ -147,6 +163,27 @@ def feature_engineering_node(state: dict, db: Session) -> dict:
     state["company_id"] = seller_product.company_id
 
     return state
+
+
+def _get_feature_seller_products(
+    *,
+    state: dict,
+    repository: FeatureEngineeringRepository,
+    product_id,
+    fallback,
+) -> list:
+    seller_product_ids = state.get("seller_product_ids") or {}
+    if not seller_product_ids:
+        return [fallback]
+
+    unique_ids = list(dict.fromkeys(seller_product_ids.values()))
+    return [
+        repository.get_seller_product(
+            product_id=product_id,
+            seller_product_id=UUID(str(seller_product_id)),
+        )
+        for seller_product_id in unique_ids
+    ]
 
 
 def _market_event_row_to_dict(row) -> dict:

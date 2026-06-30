@@ -34,7 +34,10 @@ def persist_recommendation_node(state: dict, db: Session) -> dict:
             ids={
                 "company_id": state.get("company_id"),
                 "product_id": state.get("product_id"),
-                "seller_product_id": state.get("seller_product_id"),
+                "seller_product_id": (
+                    recommendation.get("seller_product_id")
+                    or state.get("seller_product_id")
+                ),
             },
             explanation=(state.get("slm_explanation") or {}).get("explanation"),
         )
