@@ -66,6 +66,15 @@ export type SalesQuantityRecord = {
   created_at: string;
 };
 
+export type Sales7DayAverage = {
+  seller_product_id: UUID;
+  period_days: number;
+  total_sales: number;
+  sales_7d_avg: number;
+  period_start: string;
+  period_end: string;
+};
+
 export type DataCollectionResponse = {
   job_id?: UUID;
   product_id?: UUID;
@@ -123,6 +132,24 @@ export type PricingRecommendationResult = {
   tier1_min_price?: string | number | null;
 };
 
+export type MarketplaceOptimizationResult = {
+  marketplace: string;
+  seller_product_id?: UUID | null;
+  current_price?: string | number | null;
+  recommended_price?: string | number | null;
+  cost_price?: string | number | null;
+  commission_rate?: string | number | null;
+  expected_sales?: string | number | null;
+  unit_profit?: string | number | null;
+  unit_margin_rate?: string | number | null;
+  expected_profit?: string | number | null;
+  profit_uplift_vs_current?: string | number | null;
+  selected_reason?: string | null;
+  rejected_candidates?: Array<{
+    rejection_reasons?: string[];
+  }>;
+};
+
 export type PricingIntelligenceResponse = {
   product_id: UUID;
   status: "SUCCESS" | "PARTIAL_SUCCESS" | "FAILED" | string;
@@ -141,6 +168,16 @@ export type PricingIntelligenceResponse = {
     buybox_threat_score: number;
     price_aggression_score: number;
     reason_codes: string[];
+    price?: number | null;
+    original_price?: number | null;
+    currency?: string;
+    rank?: number | null;
+    stock?: number | null;
+    is_in_stock?: boolean;
+    free_shipping?: boolean;
+    fast_shipping?: boolean;
+    shipment_days?: number | null;
+    scraped_at?: string | null;
   }>;
   ingestion_result?: {
     job_id?: UUID;
@@ -152,7 +189,8 @@ export type PricingIntelligenceResponse = {
   candidate_prices?: number[] | null;
   selected_candidate_strategy?: string | null;
   optimization_result?: Record<string, unknown> | null;
-  marketplace_recommendations?: Array<Record<string, unknown>> | null;
+  marketplace_results?: MarketplaceOptimizationResult[] | null;
+  marketplace_recommendations?: MarketplaceOptimizationResult[] | null;
   recommendation?: PricingRecommendationResult | null;
   recommendation_persistence?: {
     status?: string;
@@ -181,6 +219,10 @@ export type CompetitorListing = {
   seller_name?: string | null;
   seller_score?: string | number | null;
   price?: string | number | null;
+  original_price?: string | number | null;
+  currency?: string | null;
+  stock?: number | null;
+  shipment_days?: number | null;
   shipping_price?: string | number | null;
   stock_status?: string | null;
   is_in_stock?: boolean | null;
@@ -399,7 +441,8 @@ export const pricingApi = {
     request<AnalysisResponse>("/analysis/run", { method: "POST", body }),
   runPricingIntelligence: (body: {
     product_id: UUID;
-    seller_product_id: UUID;
+    seller_product_id?: UUID;
+    seller_product_ids?: Record<string, UUID>;
     ingestion_marketplaces: string[];
     ingestion_query?: string;
     ingestion_company_id?: UUID;
@@ -412,6 +455,16 @@ export const pricingApi = {
       AGENT_SERVICE_BASE_URL,
       "/pricing-intelligence/run",
       { method: "POST", body },
+    ),
+  getLatestPricingIntelligence: (
+    productId: UUID,
+    sellerProductId?: UUID,
+  ) =>
+    requestFrom<PricingIntelligenceResponse>(
+      AGENT_SERVICE_BASE_URL,
+      `/pricing-intelligence/latest/${productId}${
+        sellerProductId ? `?seller_product_id=${sellerProductId}` : ""
+      }`,
     ),
   runProductAnalysis: (body: {
     product_id: UUID;
@@ -444,6 +497,10 @@ export const pricingApi = {
     request<SalesQuantityRecord>(
       `/products/seller-products/${sellerProductId}/sales`,
       { method: "POST", body },
+    ),
+  getSales7dAverage: (sellerProductId: UUID) =>
+    request<Sales7DayAverage>(
+      `/products/seller-products/${sellerProductId}/sales/7d-average`,
     ),
   decideRecommendation: (
     recommendationId: UUID,

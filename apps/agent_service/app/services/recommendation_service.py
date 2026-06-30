@@ -34,6 +34,7 @@ class RecommendationService:
         return {
             "product_name": product_name or "Unknown Product",
             "marketplace": best.get("marketplace"),
+            "seller_product_id": best.get("seller_product_id"),
             "current_price": best.get("current_price"),
             "recommended_price": best.get("recommended_price"),
             "action": self._resolve_action(best.get("current_price"), best.get("recommended_price")),

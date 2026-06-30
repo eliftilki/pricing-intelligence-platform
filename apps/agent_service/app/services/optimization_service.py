@@ -16,6 +16,7 @@ from app.schemas.optimization_schema import (
 
 MONEY_QUANT = Decimal("0.01")
 RATE_QUANT = Decimal("0.000001")
+NEAR_OPTIMAL_PROFIT_TOLERANCE_RATE = Decimal("0.03")
 
 
 def q_money(value: Decimal) -> Decimal:
@@ -30,7 +31,9 @@ class OptimizationService:
     def optimize(self, request: OptimizationRequest) -> OptimizationResponse:
         marketplace_results = [
             self._optimize_marketplace(
-                cost_price=request.cost_price,
+                cost_price=(
+                    marketplace_context.cost_price or request.cost_price
+                ),
                 marketplace_context=marketplace_context,
                 demand_predictions=request.demand_predictions,
             )
@@ -81,6 +84,8 @@ class OptimizationService:
         if not valid_candidates:
             return MarketplaceOptimizationResult(
                 marketplace=marketplace_context.marketplace,
+                seller_product_id=marketplace_context.seller_product_id,
+                cost_price=cost_price,
                 current_price=marketplace_context.current_price,
                 commission_rate=marketplace_context.commission_rate,
                 constraints_applied=constraints_applied,
@@ -90,15 +95,51 @@ class OptimizationService:
                 metadata={"valid_candidate_count": 0},
             )
 
-        best = max(
-            valid_candidates,
-            key=lambda item: (
-                item.expected_profit,
-                item.unit_margin_rate,
-                item.expected_sales,
-            ),
+        max_expected_profit = max(item.expected_profit for item in valid_candidates)
+        near_optimal_profit_floor = max_expected_profit * (
+            Decimal("1") - NEAR_OPTIMAL_PROFIT_TOLERANCE_RATE
         )
+        near_optimal_candidates = [
+            item
+            for item in valid_candidates
+            if item.expected_profit >= near_optimal_profit_floor
+        ]
+        constraints_applied.append(
+            OptimizationConstraintCode.NEAR_OPTIMAL_PROFIT_REGION_APPLIED
+        )
+
+        if marketplace_context.market_average_price is not None:
+            best = min(
+                near_optimal_candidates,
+                key=lambda item: (
+                    abs(item.price - marketplace_context.market_average_price),
+                    -item.expected_sales,
+                    -item.expected_profit,
+                ),
+            )
+            constraints_applied.append(
+                OptimizationConstraintCode.MARKET_AVERAGE_PROXIMITY_APPLIED
+            )
+        else:
+            best = max(
+                near_optimal_candidates,
+                key=lambda item: (
+                    item.expected_profit,
+                    item.unit_margin_rate,
+                    item.expected_sales,
+                ),
+            )
+
         constraints_applied.append(OptimizationConstraintCode.BEST_EXPECTED_PROFIT_SELECTED)
+
+        evaluated_price_bounds = (
+            min(item.price for item in evaluations),
+            max(item.price for item in evaluations),
+        )
+        warnings: list[str] = []
+        if best.price in evaluated_price_bounds:
+            constraints_applied.append(OptimizationConstraintCode.BOUNDARY_OPTIMUM)
+            warnings.append(OptimizationConstraintCode.BOUNDARY_OPTIMUM.value)
 
         current_profit = self._calculate_current_price_expected_profit(
             current_price=marketplace_context.current_price,
@@ -110,6 +151,8 @@ class OptimizationService:
 
         return MarketplaceOptimizationResult(
             marketplace=marketplace_context.marketplace,
+            seller_product_id=marketplace_context.seller_product_id,
+            cost_price=cost_price,
             recommended_price=best.price,
             current_price=marketplace_context.current_price,
             commission_rate=marketplace_context.commission_rate,
@@ -119,12 +162,28 @@ class OptimizationService:
             expected_profit=best.expected_profit,
             profit_uplift_vs_current=uplift,
             constraints_applied=constraints_applied,
-            selected_reason="Highest expected profit among valid candidates for this marketplace.",
+            selected_reason=(
+                "Closest price to the market average among candidates within 3% of "
+                "the highest expected profit."
+                if marketplace_context.market_average_price is not None
+                else "Highest expected profit among valid near-optimal candidates."
+            ),
             evaluated_candidates=evaluations,
             rejected_candidates=rejected_candidates,
             metadata={
                 "valid_candidate_count": len(valid_candidates),
                 "rejected_candidate_count": len(rejected_candidates),
+                "near_optimal_candidate_count": len(near_optimal_candidates),
+                "near_optimal_profit_tolerance_rate": str(
+                    NEAR_OPTIMAL_PROFIT_TOLERANCE_RATE
+                ),
+                "market_average_price": (
+                    str(marketplace_context.market_average_price)
+                    if marketplace_context.market_average_price is not None
+                    else None
+                ),
+                "max_expected_profit": str(max_expected_profit),
+                "warnings": warnings,
             },
         )
 

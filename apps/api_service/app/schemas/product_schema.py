@@ -121,3 +121,12 @@ class SalesQuantityOut(SalesQuantityCreate):
 
     class Config:
         from_attributes = True
+
+
+class Sales7DayAverageOut(BaseModel):
+    seller_product_id: UUID
+    period_days: int = 7
+    total_sales: int
+    sales_7d_avg: float
+    period_start: datetime
+    period_end: datetime

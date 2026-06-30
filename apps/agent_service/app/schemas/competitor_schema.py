@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -18,6 +19,16 @@ class CompetitorTierResult(BaseModel):
     buybox_threat_score: float
     price_aggression_score: float
     reason_codes: list[str]
+    price: float | None = None
+    original_price: float | None = None
+    currency: str = "TRY"
+    rank: int | None = None
+    stock: int | None = None
+    is_in_stock: bool = True
+    free_shipping: bool = False
+    fast_shipping: bool = False
+    shipment_days: int | None = None
+    scraped_at: datetime | None = None
 
 
 class CompetitorIntelligenceRunResponse(BaseModel):

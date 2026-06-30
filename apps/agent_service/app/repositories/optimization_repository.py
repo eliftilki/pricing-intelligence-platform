@@ -63,12 +63,15 @@ class OptimizationRepository:
 
         return MarketplaceOptimizationInput(
             marketplace=marketplace,
+            seller_product_id=context.get("seller_product_id"),
+            cost_price=self._to_decimal(context.get("cost_price")),
             category_id=context.get("category_id"),
             current_price=self._to_decimal(context.get("current_price")),
             commission_rate=commission_rate,
             shipping_cost=self._to_decimal(context.get("shipping_cost")) or Decimal("0"),
             packaging_cost=self._to_decimal(context.get("packaging_cost")) or Decimal("0"),
             min_margin_rate=self._to_decimal(context.get("min_margin_rate")) or Decimal("0.10"),
+            market_average_price=self._to_decimal(context.get("market_average_price")),
             metadata={
                 "source": "database",
                 "category": context.get("category"),
@@ -90,14 +93,16 @@ class OptimizationRepository:
         for result in response.marketplace_results:
             marketplace_context = context_by_marketplace[result.marketplace.value]
             record = OptimizationRecordCreate(
-                seller_product_id=response.seller_product_id,
+                seller_product_id=(
+                    result.seller_product_id or response.seller_product_id
+                ),
                 product_id=response.product_id,
                 category_id=marketplace_context.category_id,
                 run_id=response.run_id,
                 marketplace=result.marketplace,
                 recommended_price=result.recommended_price,
                 current_price=result.current_price,
-                cost_price=cost_price,
+                cost_price=marketplace_context.cost_price or cost_price,
                 commission_rate=result.commission_rate,
                 shipping_cost=marketplace_context.shipping_cost,
                 packaging_cost=marketplace_context.packaging_cost,

@@ -1,9 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.graph.pricing_pipeline_graph import build_pricing_pipeline_graph
 from app.models.product import Product, SellerProduct
+from app.repositories.pricing_intelligence_repository import (
+    PricingIntelligenceRepository,
+)
 from app.schemas.pricing_intelligence_schema import (
     PricingIntelligenceRunRequest,
     PricingIntelligenceRunResponse,
@@ -31,10 +36,11 @@ def run_pricing_intelligence(
 
     graph = build_pricing_pipeline_graph(db)
 
-    return graph.invoke(
+    graph_result = graph.invoke(
         {
             "product_id": payload.product_id,
             "seller_product_id": payload.seller_product_id,
+            "seller_product_ids": payload.seller_product_ids,
             "lookback_hours": payload.lookback_hours,
             "ingestion_marketplaces": payload.ingestion_marketplaces,
             "ingestion_query": payload.ingestion_query,
@@ -51,6 +57,40 @@ def run_pricing_intelligence(
             "warnings": [],
         }
     )
+    response = PricingIntelligenceRunResponse.model_validate(graph_result)
+
+    PricingIntelligenceRepository(db).save_run(
+        product_id=payload.product_id,
+        seller_product_id=payload.seller_product_id,
+        company_id=payload.ingestion_company_id,
+        input_payload=payload.model_dump(mode="json"),
+        output_payload=response.model_dump(mode="json"),
+        status=response.status,
+    )
+
+    return response
+
+
+@router.get(
+    "/latest/{product_id}",
+    response_model=PricingIntelligenceRunResponse,
+)
+def get_latest_pricing_intelligence(
+    product_id: UUID,
+    seller_product_id: UUID | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    run = PricingIntelligenceRepository(db).get_latest_run(
+        product_id=product_id,
+        seller_product_id=seller_product_id,
+    )
+    if run is None or run.output_payload is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No pricing intelligence result found for product: {product_id}",
+        )
+
+    return PricingIntelligenceRunResponse.model_validate(run.output_payload)
 
 
 def _validate_pricing_request(payload: PricingIntelligenceRunRequest, db: Session) -> None:
@@ -66,22 +106,40 @@ def _validate_pricing_request(payload: PricingIntelligenceRunRequest, db: Sessio
             detail=f"Product not found: {payload.product_id}",
         )
 
-    if payload.seller_product_id is None:
-        return
+    seller_products_to_validate = dict(payload.seller_product_ids)
+    if payload.seller_product_id is not None:
+        seller_products_to_validate.setdefault("PRIMARY", payload.seller_product_id)
 
-    seller_product = (
-        db.query(SellerProduct.id, SellerProduct.product_id)
-        .filter(SellerProduct.id == payload.seller_product_id)
-        .first()
-    )
-    if seller_product is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Seller product not found: {payload.seller_product_id}",
+    for expected_marketplace, seller_product_id in seller_products_to_validate.items():
+        seller_product = (
+            db.query(
+                SellerProduct.id,
+                SellerProduct.product_id,
+                SellerProduct.marketplace,
+            )
+            .filter(SellerProduct.id == seller_product_id)
+            .first()
         )
+        if seller_product is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Seller product not found: {seller_product_id}",
+            )
 
-    if seller_product.product_id != payload.product_id:
-        raise HTTPException(
-            status_code=400,
-            detail="seller_product_id does not belong to product_id.",
-        )
+        if seller_product.product_id != payload.product_id:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Seller product does not belong to product_id: {seller_product_id}",
+            )
+
+        if (
+            expected_marketplace != "PRIMARY"
+            and str(seller_product.marketplace).upper() != expected_marketplace
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"seller_product_ids[{expected_marketplace}] belongs to "
+                    f"{seller_product.marketplace}."
+                ),
+            )

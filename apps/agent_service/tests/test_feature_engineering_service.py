@@ -108,3 +108,39 @@ def test_event_signals_present_in_monopoly_fallback_too():
     assert features.recommended_demand_multiplier == 1.3
     assert features.event_confidence == 0.5
     assert features.market_demand_signal == "MEDIUM"
+
+
+def test_all_marketplaces_are_combined_when_marketplace_filter_is_none():
+    competitors = [
+        *COMPETITORS,
+        {
+            "marketplace": "HEPSIBURADA",
+            "tier": "TIER_1",
+            "price": 90.0,
+            "is_in_stock": True,
+            "competitor_strength_score": 1.0,
+            "buybox_threat_score": 60.0,
+            "price_aggression_score": 50.0,
+        },
+        {
+            "marketplace": "AMAZON",
+            "tier": "NOISE",
+            "price": 10.0,
+            "is_in_stock": True,
+        },
+    ]
+
+    features = svc.build_features(
+        product_id="p1",
+        marketplace=None,
+        current_price=110.0,
+        stock_quantity=30,
+        competitor_features=competitors,
+    )
+
+    assert features.marketplace is None
+    assert features.valid_competitor_count == 3
+    assert features.min_competitor_price == 90.0
+    assert features.max_competitor_price == 120.0
+    assert features.avg_competitor_price == 103.33
+    assert features.is_monopoly is False

@@ -87,6 +87,7 @@ def optimization_node(state: dict, db: Session) -> dict:
 
     state["optimization_result"] = response.model_dump(mode="json")
     state["marketplace_recommendations"] = state["optimization_result"]["marketplace_results"]
+    state["marketplace_results"] = state["marketplace_recommendations"]
     state["status"] = "SUCCESS"
 
     return state
@@ -99,12 +100,53 @@ def _build_marketplaces(
     seller_context: dict,
 ) -> list[MarketplaceOptimizationInput]:
     marketplaces_raw = state.get("marketplaces") or state.get("marketplace_contexts")
+    seller_product_ids = state.get("seller_product_ids") or {}
+    market_average_price = (
+        state.get("candidate_price_result") or {}
+    ).get("avg_competitor_price")
 
     if marketplaces_raw:
         return [
-            MarketplaceOptimizationInput(**item)
+            MarketplaceOptimizationInput(
+                **{
+                    **item,
+                    "market_average_price": (
+                        item.get("market_average_price") or market_average_price
+                    ),
+                }
+            )
             for item in marketplaces_raw
         ]
+
+    if seller_product_ids:
+        marketplace_inputs: list[MarketplaceOptimizationInput] = []
+        for expected_marketplace, seller_product_id in seller_product_ids.items():
+            context = repository.get_seller_product_context(
+                UUID(str(seller_product_id))
+            )
+            actual_marketplace = str(context["marketplace"]).upper()
+            if actual_marketplace != str(expected_marketplace).upper():
+                raise ValueError(
+                    f"Seller product {seller_product_id} belongs to "
+                    f"{actual_marketplace}, not {expected_marketplace}."
+                )
+
+            commission_rate = commission_service.get_commission_rate(
+                company_id=context["company_id"],
+                marketplace=context["marketplace"],
+                category_id=context.get("category_id"),
+            )
+            marketplace_inputs.append(
+                repository.build_marketplace_input_from_context(
+                    context={
+                        **context,
+                        "market_average_price": market_average_price,
+                    },
+                    commission_rate=commission_rate,
+                )
+            )
+
+        return marketplace_inputs
 
     commission_rate = commission_service.get_commission_rate(
         company_id=seller_context["company_id"],
@@ -112,9 +154,14 @@ def _build_marketplaces(
         category_id=seller_context.get("category_id"),
     )
 
+    marketplace_context = {
+        **seller_context,
+        "market_average_price": market_average_price,
+    }
+
     return [
         repository.build_marketplace_input_from_context(
-            context=seller_context,
+            context=marketplace_context,
             commission_rate=commission_rate,
         )
     ]
