@@ -219,15 +219,28 @@ function latestAnalysisDate(row: ProductInsight) {
   return dates.length ? Math.max(...dates) : null;
 }
 
-function maxBuyboxScore(row: ProductInsight) {
-  return Math.max(0, ...row.tiers.map((tier) => Number(tier.buybox_threat_score || 0)));
+function isRelevantTier(tier: CompetitorTier) {
+  const normalizedTier = String(tier.tier || "").toUpperCase();
+  return normalizedTier === "TIER_1" || normalizedTier === "TIER_2";
 }
 
-function riskLevel(row: ProductInsight) {
+function maxBuyboxScore(
+  row: ProductInsight,
+  tiers: CompetitorTier[] = row.tiers,
+) {
+  return Math.max(
+    0,
+    ...tiers
+      .filter(isRelevantTier)
+      .map((tier) => Number(tier.buybox_threat_score || 0)),
+  );
+}
+
+function riskLevel(row: ProductInsight, tiers: CompetitorTier[] = row.tiers) {
   const recommendationRisk = latestRecommendation(row)?.risk_level;
   if (recommendationRisk) return recommendationRisk;
 
-  const buyboxScore = maxBuyboxScore(row);
+  const buyboxScore = maxBuyboxScore(row, tiers);
   if (buyboxScore >= 70) return "Yüksek";
   if (buyboxScore >= 40) return "Orta";
   return latestAnalysisDate(row) ? "Düşük" : "-";
@@ -273,6 +286,8 @@ function humanReason(code: string) {
     MEDIUM_IMPACT_COMPETITOR: "Orta seviyede etkili rakip.",
     RANK_1_PRICE_LEADER: "Pazar lideri fiyata yakın konumda.",
     CRITICAL_PRICE_DUMPING_BYPASS: "Kritik fiyat baskısı oluşturuyor.",
+    PRICE_OUTLIER_MEDIAN_MAD:
+      "Piyasa fiyat dağılımından belirgin biçimde saptığı için analiz dışı bırakıldı.",
     PRICE_COMPETITIVE: "Piyasa ile rekabetçi bir fiyat sunuyor.",
     PRICE_BELOW_MARKET_AVG: "Piyasa ortalamasının altında fiyat veriyor.",
     PRICE_NEAR_MARKET_MIN: "Piyasanın en düşük fiyatına yakın.",
@@ -1556,8 +1571,14 @@ export default function CompanyProductsPage() {
   );
 }
 
-function RiskBadge({ row }: { row: ProductInsight }) {
-  const risk = riskLevel(row);
+function RiskBadge({
+  row,
+  tiers,
+}: {
+  row: ProductInsight;
+  tiers?: CompetitorTier[];
+}) {
+  const risk = riskLevel(row, tiers);
   const normalizedRisk = risk.toLocaleLowerCase("tr-TR");
   const color =
     normalizedRisk.includes("high") ||
@@ -1608,20 +1629,53 @@ function ProductDetail({
   const rejectionReasons = optimizationRejectionReasons(pipelineResult);
   const hasRecommendation =
     recommendedPrice !== null && recommendedPrice !== undefined;
-  const strongestTiers = [...row.tiers]
+  const hasLiveCompetitorResults = Array.isArray(pipelineResult?.results);
+  const analysisTiers: CompetitorTier[] = hasLiveCompetitorResults
+    ? (pipelineResult?.results || []).map((result) => ({
+        id: result.competitor_listing_id,
+        competitor_listing_id: result.competitor_listing_id,
+        product_id: pipelineResult?.product_id,
+        seller_name: result.seller_name,
+        marketplace: result.marketplace,
+        tier: result.tier,
+        competitor_strength_score: result.competitor_strength_score,
+        buybox_threat_score: result.buybox_threat_score,
+        price_aggression_score: result.price_aggression_score,
+        reason_codes: result.reason_codes,
+      }))
+    : row.tiers;
+  const analyzedListingIds = new Set(
+    analysisTiers
+      .map((tier) => tier.competitor_listing_id)
+      .filter((id): id is string => Boolean(id)),
+  );
+  const analysisListings = hasLiveCompetitorResults
+    ? row.listings.filter(
+        (listing) => listing.id && analyzedListingIds.has(listing.id),
+      )
+    : row.listings;
+  const relevantTiers = analysisTiers.filter(isRelevantTier);
+  const strongestTiers = [...relevantTiers]
     .sort((a, b) => Number(b.buybox_threat_score || 0) - Number(a.buybox_threat_score || 0))
     .slice(0, 5);
-  const usedCompetitorCount = row.tiers.filter((tier) => tier.tier !== "NOISE").length;
-  const ignoredCompetitorCount = Math.max(row.listings.length - usedCompetitorCount, 0);
+  const allTiersByThreat = [...analysisTiers].sort(
+    (a, b) => Number(b.buybox_threat_score || 0) - Number(a.buybox_threat_score || 0),
+  );
+  const usedCompetitorCount = relevantTiers.length;
+  const ignoredCompetitorCount = Math.max(
+    analysisTiers.length - usedCompetitorCount,
+    0,
+  );
   const topTier = strongestTiers[0];
+  const analysisBuyboxScore = maxBuyboxScore(row, analysisTiers);
 
   const summaryReasons = [
     topTier?.seller_name
       ? `${topTier.seller_name} en önemli rakip olarak takip ediliyor.`
       : "Rakip verisi geldikçe en önemli satıcılar burada özetlenir.",
-    maxBuyboxScore(row) >= 70
+    analysisBuyboxScore >= 70
       ? "Buybox kaybetme riski yüksek seviyede."
-      : maxBuyboxScore(row) >= 40
+      : analysisBuyboxScore >= 40
         ? "Buybox riski orta seviyede takip edilmeli."
         : "Buybox riski düşük seviyede görünüyor.",
     recommendationAction ||
@@ -1639,7 +1693,7 @@ function ProductDetail({
             Fiyat kararı, beklenen finansal etki ve pazar riskleri tek görünümde.
           </p>
         </div>
-        <RiskBadge row={row} />
+        <RiskBadge row={row} tiers={analysisTiers} />
       </div>
 
       {pipelineResult && (
@@ -1688,7 +1742,7 @@ function ProductDetail({
         />
         <MetricCard
           label="Risk Seviyesi"
-          value={riskLevel(row)}
+          value={riskLevel(row, analysisTiers)}
           description="Rakip ve buybox baskısına göre"
           icon={<BoxIconLine className="size-5" />}
         />
@@ -1800,7 +1854,7 @@ function ProductDetail({
           Detaylı Analiz
         </h3>
         <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-          <InfoPill label="Rakip Sayisi" value={row.listings.length} />
+          <InfoPill label="Rakip Sayisi" value={analysisTiers.length} />
           <InfoPill label="Analizde Kullanılan" value={usedCompetitorCount} />
           <InfoPill label="Göz Ardı Edilen" value={ignoredCompetitorCount} />
         </div>
@@ -1822,8 +1876,10 @@ function ProductDetail({
             </TableHeader>
             <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
               {strongestTiers.map((tier) => {
-                const listing = row.listings.find(
-                  (item) => item.seller_name === tier.seller_name,
+                const listing = analysisListings.find(
+                  (item) =>
+                    item.id === tier.competitor_listing_id ||
+                    item.seller_name === tier.seller_name,
                 );
                 const reasons = reasonCodes(tier).slice(0, 2).map(humanReason);
 
@@ -1863,7 +1919,7 @@ function ProductDetail({
 
         {advancedOpen && (
           <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
-            {strongestTiers.map((tier) => (
+            {allTiersByThreat.map((tier) => (
               <div
                 key={`advanced-${tier.id || tier.seller_name}`}
                 className="rounded-lg border border-gray-100 p-4 dark:border-gray-800"

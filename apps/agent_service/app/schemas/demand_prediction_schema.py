@@ -7,7 +7,7 @@ class DemandFeatureRow(BaseModel):
     month: int
     is_weekend: int
     is_salary_week: int
-    candidate_price: float
+    candidate_price: float = Field(..., gt=0)
     min_competitor_price: float
     avg_competitor_price: float
     market_avg_price: float

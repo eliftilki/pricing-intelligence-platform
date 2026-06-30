@@ -19,9 +19,6 @@ class PricingIntelligenceRunRequest(BaseModel):
     run_candidate_prices: bool = True
     run_optimization: bool = False
     persist_optimization: bool = False
-    price_step: int = 250
-    base_price_step: int = 250
-    dense_price_step: int = 50
     # GECICI: Frontend hazir olunca satıcıdan gelecek. Simdilik opsiyonel.
     sales_7d_avg: float | None = Field(default=None, ge=0)
     demand_predictions: list[DemandPredictionItem] = Field(default_factory=list)

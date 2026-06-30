@@ -30,9 +30,6 @@ def generate_candidate_prices(
 
     service = CandidatePriceGeneratorService()
 
-    result = service.generate(
-        context=context,
-        strategy=request.strategy,
-    )
+    result = service.generate(context=context)
 
     return result
