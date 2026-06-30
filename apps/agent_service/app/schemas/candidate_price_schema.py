@@ -5,16 +5,14 @@ from pydantic import BaseModel, Field
 
 
 class CandidateStrategy(str, Enum):
-    AUTO = "AUTO"
-    BASIC_COMPETITOR_RANGE = "BASIC_COMPETITOR_RANGE"
-    TIER_BASED_COMPETITOR_WINDOW = "TIER_BASED_COMPETITOR_WINDOW"
-    ADAPTIVE_DENSE_MARKET_WINDOW = "ADAPTIVE_DENSE_MARKET_WINDOW"
+    ALL_MARKETPLACE_RANGE = "ALL_MARKETPLACE_RANGE"
 
 
 class CandidateCompetitor(BaseModel):
+    marketplace: str
     seller_name: str
-    price: float
-    tier: str | None = None
+    price: float = Field(..., gt=0)
+    tier: str
     buybox_threat_score: float | None = None
 
 
@@ -33,28 +31,12 @@ class IgnoredCompetitor(BaseModel):
 class CandidatePriceContext(BaseModel):
     product_id: UUID
     seller_product_id: UUID | None = None
-
-    current_price: float
-
-    min_competitor_price: float | None = None
-    avg_competitor_price: float | None = None
-    max_competitor_price: float | None = None
-
-    competitors: list[CandidateCompetitor] = Field(default_factory=list)
-
-    price_step: int = 250
-    base_price_step: int = 250
-    dense_price_step: int = 50
+    competitors: list[CandidateCompetitor] = Field(..., min_length=1)
 
 
 class CandidatePriceGenerateRequest(BaseModel):
     product_id: UUID
     seller_product_id: UUID | None = None
-    strategy: CandidateStrategy = CandidateStrategy.AUTO
-
-    price_step: int = 250
-    base_price_step: int = 250
-    dense_price_step: int = 50
 
 
 class CandidatePriceGenerateResponse(BaseModel):
@@ -62,7 +44,12 @@ class CandidatePriceGenerateResponse(BaseModel):
     seller_product_id: UUID | None = None
 
     selected_strategy: CandidateStrategy
-    candidate_prices: list[float]
+    candidate_prices: list[float] = Field(..., min_length=1)
+
+    min_competitor_price: float
+    max_competitor_price: float
+    dynamic_step: int
+    marketplaces_included: list[str] = Field(..., min_length=1)
 
     reason: str
     constraints_applied: list[str] = Field(default_factory=list)

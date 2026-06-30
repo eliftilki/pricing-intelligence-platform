@@ -1,11 +1,17 @@
 from decimal import Decimal
 import math
+import statistics
 from typing import Any
 
 from app.models.competitor import CompetitorListing
 
 
 class CompetitorScoringService:
+    MIN_OUTLIER_SAMPLE_SIZE = 4
+    MODIFIED_Z_SCORE_THRESHOLD = 3.5
+    FALLBACK_MIN_MEDIAN_RATIO = 0.50
+    FALLBACK_MAX_MEDIAN_RATIO = 2.00
+
     KNOWN_STRONG_SELLERS: set[str] = {
         "amazon",
         "mediamarkt",
@@ -46,13 +52,64 @@ class CompetitorScoringService:
                     prices.append(p_float)
 
         if not prices:
-            return {"min_price": 0.0, "avg_price": 0.0, "max_price": 0.0}
+            return {
+                "min_price": 0.0,
+                "avg_price": 0.0,
+                "max_price": 0.0,
+                "median_price": 0.0,
+                "mad_price": 0.0,
+                "price_count": 0,
+            }
+
+        median_price = statistics.median(prices)
+        mad_price = statistics.median(
+            abs(price - median_price) for price in prices
+        )
+        inlier_prices = [
+            price
+            for price in prices
+            if not self.is_price_outlier(
+                price=price,
+                median_price=median_price,
+                mad_price=mad_price,
+                price_count=len(prices),
+            )
+        ]
+        if not inlier_prices:
+            inlier_prices = prices
 
         return {
-            "min_price": min(prices),
-            "avg_price": sum(prices) / len(prices),
-            "max_price": max(prices),
+            "min_price": min(inlier_prices),
+            "avg_price": sum(inlier_prices) / len(inlier_prices),
+            "max_price": max(inlier_prices),
+            "median_price": median_price,
+            "mad_price": mad_price,
+            "price_count": len(prices),
         }
+
+    def is_price_outlier(
+        self,
+        price: float,
+        median_price: float,
+        mad_price: float,
+        price_count: int,
+    ) -> bool:
+        if (
+            price_count < self.MIN_OUTLIER_SAMPLE_SIZE
+            or price <= 0
+            or median_price <= 0
+        ):
+            return False
+
+        if mad_price > 0:
+            modified_z_score = 0.6745 * abs(price - median_price) / mad_price
+            return modified_z_score > self.MODIFIED_Z_SCORE_THRESHOLD
+
+        median_ratio = price / median_price
+        return (
+            median_ratio < self.FALLBACK_MIN_MEDIAN_RATIO
+            or median_ratio > self.FALLBACK_MAX_MEDIAN_RATIO
+        )
 
     def calculate_price_score(
         self,
@@ -353,9 +410,13 @@ class CompetitorScoringService:
         strength_score: float,
         buybox_threat_score: float,
         price_aggression_score: float,
+        price_is_outlier: bool = False,
     ) -> tuple[str, list[str]]:
         if listing.is_in_stock is False:
             return "NOISE", ["OUT_OF_STOCK_SELLER"]
+
+        if price_is_outlier:
+            return "NOISE", ["PRICE_OUTLIER_MEDIAN_MAD"]
 
         seller_score = self.safe_float(listing.seller_score)
         review_count = listing.seller_review_count

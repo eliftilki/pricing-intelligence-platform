@@ -42,9 +42,6 @@ def run_pricing_intelligence(
             "run_candidate_prices": payload.run_candidate_prices,
             "run_optimization": payload.run_optimization,
             "persist_optimization": payload.persist_optimization,
-            "price_step": payload.price_step,
-            "base_price_step": payload.base_price_step,
-            "dense_price_step": payload.dense_price_step,
             "sales_7d_avg": payload.sales_7d_avg,
             "demand_predictions": [
                 item.model_dump(mode="json")

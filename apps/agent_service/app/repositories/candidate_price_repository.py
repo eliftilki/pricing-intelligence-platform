@@ -26,36 +26,18 @@ class CandidatePriceRepository:
             seller_product_id=request.seller_product_id,
         )
 
-        if seller_product.our_price is None:
-            raise ValueError("Seller product current price is missing.")
-
         competitors = self.get_latest_competitors_for_product(request.product_id)
 
-        competitor_prices = [
-            competitor.price
-            for competitor in competitors
-            if competitor.price > 0
-        ]
-
-        min_price = min(competitor_prices) if competitor_prices else None
-        avg_price = (
-            sum(competitor_prices) / len(competitor_prices)
-            if competitor_prices
-            else None
-        )
-        max_price = max(competitor_prices) if competitor_prices else None
+        if not competitors:
+            raise ValueError(
+                "No current positive TIER_1 or TIER_2 competitor prices were found "
+                "across marketplaces."
+            )
 
         return CandidatePriceContext(
             product_id=request.product_id,
             seller_product_id=seller_product.id,
-            current_price=float(seller_product.our_price),
-            min_competitor_price=min_price,
-            avg_competitor_price=avg_price,
-            max_competitor_price=max_price,
             competitors=competitors,
-            price_step=request.price_step,
-            base_price_step=request.base_price_step,
-            dense_price_step=request.dense_price_step,
         )
 
     def _get_seller_product(
@@ -101,6 +83,7 @@ class CandidatePriceRepository:
                 CompetitorListing.id == CompetitorTier.competitor_listing_id,
             )
             .filter(CompetitorTier.product_id == product_id)
+            .filter(CompetitorTier.tier.in_(("TIER_1", "TIER_2")))
             .filter(CompetitorListing.price.isnot(None))
             .filter(CompetitorListing.scraped_at >= cutoff)
             .filter(CompetitorTier.analyzed_at >= cutoff)
@@ -118,11 +101,12 @@ class CandidatePriceRepository:
 
             seen_listing_ids.add(listing.id)
 
-            if listing.price is None:
+            if listing.price is None or listing.price <= 0:
                 continue
 
             competitors.append(
                 CandidateCompetitor(
+                    marketplace=listing.marketplace.upper(),
                     seller_name=tier.seller_name,
                     price=float(listing.price),
                     tier=tier.tier,

@@ -1,49 +1,38 @@
 import math
 
-
 MIN_PRICE_STEP = 50
+TARGET_MARKET_INTERVALS = 15
 
 
 def choose_step(min_price: float, max_price: float) -> int:
     width = max(0.0, max_price - min_price)
+    if width == 0:
+        return MIN_PRICE_STEP
 
-    if width <= 500:
-        return 50
-    if width <= 1500:
-        return 100
-    if width <= 3000:
-        return 250
-    return 500
+    raw_step = max(MIN_PRICE_STEP, width / TARGET_MARKET_INTERVALS)
+    magnitude = 10 ** math.floor(math.log10(raw_step))
 
+    for multiplier in (1, 2.5, 5, 10):
+        candidate = multiplier * magnitude
+        if candidate >= raw_step:
+            return max(MIN_PRICE_STEP, int(candidate))
 
-def choose_dense_step(start_price: float, end_price: float) -> int:
-    width = max(0.0, end_price - start_price)
-
-    if width <= 300:
-        return 50
-    if width <= 800:
-        return 100
-    return 250
+    raise RuntimeError("Unable to determine a dynamic price step.")
 
 
-def generate_aligned_range(
+def generate_extended_market_range(
     min_price: float,
     max_price: float,
     step: int,
-    *,
-    include_ceiling: bool = False,
+    padding_steps: int = 5,
 ) -> list[float]:
+    """Create one positive price grid covering the market plus equal padding."""
     step = max(step, MIN_PRICE_STEP)
-    start = math.floor(min_price / step) * step
-    if include_ceiling:
-        end = math.ceil(max_price / step) * step
-    else:
-        end = math.floor(max_price / step) * step
+    padding_steps = max(0, padding_steps)
 
-    if end < start:
-        end = start
+    aligned_min = math.floor(min_price / step) * step
+    aligned_max = math.ceil(max_price / step) * step
+    start = max(step, aligned_min - (padding_steps * step))
+    end = aligned_max + (padding_steps * step)
 
-    return [
-        float(price)
-        for price in range(int(start), int(end) + step, step)
-    ]
+    return [float(price) for price in range(int(start), int(end) + step, step)]

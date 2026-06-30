@@ -131,6 +131,17 @@ export type PricingIntelligenceResponse = {
   analyzed_count: number;
   inserted_count: number;
   message: string;
+  results?: Array<{
+    competitor_listing_id: UUID;
+    competitor_seller_id?: UUID | null;
+    marketplace: string;
+    seller_name: string;
+    tier: string;
+    competitor_strength_score: number;
+    buybox_threat_score: number;
+    price_aggression_score: number;
+    reason_codes: string[];
+  }>;
   ingestion_result?: {
     job_id?: UUID;
     status?: string;
@@ -181,6 +192,7 @@ export type CompetitorListing = {
 
 export type CompetitorTier = {
   id?: UUID;
+  competitor_listing_id?: UUID;
   product_id?: UUID;
   seller_name?: string | null;
   marketplace?: string | null;

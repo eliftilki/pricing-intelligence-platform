@@ -1,9 +1,6 @@
-from app.services.candidate_strategies.adaptive_dense_strategy import AdaptiveDenseStrategy
-from app.services.candidate_strategies.basic_range_strategy import BasicRangeStrategy
-from app.services.candidate_strategies.tier_based_strategy import TierBasedStrategy
+from app.services.candidate_strategies.dynamic_step_policy import (
+    choose_step,
+    generate_extended_market_range,
+)
 
-__all__ = [
-    "AdaptiveDenseStrategy",
-    "BasicRangeStrategy",
-    "TierBasedStrategy",
-]
+__all__ = ["choose_step", "generate_extended_market_range"]

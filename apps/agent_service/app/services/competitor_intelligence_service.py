@@ -41,6 +41,12 @@ class CompetitorIntelligenceService:
             self.repository.delete_existing_tiers_for_listings(listing_ids)
 
             for listing in listings:
+                price_is_outlier = self.scoring_service.is_price_outlier(
+                    price=self.scoring_service.safe_float(listing.price),
+                    median_price=market_prices["median_price"],
+                    mad_price=market_prices["mad_price"],
+                    price_count=int(market_prices["price_count"]),
+                )
                 price_history_summary = self.repository.get_price_history_summary(
                     product_id=product_id,
                     marketplace=listing.marketplace,
@@ -72,6 +78,7 @@ class CompetitorIntelligenceService:
                     strength_score=strength_score,
                     buybox_threat_score=buybox_score,
                     price_aggression_score=aggression_score,
+                    price_is_outlier=price_is_outlier,
                 )
 
                 reason_codes = list(dict.fromkeys(strength_reasons + aggression_reasons + buybox_reasons + tier_reasons))
